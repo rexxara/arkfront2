@@ -1,0 +1,30 @@
+.container{
+    height: 48vw;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+}
+.dialog{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    min-height: 222px;
+    background: #aaaaaa;
+    width: 100%;
+}
+.owner{
+    padding-left:20px;
+    height: 48px;
+    line-height: 48px;
+    font-size: 32px;
+    background: #eeeeee;
+    width: 100%;
+}
+.textarea{
+    text-indent: 2em;
+    padding:15px;
+    min-height: 174px;
+    line-height: 36px;
+    font-size: 24px;
+    width: 100%;
+}

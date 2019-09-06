@@ -1,0 +1,13 @@
+
+
+.Abutton{
+    width: 80px;
+    height:45px;
+    background: #575757;
+    text-align: center;
+    user-select: none;
+    line-height: 45px;
+    display: inline-block;
+    border: none;
+    outline: none;
+}

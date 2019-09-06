@@ -1,0 +1,26 @@
+@import '~antd/dist/antd.css';
+
+.ant-carousel .slick-slide {
+  background: #364d79;
+  overflow: hidden;
+}
+
+.ant-carousel .slick-slide h3 {
+  color: #fff;
+}
+.App {
+  width: 72vw;
+  height: 48vw;
+  background: #66ccff;
+  text-align: center;
+  position: relative;
+}
+
+.scence{
+  width: 72vw;
+  height: 48vw;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
