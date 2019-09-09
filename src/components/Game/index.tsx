@@ -93,6 +93,7 @@ const MainGame = (props: IProps) => {
     useEffect(() => start(currentLine), [])
     return <React.Fragment>
         <button data-linepointer={linePointer} id="linPointer" onClick={(ev) => clickHandle(ev, true)}>{linePointer}</button>
+        <button data-chapterpointer={chapterPointer} id="linPointer">{chapterPointer}</button>
         <button data-auto={auto} id="auto" onClick={toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
         <div className={styles.container} onClick={clickHandle}>
             <div className={styles.dialog}>

@@ -31,7 +31,11 @@ const charaters=[{
     name:'妹子'
 }]
 const chapters=[chapter1,chapter2]
+const variables={
+    userName:"rexxara"
+}
 export default {
     charaters,
-    chapters
+    chapters,
+    variables
 }

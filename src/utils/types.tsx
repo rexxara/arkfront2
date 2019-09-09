@@ -21,5 +21,6 @@ export interface Game{
 }
 export interface RawScript{
     charaters:charater[],
-    chapters:string[]
+    chapters:string[],
+    variables:Object
 }
