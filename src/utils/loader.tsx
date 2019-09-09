@@ -34,7 +34,6 @@ function loader(script: string) {
         if (currentCharCode === 10) {//enter
             if (strlen(lineText.join("")) > SplitLimit) {
                 //提示有过长段落
-                console.log(lineText.length,strlen(lineText.join("")))
             }
             if (lineText.length > 1) {//略过空行
                 voidLineCounter = 0
@@ -42,7 +41,7 @@ function loader(script: string) {
             } else {
                 voidLineCounter++
                 if (voidLineCounter === ALLOW_MAX_SPACE_LINE) {
-                    chapter[chapterPointer++] = { type: LINE_TYPE.spaceLine }
+                    chapter[chapterPointer++] = { type: LINE_TYPE.spaceLine ,value:""}
                 }
             }
             lineText = []

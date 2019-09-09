@@ -25,3 +25,19 @@ export function strlen(str: string = "") {
 //   }
 //   return tmp;
 // }
+
+export function getDomAttribute(id: string, key: string, dataType: string): any {
+  const dataCon = document.getElementById(id)
+  let data = ""
+  if (dataCon) {
+    data = dataCon.getAttribute(key) || ""
+  }
+  switch (dataType) {
+    case "int":
+      return parseInt(data)
+    case "bool":
+      return data === "true" ? true : false
+    default:
+      return data
+  }
+}

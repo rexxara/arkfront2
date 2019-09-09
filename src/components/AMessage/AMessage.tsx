@@ -16,7 +16,6 @@ const con = document.createElement("div")
 con.className = "AMessageCon"
 document.body.appendChild(con)
 function removeMessage(messageId: number): void {
-    console.log(messageId)
     outerSetMessageList((array: messageArray[]) => array.filter((v: messageArray, k) => v.key !== messageId))
 }
 
@@ -36,7 +35,7 @@ const AMessage = () => {
 const MessageCon: React.FC = () => {
     const [messageList, setMessageList] = useState([])
     outerSetMessageList = setMessageList
-    return <div className="messageCon">
+    return <div style={{position:"fixed",top:0,left:0,background:"AAAAAA"}} className="messageCon">
         {messageList.map((v: messageArray, k) => {
             return <p key={k}>{v.text}</p>
         })}
