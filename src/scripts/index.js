@@ -30,7 +30,7 @@ import chapter2 from './chapter2.mi'
 const charaters=[{
     name:'妹子'
 }]
-const chapters=[chapter1,chapter2]
+const chapters=[chapter1]
 const variables={
     userName:"rexxara"
 }

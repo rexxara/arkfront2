@@ -7,6 +7,7 @@ import { Line, LINE_TYPE, Game, RawScript } from './types'
 import { strlen } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
+const spaceLine = [13, 10, 13, 10]
 
 function b64_to_utf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)))
@@ -17,40 +18,37 @@ const GameLoader = (game: RawScript): Game => {
     console.log(variables)
     return { chapters: chapters.map(v => ChapterLoader(v, variables)), charaters }
 }
+function isArrayEqual(arr: number[]) {
+    let res = arr.find((v, k) => {
+        return v !== spaceLine[k]
+    })
+    return res ? false : true
+}
 function ChapterLoader(script: string, variables: Object) {
     let decodedScript = b64_to_utf8(script.slice("data:;base64,".length))
     let chapter: Line[] = []
     let lineText: string[] = []
-    let varable = ''
     let chapterPointer = 0
     let linePointer = 0
-    let isChat = false
     let voidLineCounter = 0
-    // if(decodedScript.charCodeAt(decodedScript.length-1)!==10){
-    //     decodedScript=decodedScript.concat(`
-    //     `)
-    // }//末尾添加enter
-    // if(decodedScript.charCodeAt(0)!==10){
-    //     decodedScript=(`
-    //     `).concat(decodedScript)
-    // }
-    for (let i = 0; i < decodedScript.length; i++) {
-        const currentCharCode = decodedScript.charCodeAt(i)
-        const nextCharCode=decodedScript.charCodeAt(i+1)
-        const currentChar = decodedScript.charAt(i)
-        console.log(currentCharCode,decodedScript.charAt(i))
+    let lineCache = []
+        decodedScript=decodedScript.concat(spaceLine.map(v=>String.fromCharCode(v)).join(""))//添加空行
 
-        if(nextCharCode===10&&currentCharCode===13){
-        console.log(currentCharCode,decodedScript.charAt(i))
+    for (let i = 0; i < decodedScript.length; i++) {
+        if (lineCache.length === 4) {//一行空行是13 10 13 10
+            lineCache.shift()
         }
-        if (currentCharCode !== 10) {//13
-            lineText[linePointer++] = currentChar
-        }
-        if (currentCharCode === 10) {//enter
+        const currentCharCode = decodedScript.charCodeAt(i)
+        console.log(currentCharCode)
+        lineCache.push(currentCharCode)
+        const currentChar = decodedScript.charAt(i)
+        lineText[linePointer++] = currentChar
+        
+        if (isArrayEqual(lineCache))  {//空行
             if (strlen(lineText.join("")) > SplitLimit) {
                 //提示有过长段落
             }
-            if (lineText.length > 1) {//略过空行
+            if (lineText.length > 2) {//回车长度为2
                 voidLineCounter = 0
                 chapter[chapterPointer++] = lineTextProcess(lineText, variables)
             } else {
@@ -67,7 +65,7 @@ function ChapterLoader(script: string, variables: Object) {
     console.log(chapter)
     return chapter
 }
-function variableLoader(text: string, variables: any):string[] {
+function variableLoader(text: string, variables: any): string[] {
     const reg = /\$\{[^}]+\}/g
     const res = text.replace(reg, function (rs) {
         const key = rs.slice(2, rs.length - 1)
@@ -102,7 +100,7 @@ function lineTextProcess(lineText: string[], variables: Object): Line {
     }
     return {
         type: LINE_TYPE.raw,
-        value: rawLine
+        value: rawLine.slice(0,rawLine.length-4)//去掉两行空行
     }
 }
 export default GameLoader
