@@ -19,7 +19,9 @@ const config: IConfig = {
   plugins: [
     ['umi-plugin-react', {
       antd: true,
-      dva: true,
+      dva: {
+        immer: true
+      },
       dynamicImport: { webpackChunkName: true },
       title: null,
       dll: true,

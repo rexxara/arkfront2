@@ -61,7 +61,7 @@ const MainGame = (props: IProps) => {
     const start = (line: Line) => {
         const { value } = line
         let flags = []
-        for (let i = 0; i < value.length; i++) {
+        for (let i = 0; i <= value.length; i++) {
             const flag = setTimeout(() => {
                 setDisplayText(value.slice(0, i))
             }, i * TEXT_DISPLAY_SPEEED)
@@ -91,6 +91,19 @@ const MainGame = (props: IProps) => {
         }
     }
     useEffect(() => start(currentLine), [])
+    const reset = () => {
+        setAuto(false)
+        setLinePointer(0)
+        setChapterPointer(0)
+        setDisplayText('')
+        clearTimers()
+        setTimer([])
+            const currentChapter = chapters[0]
+            const currentLine = currentChapter[0]
+            start(currentLine)
+    }
+    window.reset=reset
+    
     return <React.Fragment>
         <button data-linepointer={linePointer} id="linPointer" onClick={(ev) => clickHandle(ev, true)}>{linePointer}</button>
         <button data-chapterpointer={chapterPointer} id="linPointer">{chapterPointer}</button>

@@ -1,8 +1,11 @@
 export const dva = {
   config: {
-    onError(err: ErrorEvent) {
-      err.preventDefault();
-      console.error(err.message);
+    onError(e:ErrorEvent) {
+      e.preventDefault();
+      console.error(e.message);
     },
   },
+  plugins: [
+    require('dva-logger')(),
+  ],
 };

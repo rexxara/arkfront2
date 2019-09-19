@@ -8,7 +8,7 @@ import copyrightPage from './copyrightPage'
 import alertPage from './alertPage'
 import titlePage from './titlePage'
 import updatePage from './updatePage'
-import playGround from './playGround'
+import playGround from './playGround/index'
 import loginPage from './loginPage'
 import warpedAnimation from '../components/HOC/animation'
 const history = createHistory()

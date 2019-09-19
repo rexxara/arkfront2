@@ -12,6 +12,8 @@
     "animate.css": "^3.7.2",
     "antd": "^3.19.5",
     "dva": "^2.6.0-beta.6",
+    "dva-logger": "^1.0.0",
+    "highlight.js": "^9.15.10",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-transition-group": "^4.3.0"
@@ -40,7 +42,7 @@
     "tslint-eslint-rules": "^5.4.0",
     "tslint-react": "^3.6.0",
     "umi": "^2.9.0",
-    "umi-plugin-react": "^1.8.0",
+    "umi-plugin-react": "^1.10.1",
     "umi-types": "^0.3.0"
   },
   "lint-staged": {
