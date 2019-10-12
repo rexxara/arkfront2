@@ -7,17 +7,17 @@ import { Line, LINE_TYPE, Game, RawScript } from './types'
 import { strlen } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
-const WindowsSpaceLine = [13, 10, 13, 10]
-const antdSpaceLine = [10, 10]
+const CRLF = [13, 10, 13, 10]
+const LF = [10, 10]
 
 export function b64_to_utf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)))
 }
 
-const GameLoader = (game: RawScript, needDecode: boolean, spaceLineTypeIsWindows: boolean): Game => {
+const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game => {
     const { chapters, charaters, variables } = game
-    const currentSpaceLine = spaceLineTypeIsWindows ? WindowsSpaceLine : antdSpaceLine
-    console.log(spaceLineTypeIsWindows,'spaceLineTypeIsWindows')
+    const currentSpaceLine = IsCRLF ? CRLF : LF
+    console.log(IsCRLF,'IsCRLF')
     const res = { chapters: chapters.map(v => ChapterLoader(needDecode ? b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, currentSpaceLine)), charaters }
     console.log(res)
     return res

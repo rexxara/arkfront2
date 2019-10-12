@@ -11,6 +11,8 @@ import updatePage from './updatePage'
 import playGround from './playGround/index'
 import loginPage from './loginPage'
 import warpedAnimation from '../components/HOC/animation'
+import MainGame from './MainGame'
+import HomePage from './HomePage'
 const history = createHistory()
 const WarpedIniPage = warpedAnimation(IniPage)
 const WarpedCopyrightPage = warpedAnimation(copyrightPage)
@@ -26,6 +28,8 @@ const App: React.FC = () => {
           <Route path="/titlePage" component={titlePage} />
           <Route path="/updatePage" component={updatePage} />
           <Route path="/playGround" component={playGround} />
+          <Route path="/homePage" component={HomePage} />
+          <Route path="/mainGame" component={MainGame} />
           <Route path="/loginPage" children={props => <WarpedLoginPage {...props} />} />
         </div>
       </Router>

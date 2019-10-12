@@ -28,3 +28,10 @@
     font-size: 24px;
     width: 100%;
 }
+.ctrlPanle{
+    background: #272822;
+    color:#0c7d9b;
+    position: absolute;
+    right: 0;
+    width: 200px;
+}

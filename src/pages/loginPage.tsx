@@ -54,6 +54,7 @@ const LoginPage: React.FC = () => {
       </AForm>}
         <Abutton to="/playGround" text="游乐场" />
       <p>{count}</p>
+        <Abutton to="/mainGame" text="游戏" />
     </Scence>
   )
 }
