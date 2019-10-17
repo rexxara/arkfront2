@@ -3,7 +3,8 @@
 export interface Line {
     type: string,
     value: string,
-    owner?:string
+    charater?:Charater
+    emotion?:String
 }
 export const LINE_TYPE ={
     raw:'raw',
@@ -12,15 +13,16 @@ export const LINE_TYPE ={
 }
 export type Chapter =Line[]
 
-export interface charater{
-    name:string
+export interface Charater{
+    name:string,
+    images:Object[]
 }
 export interface Game{
-    charaters:charater[],
+    charaters:Charater[],
     chapters:Chapter[]
 }
 export interface RawScript{
-    charaters:charater[],
+    charaters:Charater[],
     chapters:string[],
     variables:Object
 }

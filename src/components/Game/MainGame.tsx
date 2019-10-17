@@ -114,8 +114,10 @@ const MainGame = (props: IProps) => {
             <button data-auto={auto} id="auto" onClick={actions.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
         </div>
         <div className={styles.container} onClick={clickHandle}>
+            {(currentLine.charater&&currentLine.emotion)&&
+            <img style={{width:'100px'}} src={require(`../../scripts/charatersImages/${currentLine.charater.name}/${currentLine.emotion}`)}/>}
             <div className={styles.dialog}>
-                <div className={styles.owner}>{currentLine.owner}</div>
+                <div className={styles.owner}>{currentLine.charater&&currentLine.charater.name}</div>
                 <div className={styles.textarea} >{displayText}</div>
             </div>
         </div>

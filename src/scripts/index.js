@@ -28,7 +28,20 @@ import chapter2 from './chapter2.mi'
 // 　　第十二章　我的话
 
 const charaters=[{
-    name:'妹子'
+    name:'紫',
+    images:
+        {
+            default:'不笑.jpg',
+            笑:"笑.jpg",
+            不笑:"笑.jpg"
+        }
+},{
+    name:'孙笑川',
+    images:{
+        default:'sml.jpg',
+        死妈脸:'sml.jpg',
+        气急败坏:'qjbh.gif',
+    }
 }]
 const chapters=[chapter1,chapter2]
 const variables={
