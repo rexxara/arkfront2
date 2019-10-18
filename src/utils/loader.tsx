@@ -14,64 +14,38 @@ const enAndChsCharMixJudgement = (a: string, b: string) => {
         if (str === a || str === b) { return true }
     }
 }
-interface WithCharaterLine{
-    type: String,
-    charater: Charater,
-    value:String,
-    emotion?:String
-}
 const commaJudger = enAndChsCharMixJudgement(":", "：")
-const isLeftBracket = enAndChsCharMixJudgement("(", "（")
-const isRightBracket = enAndChsCharMixJudgement(")", "）")
+// const isLeftBracket = enAndChsCharMixJudgement("(", "（")
+// const isRightBracket = enAndChsCharMixJudgement(")", "）")
 const emotionProcessor = (str: String) => {
-    function haveBracket(left: number, right: number): boolean {
-        if (left > 0 && right > 0 && left < right) {
-            return true
-        }
-        return false
-    }
-    let rightBracketIndex = 0
-    let lefBracketIndex = 0
-    for (let i = 0; i < str.length; i++) {
-        if (isLeftBracket(str[i])) {
-            lefBracketIndex = i
-        }
-        if (isRightBracket(str[i])) {
-            rightBracketIndex = i
-            break;
-        }
-    }
-    if (haveBracket(lefBracketIndex, rightBracketIndex)) {
+    const emoReg = /(?<=[\(|（])[^\(\)]*(?=[\)|）])/g
+    const nameReg=/^(.*)(?:\s*)(?=[\(|（])/g
+    const emotion = str.match(emoReg)
+    const name = str.match(nameReg)
+    if (emotion&&name) {
         return {
-            name: str.slice(0, lefBracketIndex),
-            emotionKey: str.slice(lefBracketIndex+1,rightBracketIndex)
+            name: name[0].trim(),
+            emotionKey:emotion[0]
         }
     } else {
-        return { name: str,emotionKey:'default' }
+        return { name: str, emotionKey: 'default' }
     }
 }
-function filterSpace(str:string):string{
-    let arr=[]
-    for (let index = 0; index < str.length; index++) {
-        const element = str[index]
-        if(element!==" "){
-            arr.push(element)
-        }
-    }
-    return arr.join("")
+function filterSpace(str: string): string {
+    return str.replace(/\s/g, '')
 }
 export function b64_to_utf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)))
 }
-function charatersPreProcess(characters:Charater[]) {
-    return characters.map(v=>{
-        v.images.none=''
-    return v
-})
+function charatersPreProcess(characters: Charater[]) {
+    return characters.map(v => {
+        v.images.none = ''
+        return v
+    })
 }
 const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game => {
-    let { chapters, charaters, variables } = game
-    charaters=charatersPreProcess(charaters)
+    const { chapters, variables } = game
+    const charaters = charatersPreProcess(game.charaters)
     const currentSpaceLine = IsCRLF ? CRLF : LF
     console.log(IsCRLF, 'IsCRLF')
     const res = {
@@ -83,7 +57,7 @@ const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game
     return res
 }
 function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
-    let res = arr.find((v, k) => {
+    const res = arr.find((v, k) => {
         return v !== currentSpaceLine[k]
     })
     return res ? false : true
@@ -126,27 +100,23 @@ function ChapterLoader(script: string, variables: Object, currentSpaceLine: numb
     }
     return chapter
 }
-function variableLoader(text: string, variables: any): string[] {
+function variableLoader(text: string, variables: any): string {
     const reg = /\$\{[^}]+\}/g
     const res = text.replace(reg, function (rs) {
         const key = rs.slice(2, rs.length - 1)
         return variables[key]
     })
-    return res.split("")
+    return res
 }
 function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine: number[], Charaters: Charater[]): Line {
-    let spliter = 0
+    const reg=/[/:|：]/g
     const rawLine = lineText.join("")
     const lineWithVariable = variableLoader(rawLine, variables)
-    lineWithVariable.find((v, i) => {
-        if (commaJudger(v)) {
-            spliter = i
-        }
-    })
-
-    if (spliter) {//有冒号
-        let textBeforeComma = lineWithVariable.slice(0, spliter).join("")
-        let value = lineWithVariable.slice(spliter + 1, lineWithVariable.length).join("")
+    const haveComma=lineWithVariable.match(reg)
+    if (haveComma) {//有冒号
+        const res=lineWithVariable.split(haveComma[0])
+        const textBeforeComma = res[0]
+        const value = res[1]
         const charaterWithEmotion = emotionProcessor(filterSpace(textBeforeComma))
         const hitedCharater = Charaters.find(charater => {
             if (charaterWithEmotion.name === charater.name) {
@@ -154,20 +124,18 @@ function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine
             }
         })
         if (hitedCharater) {
-            console.log(hitedCharater)
-            console.log(charaterWithEmotion.emotionKey)
-            let res:Line={
+            const res: Line = {
                 type: LINE_TYPE.chat,
                 charater: hitedCharater,
                 value,
-                emotion:hitedCharater.images[charaterWithEmotion.emotionKey as any] as string
+                emotion: hitedCharater.images[charaterWithEmotion.emotionKey as any] as string
             }
-                
+
             return res
         } else {
             return {
                 type: LINE_TYPE.raw,
-                value: lineWithVariable.join("")
+                value: lineWithVariable
             }
         }
 
