@@ -43,7 +43,7 @@ const charaters=[{
         气急败坏:'qjbh.gif',
     }
 }]
-const chapters=[chapter1,chapter2]
+const chapters=[chapter1]
 const variables={
     userName:"rexxara"
 }
