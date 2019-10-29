@@ -1,15 +1,24 @@
 
 
-export interface Line {
+export interface CommandLine {
+    command:string,
+    param:string
+}
+export interface DisplayLine{
     type: string,
     value: string,
-    charater?:Charater
-    emotion?:String
+    name?:string
+    emotion?:string
+
 }
-export const LINE_TYPE ={
-    raw:'raw',
-    spaceLine:'spaceLine',
-    chat:'chat'
+export const LINE_TYPE = {
+    raw: 'raw',
+    spaceLine: 'spaceLine',
+    chat: 'chat',
+    monologue: 'monologue',
+    //comand
+    command: 'command',
+    command_SHOW_BACKGROUND:'showbg'
 }
 export type Chapter =Line[]
 
@@ -19,10 +28,12 @@ export interface Charater{
 }
 export interface Game{
     charaters:Charater[],
-    chapters:Chapter[]
+    chapters:Chapter[],
+    backgrounds:Object,
 }
 export interface RawScript{
     charaters:Charater[],
     chapters:string[],
-    variables:Object
+    variables:Object,
+    backgrounds:Object
 }

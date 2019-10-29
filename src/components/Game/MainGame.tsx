@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'dva'
-import { Chapter, Line, LINE_TYPE, Game } from '../../utils/types'
+import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game } from '../../utils/types'
 import { getDomAttribute } from '../../utils/utils'
 import styles from './style.css'
 interface IProps {
     data: Game
+}
+interface clickHandleConfig {
+    reset?: boolean
+    plusOne?: boolean
 }
 const TEXT_DISPLAY_SPEEED = 100
 const MainGame = (props: IProps) => {
@@ -18,6 +22,7 @@ const MainGame = (props: IProps) => {
     //textarea
     const [displayText, setDisplayText] = useState("")
     const [timers, setTimer] = useState([])
+    const [background, setBackground] = useState('')
     ///////////////////////////////actions
 
     const actions = {
@@ -31,13 +36,16 @@ const MainGame = (props: IProps) => {
                 actions.start(chapters[chapterPointer + 1][0])
             }
         },
-        skipThisLine: (line: Line) => {
+        skipThisLine: (line: DisplayLine) => {
             actions.clearTimers()
             setDisplayText(line.value)
         },
-        start: (line: Line) => {
+        start: (line: DisplayLine) => {
             const { value } = line
             let flags = []
+            if (!value) {
+                return undefined
+            }
             for (let i = 0; i <= value.length; i++) {
                 const flag = setTimeout(() => {
                     setDisplayText(value.slice(0, i))
@@ -47,7 +55,6 @@ const MainGame = (props: IProps) => {
             const lastFlag = setTimeout(() => {
                 actions.clearTimers()
                 let auto = getDomAttribute("auto", "data-auto", "bool")
-                console.log(auto)
                 if (auto) {
                     clickHandle()
                 }
@@ -79,26 +86,46 @@ const MainGame = (props: IProps) => {
             actions.start(currentLine)
         }
     }
+    function commandLineProcess(command: CommandLine) {
+        switch (command.command) {
+            case LINE_TYPE.command_SHOW_BACKGROUND:
+                setBackground(command.param)
+                break;
+        
+            default:
+                console.warn('invalidCommand')
+                break;
+        }
+    }
     ////computedVar
-    const currentChapter = chapters[chapterPointer]
-    const currentLine = currentChapter[linePointer]
-
-    function clickHandle(ev?: React.MouseEvent, reset?: boolean) {
+    const currentChapter = chapters[chapterPointer] as Chapter
+    const currentLine = currentChapter[linePointer] as DisplayLine
+    function clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
+        config = config || {}
         if (ev) {//手动点击取消自动播放
             setAuto(false)
             actions.clearTimers()
         }
         let asyncLinePointer = getDomAttribute("linPointer", "data-linepointer", "int")
         //由于在setTimeOut里调用clickHandle导致reactHook托管的数据全部归零，暂时这么修复一下，考虑日后使用async函数
-        const mixedLinePointer = asyncLinePointer > linePointer ? asyncLinePointer : linePointer
-        const currentChapter = chapters[chapterPointer]
+        let mixedLinePointer = asyncLinePointer > linePointer ? asyncLinePointer : linePointer
+        if (config.plusOne) {
+            mixedLinePointer += 1
+        }
+        const currentChapter = chapters[chapterPointer] as Chapter
         if (!timers.length) {//如果一行播放结束
             if (mixedLinePointer === currentChapter.length - 1) {//一章结束
                 return actions.nextChapter()
             } else {
-                console.log(currentChapter[mixedLinePointer + 1])
+                const nextLine = currentChapter[mixedLinePointer + 1] as (DisplayLine|CommandLine)
+                console.log(nextLine)
                 setLinePointer(pre => pre + 1)
-                actions.start(currentChapter[mixedLinePointer + 1])
+                if (nextLine.command) {
+                    commandLineProcess(nextLine as CommandLine)
+                    clickHandle(undefined, { plusOne: true })
+                } else {
+                    actions.start(nextLine as DisplayLine)
+                }
             }
         } else {
             actions.skipThisLine(currentChapter[mixedLinePointer])
@@ -107,17 +134,23 @@ const MainGame = (props: IProps) => {
 
     useEffect(() => actions.start(currentLine), [])//autoStartFirstLine
     window.reset = actions.reset
+
     return <React.Fragment>
         <div className={styles.ctrlPanle}>
             <p>第<button data-chapterpointer={chapterPointer} id="linPointer">{chapterPointer}</button>章</p>
-            <p>第<button data-linepointer={linePointer} id="linPointer" onClick={(ev) => clickHandle(ev, true)}>{linePointer}</button>行</p>
+            <p>第<button data-linepointer={linePointer} id="linPointer" onClick={(ev) => clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
             <button data-auto={auto} id="auto" onClick={actions.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
         </div>
-        <div className={styles.container} onClick={clickHandle}>
-            {(currentLine.charater&&currentLine.emotion)&&
-            <img style={{width:'100px'}} src={require(`../../scripts/charatersImages/${currentLine.charater.name}/${currentLine.emotion}`)}/>}
+        <div className={styles.container}
+            style={{
+                background: background ?
+                    `url(${require(`../../scripts/backgrounds/${background}`)})` : null
+            }}
+            onClick={clickHandle}>
+            {(currentLine.name && currentLine.emotion) &&
+                <img style={{ width: '100px' }} src={require(`../../scripts/charatersImages/${currentLine.name}/${currentLine.emotion}`)} />}
             <div className={styles.dialog}>
-                <div className={styles.owner}>{currentLine.charater&&currentLine.charater.name}</div>
+                <div className={styles.owner}>{currentLine.name}</div>
                 <div className={styles.textarea} >{displayText}</div>
             </div>
         </div>

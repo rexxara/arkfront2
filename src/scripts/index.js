@@ -47,8 +47,15 @@ const chapters=[chapter1]
 const variables={
     userName:"rexxara"
 }
+const backgrounds={
+    大街:'timg.jpg'
+}
+
+const cgs={}
+
 export default {
     charaters,
     chapters,
-    variables
+    variables,
+    backgrounds
 }
