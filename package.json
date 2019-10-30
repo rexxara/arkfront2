@@ -11,6 +11,7 @@
   "dependencies": {
     "animate.css": "^3.7.2",
     "antd": "^3.19.5",
+    "classnames": "^2.2.6",
     "dva": "^2.6.0-beta.6",
     "dva-logger": "^1.0.0",
     "highlight.js": "^9.15.10",

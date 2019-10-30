@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'dva'
-import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game } from '../../utils/types'
+import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG } from '../../utils/types'
 import { getDomAttribute } from '../../utils/utils'
+import classnames from 'classnames'
 import styles from './style.css'
 interface IProps {
     data: Game
@@ -9,6 +10,10 @@ interface IProps {
 interface clickHandleConfig {
     reset?: boolean
     plusOne?: boolean
+}
+interface DisplayCharacter {
+    name: string,
+    emotion: string
 }
 const TEXT_DISPLAY_SPEEED = 100
 const MainGame = (props: IProps) => {
@@ -21,8 +26,13 @@ const MainGame = (props: IProps) => {
     const [chapterPointer, setChapterPointer] = useState(0)
     //textarea
     const [displayText, setDisplayText] = useState("")
+    const [displayName, setDisplayName] = useState("")
     const [timers, setTimer] = useState([])
     const [background, setBackground] = useState('')
+    const [displayCharacters, setDisplayCharacters] = useState([])
+    const [cacheDisplayLineText,setCacheDisplayLineText]=useState('')
+    const [cacheDisplayLineName,setCacheDisplayLineName]=useState('')
+    
     ///////////////////////////////actions
 
     const actions = {
@@ -41,26 +51,29 @@ const MainGame = (props: IProps) => {
             setDisplayText(line.value)
         },
         start: (line: DisplayLine) => {
-            const { value } = line
-            let flags = []
-            if (!value) {
-                return undefined
-            }
-            for (let i = 0; i <= value.length; i++) {
-                const flag = setTimeout(() => {
-                    setDisplayText(value.slice(0, i))
-                }, i * TEXT_DISPLAY_SPEEED)
-                flags.push(flag)//一个个字符显示
-            }
-            const lastFlag = setTimeout(() => {
-                actions.clearTimers()
-                let auto = getDomAttribute("auto", "data-auto", "bool")
-                if (auto) {
-                    clickHandle()
+            const { value, name, emotion } = line
+            let needLoadNewCharater = false
+            let needLoadNewEmotion=true
+            if (name && emotion) {
+                needLoadNewCharater=true
+                const nextEmo = emotion === NO_IMG ? null : emotion
+                let nextDisplay = displayCharacters.map(v => {
+                    if (v.name === name) { needLoadNewCharater = false }
+                    if(v.name===name&&v.emotion===emotion){needLoadNewEmotion=false}
+                    return v.name !== name ? v : { name, emotion: nextEmo }
+                })
+                if (needLoadNewCharater) {
+                    nextDisplay = [...displayCharacters, { name, emotion: nextEmo }]
                 }
-            }, TEXT_DISPLAY_SPEEED * value.length)
-            flags.push(lastFlag)
-            setTimer(flags as any)
+                setDisplayCharacters(nextDisplay as DisplayCharacter[])
+            }
+            if(needLoadNewEmotion){
+                setCacheDisplayLineText(value)
+                if(name){setCacheDisplayLineName(name)}
+            }else{
+                console.log('driect')
+                textAnimation(value,name)
+            }
         },
         clearTimers: () => {
             for (let i = 0; i < timers.length; i++) {
@@ -91,11 +104,42 @@ const MainGame = (props: IProps) => {
             case LINE_TYPE.command_SHOW_BACKGROUND:
                 setBackground(command.param)
                 break;
-        
+
             default:
                 console.warn('invalidCommand')
                 break;
         }
+    }
+    function imgOnload(ev) {
+        console.log('callFromImg')
+        textAnimation(cacheDisplayLineText,cacheDisplayLineName)
+    }
+    function textAnimation(value:string,name?:string){
+        console.log(value)
+        let flags = []
+        if (!value) {
+            return undefined
+        }
+        if (name) {
+            setTimeout(() => {
+                setDisplayName(name)
+            }, TEXT_DISPLAY_SPEEED)
+        }
+        for (let i = 0; i <= value.length; i++) {
+            const flag = setTimeout(() => {
+                setDisplayText(value.slice(0, i))
+            }, i * TEXT_DISPLAY_SPEEED)
+            flags.push(flag)//一个个字符显示
+        }
+        const lastFlag = setTimeout(() => {
+            actions.clearTimers()
+            let auto = getDomAttribute("auto", "data-auto", "bool")
+            if (auto) {
+                clickHandle()
+            }
+        }, TEXT_DISPLAY_SPEEED * value.length)
+        flags.push(lastFlag)
+        setTimer(flags as any)
     }
     ////computedVar
     const currentChapter = chapters[chapterPointer] as Chapter
@@ -117,8 +161,7 @@ const MainGame = (props: IProps) => {
             if (mixedLinePointer === currentChapter.length - 1) {//一章结束
                 return actions.nextChapter()
             } else {
-                const nextLine = currentChapter[mixedLinePointer + 1] as (DisplayLine|CommandLine)
-                console.log(nextLine)
+                const nextLine = currentChapter[mixedLinePointer + 1] as (DisplayLine | CommandLine)
                 setLinePointer(pre => pre + 1)
                 if (nextLine.command) {
                     commandLineProcess(nextLine as CommandLine)
@@ -134,7 +177,6 @@ const MainGame = (props: IProps) => {
 
     useEffect(() => actions.start(currentLine), [])//autoStartFirstLine
     window.reset = actions.reset
-
     return <React.Fragment>
         <div className={styles.ctrlPanle}>
             <p>第<button data-chapterpointer={chapterPointer} id="linPointer">{chapterPointer}</button>章</p>
@@ -147,10 +189,16 @@ const MainGame = (props: IProps) => {
                     `url(${require(`../../scripts/backgrounds/${background}`)})` : null
             }}
             onClick={clickHandle}>
-            {(currentLine.name && currentLine.emotion) &&
-                <img style={{ width: '100px' }} src={require(`../../scripts/charatersImages/${currentLine.name}/${currentLine.emotion}`)} />}
+            <div className={styles.displayCharactersCon}>
+                {displayCharacters.map(v => v.emotion ? <img
+                    onLoad={imgOnload}
+                    className={currentLine.name === v.name ? classnames(styles.displayCharacter, styles.active) : styles.displayCharacter}
+                    key={v.name}
+                    src={require(`../../scripts/charatersImages/${v.name}/${v.emotion}`)} /> : <p key={v.name} />)}
+            </div>
+
             <div className={styles.dialog}>
-                <div className={styles.owner}>{currentLine.name}</div>
+                <div className={styles.owner}>{displayName}</div>
                 <div className={styles.textarea} >{displayText}</div>
             </div>
         </div>
@@ -159,3 +207,4 @@ const MainGame = (props: IProps) => {
 
 
 export default MainGame
+

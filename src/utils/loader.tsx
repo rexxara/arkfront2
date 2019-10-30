@@ -3,7 +3,7 @@
 32:空格
 66:目前配置下一行最长66个字符,显示四行
 */
-import { DisplayLine, CommandLine, Game, RawScript, LINE_TYPE, Charater } from './types'
+import { DisplayLine, CommandLine, Game, RawScript, LINE_TYPE, Charater,NO_IMG } from './types'
 import { strlen } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
@@ -14,7 +14,6 @@ const emotionProcessor = (str: String) => {
     const nameReg = /^(.*)(?:\s*)(?=[\(|（])/g
     const emotion = str.match(emoReg)
     const name = str.match(nameReg)
-    console.log(emotion,name)
     if (emotion && name) {
         return {
             name: name[0].trim(),
@@ -32,7 +31,7 @@ export function b64_to_utf8(str: string) {
 }
 function charatersPreProcess(characters: Charater[]) {
     return characters.map(v => {
-        v.images.none = ''
+        v.images.none = NO_IMG
         return v
     })
 }

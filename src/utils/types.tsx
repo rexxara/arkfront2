@@ -11,6 +11,7 @@ export interface DisplayLine{
     emotion?:string
 
 }
+export const NO_IMG="不显示立绘"
 export const LINE_TYPE = {
     raw: 'raw',
     spaceLine: 'spaceLine',
