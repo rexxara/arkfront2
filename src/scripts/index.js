@@ -28,19 +28,19 @@ import chapter2 from './chapter2.mi'
 // 　　第十二章　我的话
 
 const charaters=[{
-    name:'紫',
+    name:'临光',
     images:
         {
-            default:'不笑.jpg',
-            笑:"笑.jpg",
-            不笑:"笑.jpg"
+            default:'char_148_nearl_1.png.merge.png',
+            笑:"char_148_nearl_2.png.merge.png",
+            不笑:"char_148_nearl_9.png.merge.png"
         }
 },{
-    name:'孙笑川',
+    name:'塔露拉',
     images:{
-        default:'sml.jpg',
-        死妈脸:'sml.jpg',
-        气急败坏:'qjbh.gif',
+        default:'char_011_talula_1.png.merge.png',
+        死妈脸:'char_011_talula_2.png.merge.png',
+        气急败坏:'char_011_talula_2.png.merge.png',
     }
 }]
 const chapters=[chapter1]
@@ -48,7 +48,8 @@ const variables={
     userName:"rexxara"
 }
 const backgrounds={
-    大街:'timg.jpg'
+    大街:'bg_abyss_1.png',
+    龙门:"bg_lungmen_m.png",
 }
 
 const cgs={}

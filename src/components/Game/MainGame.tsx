@@ -30,9 +30,9 @@ const MainGame = (props: IProps) => {
     const [timers, setTimer] = useState([])
     const [background, setBackground] = useState('')
     const [displayCharacters, setDisplayCharacters] = useState([])
-    const [cacheDisplayLineText,setCacheDisplayLineText]=useState('')
-    const [cacheDisplayLineName,setCacheDisplayLineName]=useState('')
-    
+    const [cacheDisplayLineText, setCacheDisplayLineText] = useState('')
+    const [cacheDisplayLineName, setCacheDisplayLineName] = useState('')
+
     ///////////////////////////////actions
 
     const actions = {
@@ -53,13 +53,14 @@ const MainGame = (props: IProps) => {
         start: (line: DisplayLine) => {
             const { value, name, emotion } = line
             let needLoadNewCharater = false
-            let needLoadNewEmotion=true
+            let needLoadNewEmotion = false
             if (name && emotion) {
-                needLoadNewCharater=true
+                needLoadNewCharater = true
                 const nextEmo = emotion === NO_IMG ? null : emotion
+                needLoadNewEmotion = nextEmo ? true : false
                 let nextDisplay = displayCharacters.map(v => {
                     if (v.name === name) { needLoadNewCharater = false }
-                    if(v.name===name&&v.emotion===emotion){needLoadNewEmotion=false}
+                    if (v.name === name && v.emotion === nextEmo) { needLoadNewEmotion = false }
                     return v.name !== name ? v : { name, emotion: nextEmo }
                 })
                 if (needLoadNewCharater) {
@@ -67,12 +68,13 @@ const MainGame = (props: IProps) => {
                 }
                 setDisplayCharacters(nextDisplay as DisplayCharacter[])
             }
-            if(needLoadNewEmotion){
+            if (needLoadNewEmotion) {
                 setCacheDisplayLineText(value)
-                if(name){setCacheDisplayLineName(name)}
-            }else{
+                setCacheDisplayLineName(name || '')
+            } else {
                 console.log('driect')
-                textAnimation(value,name)
+                if (name !== displayName) { setDisplayName('') }
+                textAnimation(value, name)
             }
         },
         clearTimers: () => {
@@ -112,10 +114,9 @@ const MainGame = (props: IProps) => {
     }
     function imgOnload(ev) {
         console.log('callFromImg')
-        textAnimation(cacheDisplayLineText,cacheDisplayLineName)
+        textAnimation(cacheDisplayLineText, cacheDisplayLineName)
     }
-    function textAnimation(value:string,name?:string){
-        console.log(value)
+    function textAnimation(value: string, name?: string) {
         let flags = []
         if (!value) {
             return undefined
@@ -158,11 +159,13 @@ const MainGame = (props: IProps) => {
         }
         const currentChapter = chapters[chapterPointer] as Chapter
         if (!timers.length) {//如果一行播放结束
-            if (mixedLinePointer === currentChapter.length - 1) {//一章结束
+            console.log(mixedLinePointer, currentChapter.length - 1)
+            if (mixedLinePointer >= currentChapter.length - 1) {//一章结束
                 return actions.nextChapter()
             } else {
                 const nextLine = currentChapter[mixedLinePointer + 1] as (DisplayLine | CommandLine)
                 setLinePointer(pre => pre + 1)
+                console.log(nextLine)
                 if (nextLine.command) {
                     commandLineProcess(nextLine as CommandLine)
                     clickHandle(undefined, { plusOne: true })
@@ -175,11 +178,20 @@ const MainGame = (props: IProps) => {
         }
     }
 
-    useEffect(() => actions.start(currentLine), [])//autoStartFirstLine
+    useEffect(() => {
+        const currentChapter = chapters[chapterPointer] as Chapter
+        const currentLine = currentChapter[linePointer]
+        if (currentLine.command) {
+            commandLineProcess(currentLine as CommandLine)
+            clickHandle(undefined)
+        } else {
+            actions.start(currentLine)
+        }
+    }, [])//autoStartFirstLine
     window.reset = actions.reset
     return <React.Fragment>
         <div className={styles.ctrlPanle}>
-            <p>第<button data-chapterpointer={chapterPointer} id="linPointer">{chapterPointer}</button>章</p>
+            <p>第<button data-chapterpointer={chapterPointer} id="chapterPointer">{chapterPointer}</button>章</p>
             <p>第<button data-linepointer={linePointer} id="linPointer" onClick={(ev) => clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
             <button data-auto={auto} id="auto" onClick={actions.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
         </div>
@@ -192,7 +204,7 @@ const MainGame = (props: IProps) => {
             <div className={styles.displayCharactersCon}>
                 {displayCharacters.map(v => v.emotion ? <img
                     onLoad={imgOnload}
-                    className={currentLine.name === v.name ? classnames(styles.displayCharacter, styles.active) : styles.displayCharacter}
+                    className={displayName === v.name ? classnames(styles.displayCharacter, styles.active) : styles.displayCharacter}
                     key={v.name}
                     src={require(`../../scripts/charatersImages/${v.name}/${v.emotion}`)} /> : <p key={v.name} />)}
             </div>
