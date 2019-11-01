@@ -18,8 +18,7 @@ interface DisplayCharacter {
 const TEXT_DISPLAY_SPEEED = 100
 const MainGame = (props: IProps) => {
     ////////////////props
-    const { data } = props
-    const { chapters } = data
+    const { data:{chapters} } = props
     ///////////////////variables
     const [auto, setAuto] = useState(false)
     const [linePointer, setLinePointer] = useState(0)
@@ -27,11 +26,11 @@ const MainGame = (props: IProps) => {
     //textarea
     const [displayText, setDisplayText] = useState("")
     const [displayName, setDisplayName] = useState("")
-    const [timers, setTimer] = useState([])
-    const [background, setBackground] = useState('')
+    const [timers, setTimer] = useState([])///控制文字显示
+    const [background, setBackground] = useState('')//背景图
     const [displayCharacters, setDisplayCharacters] = useState([])
-    const [cacheDisplayLineText, setCacheDisplayLineText] = useState('')
-    const [cacheDisplayLineName, setCacheDisplayLineName] = useState('')
+    const [cacheDisplayLineText, setCacheDisplayLineText] = useState('')//加载图片之后调用handle
+    const [cacheDisplayLineName, setCacheDisplayLineName] = useState('')//加载图片之后调用handle
 
     ///////////////////////////////actions
 
@@ -106,7 +105,6 @@ const MainGame = (props: IProps) => {
             case LINE_TYPE.command_SHOW_BACKGROUND:
                 setBackground(command.param)
                 break;
-
             default:
                 console.warn('invalidCommand')
                 break;
@@ -142,9 +140,6 @@ const MainGame = (props: IProps) => {
         flags.push(lastFlag)
         setTimer(flags as any)
     }
-    ////computedVar
-    const currentChapter = chapters[chapterPointer] as Chapter
-    const currentLine = currentChapter[linePointer] as DisplayLine
     function clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
         config = config || {}
         if (ev) {//手动点击取消自动播放
@@ -188,7 +183,11 @@ const MainGame = (props: IProps) => {
             actions.start(currentLine)
         }
     }, [])//autoStartFirstLine
+
     window.reset = actions.reset
+    ////computedVar
+    const currentChapter = chapters[chapterPointer] as Chapter
+    const currentLine = currentChapter[linePointer] as DisplayLine
     return <React.Fragment>
         <div className={styles.ctrlPanle}>
             <p>第<button data-chapterpointer={chapterPointer} id="chapterPointer">{chapterPointer}</button>章</p>

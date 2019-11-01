@@ -19,9 +19,10 @@ export const LINE_TYPE = {
     monologue: 'monologue',
     //comand
     command: 'command',
-    command_SHOW_BACKGROUND:'showbg'
+    command_SHOW_BACKGROUND:'showbg',
+    command_LEAVE_CHARATER:'leave'
 }
-export type Chapter =Line[]
+export type Chapter =(CommandLine|DisplayLine)[]
 
 export interface Charater{
     name:string,

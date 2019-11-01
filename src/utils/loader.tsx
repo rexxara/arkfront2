@@ -3,7 +3,7 @@
 32:空格
 66:目前配置下一行最长66个字符,显示四行
 */
-import { DisplayLine, CommandLine, Game, RawScript, LINE_TYPE, Charater,NO_IMG } from './types'
+import { DisplayLine, CommandLine, Game, RawScript, LINE_TYPE, Charater, NO_IMG } from './types'
 import { strlen } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
@@ -30,7 +30,7 @@ export function b64_to_utf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)))
 }
 function charatersPreProcess(characters: Charater[]) {
-    return characters.map(v => {
+    return characters.map((v:any) => {
         v.images.none = NO_IMG
         return v
     })
@@ -41,8 +41,8 @@ const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game
     const res = {
         chapters: chapters.map(v =>
             ChapterLoader(needDecode ?
-                b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, IsCRLF, charaters,backgrounds)),
-                 charaters,backgrounds
+                b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, IsCRLF, charaters, backgrounds)),
+        charaters, backgrounds
     }
     console.log(res)
     return res
@@ -56,7 +56,7 @@ function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
     })
     return res ? false : true
 }
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[],backgrounds:Object) {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object) {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
@@ -90,7 +90,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                         break;
                     case LINE_TYPE.command:
                         if (extra) {
-                            chapter[chapterPointer++] = commandProcess(extra,backgrounds)
+                            chapter[chapterPointer++] = commandProcess(extra, backgrounds)
                         } else {
                             //warn invalid command
                         }
@@ -111,7 +111,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
     }
     return chapter
 }
-function commandProcess(matchedRawLine: RegExpMatchArray,backgrounds:any): CommandLine {
+function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any): CommandLine {
     console.log(matchedRawLine)
     const command = matchedRawLine[1]
     const key = matchedRawLine[2]
@@ -120,7 +120,12 @@ function commandProcess(matchedRawLine: RegExpMatchArray,backgrounds:any): Comma
         case LINE_TYPE.command_SHOW_BACKGROUND:
             return {
                 command: LINE_TYPE.command_SHOW_BACKGROUND,
-                param:backgrounds[key] as string
+                param: backgrounds[key] as string
+            }
+        case LINE_TYPE.command_LEAVE_CHARATER:
+            return {
+                command: LINE_TYPE.command_LEAVE_CHARATER,
+                param: key as string
             }
         default:
             //warn：unKnowCommand
@@ -174,7 +179,7 @@ function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine
         if (hitedCharater) {
             const res: DisplayLine = {
                 type: LINE_TYPE.chat,
-                name:hitedCharater.name,
+                name: hitedCharater.name,
                 value,
                 emotion: hitedCharater.images[charaterWithEmotion.emotionKey as any] as string
             }
