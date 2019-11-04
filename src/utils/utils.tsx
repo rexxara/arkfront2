@@ -26,7 +26,7 @@ export function strlen(str: string = "") {
 //   return tmp;
 // }
 
-export function getDomAttribute(id: string, key: string, dataType: string): any {
+export function get(id: string, key: string, dataType: string): any {
   const dataCon = document.getElementById(id)
   let data = ""
   if (dataCon) {
@@ -48,7 +48,8 @@ export function getDomAttribute(id: string, key: string, dataType: string): any 
         return characters.map(v => {
           if (v) {
             const res = v.split(":")
-            return { name: res[0], emotion: res[1] }
+            const emo=res[1]==='null'?null:res[1]
+            return { name: res[0], emotion: emo }
           }
         })
       }else{
@@ -58,7 +59,7 @@ export function getDomAttribute(id: string, key: string, dataType: string): any 
       return data
   }
 }
-export function setDomAttribute(id: string, key: string, value: any,type?:string): any {
+export function set(id: string, key: string, value: any,type?:string): any {
   const dataCon = document.getElementById(id)
   if (dataCon) {
     switch (type) {

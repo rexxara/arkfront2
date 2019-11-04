@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'dva'
 import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG } from '../../utils/types'
-import { getDomAttribute, setDomAttribute } from '../../utils/utils'
+import { get, set } from '../../utils/utils'
 import classnames from 'classnames'
 import styles from './style.css'
 interface IProps {
@@ -34,7 +34,7 @@ const MainGame = (props: IProps) => {
                 //end
             } else {
                 //nextChapter
-                setDomAttribute('linPointer', 'data-linepointer', '0')
+                set('linPointer', 'data-linepointer', '0')
                 setChapterPointer(pre => pre + 1)
                 const currentLine = chapters[chapterPointer + 1][0]
                 if (currentLine.command) {
@@ -51,7 +51,7 @@ const MainGame = (props: IProps) => {
             }
         },
         start: (line: DisplayLine) => {
-            const mixCharacters = getDomAttribute('displaycharacters', 'data-displaycharacters', 'displayCharacters')
+            const mixCharacters = get('displaycharacters', 'data-displaycharacters', 'displayCharacters')
             const { value, name, emotion } = line
             let needLoadNewCharater = false
             let needLoadNewEmotion = false
@@ -67,7 +67,7 @@ const MainGame = (props: IProps) => {
                 if (needLoadNewCharater) {
                     nextDisplay = [...mixCharacters, { name, emotion: nextEmo }]
                 }
-                setDomAttribute('displaycharacters', 'data-displaycharacters', nextDisplay, 'displayCharacters')
+                set('displaycharacters', 'data-displaycharacters', nextDisplay, 'displayCharacters')
             }
             if (needLoadNewEmotion) {
                 setCacheDisplayLineText(value)
@@ -92,7 +92,7 @@ const MainGame = (props: IProps) => {
         },
         reset: () => {
             setAuto(false)
-            setDomAttribute('linPointer', 'data-linepointer', '0')
+            set('linPointer', 'data-linepointer', '0')
             setChapterPointer(0)
             setDisplayText('')
             actions.clearTimers()
@@ -112,9 +112,9 @@ const MainGame = (props: IProps) => {
                 setBackground(command.param)
                 break;
             case LINE_TYPE.command_LEAVE_CHARATER:
-                const asyncCharacters = getDomAttribute('displaycharacters', 'data-displaycharacters', 'displayCharacters')
+                const asyncCharacters = get('displaycharacters', 'data-displaycharacters', 'displayCharacters')
                 const res = asyncCharacters.filter(v => v.name !== command.param)
-                setDomAttribute('displaycharacters', 'data-displaycharacters', res, 'displayCharacters')
+                set('displaycharacters', 'data-displaycharacters', res, 'displayCharacters')
                 break;
             default:
                 console.warn('invalidCommand')
@@ -151,7 +151,7 @@ const MainGame = (props: IProps) => {
         }
         const lastFlag = setTimeout(() => {
             actions.clearTimers()
-            let auto = getDomAttribute("auto", "data-auto", "bool")
+            let auto = get("auto", "data-auto", "bool")
             if (auto) {
                 clickHandle()
             }
@@ -165,7 +165,7 @@ const MainGame = (props: IProps) => {
             setAuto(false)
             actions.clearTimers()
         }
-        let asyncLinePointer = getDomAttribute("linPointer", "data-linepointer", "int")
+        let asyncLinePointer = get("linPointer", "data-linepointer", "int")
         const currentChapter = chapters[chapterPointer] as Chapter
         if (!timers.length) {//如果一行播放结束
             console.log(asyncLinePointer + 1, currentChapter.length)
@@ -173,8 +173,7 @@ const MainGame = (props: IProps) => {
                 return actions.nextChapter()
             } else {
                 const nextLine = currentChapter[asyncLinePointer + 1] as (DisplayLine | CommandLine)
-                setDomAttribute('linPointer', 'data-linepointer', asyncLinePointer + 1)
-                console.log(nextLine)
+                set('linPointer', 'data-linepointer', asyncLinePointer + 1)
                 if (nextLine.command) {
                     commandLineProcess(nextLine as CommandLine)
                 } else {
@@ -188,7 +187,7 @@ const MainGame = (props: IProps) => {
 
     useEffect(() => {
         const currentChapter = chapters[chapterPointer] as Chapter
-        const currentLine = currentChapter[getDomAttribute('linPointer', 'data-linepointer', 'int')]
+        const currentLine = currentChapter[get('linPointer', 'data-linepointer', 'int')]
         if (currentLine.command) {
             commandLineProcess(currentLine as CommandLine)
         } else {
@@ -198,8 +197,8 @@ const MainGame = (props: IProps) => {
 
     window.reset = actions.reset
     
-    const linePointer = getDomAttribute('linPointer', 'data-linepointer', 'int')
-    const asyncCharacters = getDomAttribute('displaycharacters', 'data-displaycharacters', 'displayCharacters')
+    const linePointer = get('linPointer', 'data-linepointer', 'int')
+    const asyncCharacters = get('displaycharacters', 'data-displaycharacters', 'displayCharacters')
     return <React.Fragment>
         <div className={styles.ctrlPanle}>
             <p>第<button data-chapterpointer={chapterPointer} id="chapterPointer">{chapterPointer}</button>章</p>
