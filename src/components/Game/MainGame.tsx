@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'dva'
 import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG } from '../../utils/types'
-import { getDomAttribute } from '../../utils/utils'
+import { getDomAttribute, setDomAttribute } from '../../utils/utils'
 import classnames from 'classnames'
 import styles from './style.css'
 interface IProps {
@@ -11,24 +11,18 @@ interface clickHandleConfig {
     reset?: boolean
     plusOne?: boolean
 }
-interface DisplayCharacter {
-    name: string,
-    emotion: string
-}
 const TEXT_DISPLAY_SPEEED = 100
 const MainGame = (props: IProps) => {
     ////////////////props
-    const { data:{chapters} } = props
+    const { data: { chapters } } = props
     ///////////////////variables
     const [auto, setAuto] = useState(false)
-    const [linePointer, setLinePointer] = useState(0)
     const [chapterPointer, setChapterPointer] = useState(0)
     //textarea
     const [displayText, setDisplayText] = useState("")
     const [displayName, setDisplayName] = useState("")
     const [timers, setTimer] = useState([])///控制文字显示
     const [background, setBackground] = useState('')//背景图
-    const [displayCharacters, setDisplayCharacters] = useState([])
     const [cacheDisplayLineText, setCacheDisplayLineText] = useState('')//加载图片之后调用handle
     const [cacheDisplayLineName, setCacheDisplayLineName] = useState('')//加载图片之后调用handle
 
@@ -40,16 +34,24 @@ const MainGame = (props: IProps) => {
                 //end
             } else {
                 //nextChapter
-                setLinePointer(0)
+                setDomAttribute('linPointer', 'data-linepointer', '0')
                 setChapterPointer(pre => pre + 1)
-                actions.start(chapters[chapterPointer + 1][0])
+                const currentLine = chapters[chapterPointer + 1][0]
+                if (currentLine.command) {
+                    commandLineProcess(currentLine as CommandLine)
+                } else {
+                    actions.start(currentLine as DisplayLine)
+                }
             }
         },
-        skipThisLine: (line: DisplayLine) => {
+        skipThisLine: (line: (DisplayLine | CommandLine)) => {
             actions.clearTimers()
-            setDisplayText(line.value)
+            if (line.value) {
+                setDisplayText(line.value)
+            }
         },
         start: (line: DisplayLine) => {
+            const mixCharacters = getDomAttribute('displaycharacters', 'data-displaycharacters', 'displayCharacters')
             const { value, name, emotion } = line
             let needLoadNewCharater = false
             let needLoadNewEmotion = false
@@ -57,23 +59,23 @@ const MainGame = (props: IProps) => {
                 needLoadNewCharater = true
                 const nextEmo = emotion === NO_IMG ? null : emotion
                 needLoadNewEmotion = nextEmo ? true : false
-                let nextDisplay = displayCharacters.map(v => {
+                let nextDisplay = mixCharacters.map(v => {
                     if (v.name === name) { needLoadNewCharater = false }
                     if (v.name === name && v.emotion === nextEmo) { needLoadNewEmotion = false }
                     return v.name !== name ? v : { name, emotion: nextEmo }
                 })
                 if (needLoadNewCharater) {
-                    nextDisplay = [...displayCharacters, { name, emotion: nextEmo }]
+                    nextDisplay = [...mixCharacters, { name, emotion: nextEmo }]
                 }
-                setDisplayCharacters(nextDisplay as DisplayCharacter[])
+                setDomAttribute('displaycharacters', 'data-displaycharacters', nextDisplay, 'displayCharacters')
             }
             if (needLoadNewEmotion) {
                 setCacheDisplayLineText(value)
                 setCacheDisplayLineName(name || '')
             } else {
-                console.log('driect')
+                //console.log('driect')
                 if (name !== displayName) { setDisplayName('') }
-                textAnimation(value, name)
+                textAnimation(value, name, true)
             }
         },
         clearTimers: () => {
@@ -90,14 +92,18 @@ const MainGame = (props: IProps) => {
         },
         reset: () => {
             setAuto(false)
-            setLinePointer(0)
+            setDomAttribute('linPointer', 'data-linepointer', '0')
             setChapterPointer(0)
             setDisplayText('')
             actions.clearTimers()
             setTimer([])
             const currentChapter = chapters[0]
             const currentLine = currentChapter[0]
-            actions.start(currentLine)
+            if (currentLine.command) {
+                commandLineProcess(currentLine as CommandLine)
+            } else {
+                actions.start(currentLine as DisplayLine)
+            }
         }
     }
     function commandLineProcess(command: CommandLine) {
@@ -105,16 +111,29 @@ const MainGame = (props: IProps) => {
             case LINE_TYPE.command_SHOW_BACKGROUND:
                 setBackground(command.param)
                 break;
+            case LINE_TYPE.command_LEAVE_CHARATER:
+                const asyncCharacters = getDomAttribute('displaycharacters', 'data-displaycharacters', 'displayCharacters')
+                const res = asyncCharacters.filter(v => v.name !== command.param)
+                setDomAttribute('displaycharacters', 'data-displaycharacters', res, 'displayCharacters')
+                break;
             default:
                 console.warn('invalidCommand')
                 break;
         }
+        clickHandle()
     }
     function imgOnload(ev) {
-        console.log('callFromImg')
-        textAnimation(cacheDisplayLineText, cacheDisplayLineName)
+        //console.log('callFromImg')
+        textAnimation(cacheDisplayLineText, cacheDisplayLineName, true)
     }
-    function textAnimation(value: string, name?: string) {
+    function textAnimation(value: string, name?: string, notAnimate?: boolean) {
+        // if (notAnimate) {
+        //     if (name) {
+        //         setDisplayName(name)
+        //     }
+        //     setDisplayText(value)
+        //     return 0
+        // }
         let flags = []
         if (!value) {
             return undefined
@@ -147,51 +166,46 @@ const MainGame = (props: IProps) => {
             actions.clearTimers()
         }
         let asyncLinePointer = getDomAttribute("linPointer", "data-linepointer", "int")
-        //由于在setTimeOut里调用clickHandle导致reactHook托管的数据全部归零，暂时这么修复一下，考虑日后使用async函数
-        let mixedLinePointer = asyncLinePointer > linePointer ? asyncLinePointer : linePointer
-        if (config.plusOne) {
-            mixedLinePointer += 1
-        }
         const currentChapter = chapters[chapterPointer] as Chapter
         if (!timers.length) {//如果一行播放结束
-            console.log(mixedLinePointer, currentChapter.length - 1)
-            if (mixedLinePointer >= currentChapter.length - 1) {//一章结束
+            console.log(asyncLinePointer + 1, currentChapter.length)
+            if (asyncLinePointer >= currentChapter.length - 1) {//一章结束
                 return actions.nextChapter()
             } else {
-                const nextLine = currentChapter[mixedLinePointer + 1] as (DisplayLine | CommandLine)
-                setLinePointer(pre => pre + 1)
+                const nextLine = currentChapter[asyncLinePointer + 1] as (DisplayLine | CommandLine)
+                setDomAttribute('linPointer', 'data-linepointer', asyncLinePointer + 1)
                 console.log(nextLine)
                 if (nextLine.command) {
                     commandLineProcess(nextLine as CommandLine)
-                    clickHandle(undefined, { plusOne: true })
                 } else {
                     actions.start(nextLine as DisplayLine)
                 }
             }
         } else {
-            actions.skipThisLine(currentChapter[mixedLinePointer])
+            actions.skipThisLine(currentChapter[asyncLinePointer])
         }
     }
 
     useEffect(() => {
         const currentChapter = chapters[chapterPointer] as Chapter
-        const currentLine = currentChapter[linePointer]
+        const currentLine = currentChapter[getDomAttribute('linPointer', 'data-linepointer', 'int')]
         if (currentLine.command) {
             commandLineProcess(currentLine as CommandLine)
-            clickHandle(undefined)
         } else {
             actions.start(currentLine)
         }
     }, [])//autoStartFirstLine
 
     window.reset = actions.reset
-    ////computedVar
-    const currentChapter = chapters[chapterPointer] as Chapter
-    const currentLine = currentChapter[linePointer] as DisplayLine
+    
+    const linePointer = getDomAttribute('linPointer', 'data-linepointer', 'int')
+    const asyncCharacters = getDomAttribute('displaycharacters', 'data-displaycharacters', 'displayCharacters')
     return <React.Fragment>
         <div className={styles.ctrlPanle}>
             <p>第<button data-chapterpointer={chapterPointer} id="chapterPointer">{chapterPointer}</button>章</p>
-            <p>第<button data-linepointer={linePointer} id="linPointer" onClick={(ev) => clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
+            <p>在场人物<span data-displaycharacters='' id="displaycharacters"></span></p>
+            <p>{asyncCharacters.map(v => v.name)}</p>
+            <p>第<button data-linepointer='0' id="linPointer" onClick={(ev) => clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
             <button data-auto={auto} id="auto" onClick={actions.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
         </div>
         <div className={styles.container}
@@ -201,7 +215,7 @@ const MainGame = (props: IProps) => {
             }}
             onClick={clickHandle}>
             <div className={styles.displayCharactersCon}>
-                {displayCharacters.map(v => v.emotion ? <img
+                {asyncCharacters&&asyncCharacters.map(v => v.emotion ? <img
                     onLoad={imgOnload}
                     className={displayName === v.name ? classnames(styles.displayCharacter, styles.active) : styles.displayCharacter}
                     key={v.name}

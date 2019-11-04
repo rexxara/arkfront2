@@ -35,6 +35,16 @@ function charatersPreProcess(characters: Charater[]) {
         return v
     })
 }
+function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
+    if (arr.length !== currentSpaceLine.length) {
+        return false
+    }
+    const res = arr.find((v, k) => {
+        return v !== currentSpaceLine[k]
+    })
+    return res ? false : true
+}
+
 const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game => {
     const { chapters, variables, backgrounds } = game
     const charaters = charatersPreProcess(game.charaters)
@@ -47,15 +57,7 @@ const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game
     console.log(res)
     return res
 }
-function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
-    if (arr.length !== currentSpaceLine.length) {
-        return false
-    }
-    const res = arr.find((v, k) => {
-        return v !== currentSpaceLine[k]
-    })
-    return res ? false : true
-}
+
 function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object) {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
@@ -66,7 +68,6 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
     const currentSpaceLine = [...currentSingleSpaceLine, ...currentSingleSpaceLine]
     let lineCache = new Array(currentSpaceLine.length).fill(233)//随便填点什么
     script = script.concat(currentSpaceLine.map(v => String.fromCharCode(v)).join(""))//添加空行
-
     for (let i = 0; i < script.length; i++) {
         if (lineCache.length === currentSpaceLine.length) {//一行空行是13 10 13 10
             lineCache.shift()
@@ -112,10 +113,8 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
     return chapter
 }
 function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any): CommandLine {
-    console.log(matchedRawLine)
     const command = matchedRawLine[1]
     const key = matchedRawLine[2]
-    console.log(command, LINE_TYPE.command_SHOW_BACKGROUND)
     switch (command) {
         case LINE_TYPE.command_SHOW_BACKGROUND:
             return {
