@@ -51,6 +51,10 @@ const backgrounds={
     大街:'bg_abyss_1.png',
     龙门:"bg_lungmen_m.png",
 }
+const BGMs={
+    無花果:'ウォルピスカーター - 無花果.mp3',
+    晴天前夜:'ウォルピスカーター - 晴天前夜.mp3'
+}
 
 const cgs={}
 
@@ -58,5 +62,6 @@ export default {
     charaters,
     chapters,
     variables,
-    backgrounds
+    backgrounds,
+    BGMs
 }

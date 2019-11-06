@@ -1,8 +1,15 @@
-
+export interface displayCharacter {
+    name: string
+    emotion: string
+}
 
 export interface CommandLine {
     command:string,
-    param:string
+    param?:string|displayCharacter|selectedBGM
+}
+export interface selectedBGM{
+    name:string,
+    src:string
 }
 export interface DisplayLine{
     type: string,
@@ -20,13 +27,19 @@ export const LINE_TYPE = {
     //comand
     command: 'command',
     command_SHOW_BACKGROUND:'showbg',
-    command_LEAVE_CHARATER:'leave'
+    command_LEAVE_CHARATER:'leave',
+    command_ENTER_CHARATER:'showCh',
+    command_PLAY_BGM:'playBgm',
+    command_PAUSE_BGM:'pauseBgm',
+    command_RESUME_BGM:'resumeBgm'
 }
 export type Chapter =(CommandLine|DisplayLine)[]
-
+export interface Emotions{
+    default:string
+}
 export interface Charater{
     name:string,
-    images:Object[]
+    images:Emotions
 }
 export interface Game{
     charaters:Charater[],
@@ -37,5 +50,6 @@ export interface RawScript{
     charaters:Charater[],
     chapters:string[],
     variables:Object,
-    backgrounds:Object
+    backgrounds:Object,
+    BGMs:Object
 }
