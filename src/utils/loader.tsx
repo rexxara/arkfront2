@@ -30,7 +30,7 @@ export function b64_to_utf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)))
 }
 function charatersPreProcess(characters: Charater[]) {
-    return characters.map((v:any) => {
+    return characters.map((v: any) => {
         v.images.none = NO_IMG
         return v
     })
@@ -46,19 +46,19 @@ function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
 }
 
 const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game => {
-    const { chapters, variables, backgrounds } = game
+    const { chapters, variables, backgrounds, BGMs } = game
     const charaters = charatersPreProcess(game.charaters)
     const res = {
         chapters: chapters.map(v =>
             ChapterLoader(needDecode ?
-                b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, IsCRLF, charaters, backgrounds)),
+                b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, IsCRLF, charaters, backgrounds, BGMs)),
         charaters, backgrounds
     }
     console.log(res)
     return res
 }
 
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object) {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object, BGMs: Object) {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
@@ -91,7 +91,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                         break;
                     case LINE_TYPE.command:
                         if (extra) {
-                            chapter[chapterPointer++] = commandProcess(extra, backgrounds)
+                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs)
                         } else {
                             //warn invalid command
                         }
@@ -112,9 +112,8 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
     }
     return chapter
 }
-function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any): CommandLine {
-    const command = matchedRawLine[1]
-    const key = matchedRawLine[2]
+function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Charaters: Charater[], BGMs: any): CommandLine {
+    const [command, key] = matchedRawLine[1].split(":")
     switch (command) {
         case LINE_TYPE.command_SHOW_BACKGROUND:
             return {
@@ -125,6 +124,39 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any): Com
             return {
                 command: LINE_TYPE.command_LEAVE_CHARATER,
                 param: key as string
+            }
+        case LINE_TYPE.command_ENTER_CHARATER:
+            const hitedCharater = Charaters.find(charater => {
+                if (key === charater.name) {
+                    return true
+                }
+            })
+            if (hitedCharater) {
+                return {
+                    command: LINE_TYPE.command_ENTER_CHARATER,
+                    param: {
+                        name: hitedCharater.name,
+                        emotion: hitedCharater.images.default
+                    }
+                }
+            } else {
+                throw new Error('no such charater')
+            }
+        case LINE_TYPE.command_PLAY_BGM:
+            return {
+                command: LINE_TYPE.command_PLAY_BGM,
+                param: {
+                    name: key,
+                    src: BGMs[key] as string
+                }
+            }
+        case LINE_TYPE.command_PAUSE_BGM:
+            return {
+                command: LINE_TYPE.command_PAUSE_BGM
+            }
+        case LINE_TYPE.command_RESUME_BGM:
+            return {
+                command: LINE_TYPE.command_RESUME_BGM
             }
         default:
             //warn：unKnowCommand
@@ -137,7 +169,7 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any): Com
 }
 function lineTypeJudger(lineText: string[], currentSpaceLine: number[], currentSingleSpaceLine: number[]) {
     const rawLine = lineText.join("")
-    const actionReg = /(?<=\[)(\S+):(\S+)(?=\])/
+    const actionReg = /(?<=\[)(\S+)(?=\])/
     const isCommand = rawLine.match(actionReg)
     if (isCommand) {
         return { type: LINE_TYPE.command, extra: isCommand }
@@ -180,7 +212,7 @@ function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine
                 type: LINE_TYPE.chat,
                 name: hitedCharater.name,
                 value,
-                emotion: hitedCharater.images[charaterWithEmotion.emotionKey as any] as string
+                emotion: hitedCharater.images[charaterWithEmotion.emotionKey] as string
             }
             return res
         } else {

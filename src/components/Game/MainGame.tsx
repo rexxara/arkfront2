@@ -1,7 +1,8 @@
 import React from 'react'
-import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG } from '../../utils/types'
+import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG, displayCharacter, selectedBGM } from '../../utils/types'
 import classnames from 'classnames'
 import styles from './style.css'
+import BGMplayer from './BGMplayer'
 interface IProps {
     data: Game
 }
@@ -13,19 +14,19 @@ interface IState {
     cacheDisplayLineText: string
     cacheDisplayLineName: string
     background: string
-    timers: any[]
+    timers: any
     linePointer: number
     displaycharacters: displayCharacter[]
+    rawLine: string
+    stop: boolean
+    bgm: selectedBGM
 }
 interface clickHandleConfig {
     reset?: boolean
     plusOne?: boolean
 }
-interface displayCharacter {
-    name: string
-    emotion: string
-}
-const TEXT_DISPLAY_SPEEED = 100
+
+const TEXT_DISPLAY_SPEEED = 50
 
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
@@ -38,9 +39,12 @@ class MainGame extends React.Component<IProps, IState> {
             cacheDisplayLineText: '',
             cacheDisplayLineName: '',
             background: '',
-            timers: [],
+            timers: undefined,
             linePointer: 0,
-            displaycharacters: []
+            displaycharacters: [],
+            rawLine: '',
+            stop: false,
+            bgm: { name: '', src: '' }
         }
         this.clickHandle = this.clickHandle.bind(this)
         this.textAnimation = this.textAnimation.bind(this)
@@ -53,6 +57,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.displayLineProcess = this.displayLineProcess.bind(this)
         this.skipThisLine = this.skipThisLine.bind(this)
         this.start = this.start.bind(this)
+        this.textAnimationInner = this.textAnimationInner.bind(this)
     }
 
     componentDidMount() {
@@ -64,7 +69,7 @@ class MainGame extends React.Component<IProps, IState> {
     }
     skipThisLine(line: (DisplayLine | CommandLine)) {
         this.clearTimers()
-        if (line.value) {
+        if ('value' in line) {
             this.setState({ displayText: line.value as string })
         }
     }
@@ -96,15 +101,13 @@ class MainGame extends React.Component<IProps, IState> {
     }
     clearTimers() {
         const { timers } = this.state
-        for (let i = 0; i < timers.length; i++) {
-            clearTimeout(timers[i])
-        }
-        this.setState({ timers: [] })
+        clearTimeout(timers)
+        this.setState({ timers: undefined, stop: false })
     }
     toogleAuto() {
         const { auto, timers } = this.state
         this.setState({ auto: !auto })
-        if (!auto && timers.length === 0) {//要自动播放但是现在没在滚动
+        if (!auto && !timers) {//要自动播放但是现在没在滚动
             this.clickHandle()
         }
     }
@@ -135,27 +138,48 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     start(currentLine: (CommandLine | DisplayLine)) {
-        if (currentLine.command) {
+        if ('command' in currentLine) {
             this.commandLineProcess(currentLine as CommandLine)
         } else {
             this.displayLineProcess(currentLine as DisplayLine)
         }
     }
     commandLineProcess(command: CommandLine) {
+        const ARKBGM = document.getElementById('ARKBGM') as HTMLAudioElement
         let newParam = {}
+        const { displaycharacters } = this.state
         switch (command.command) {
             case LINE_TYPE.command_SHOW_BACKGROUND:
                 newParam = { background: command.param }
-                break;
+                break
             case LINE_TYPE.command_LEAVE_CHARATER:
-                const { displaycharacters } = this.state
-                const res = displaycharacters.filter(v => v.name !== command.param)
-                newParam = { displaycharacters: res }
-                break;
+                newParam = { displaycharacters: displaycharacters.filter(v => v.name !== command.param) }
+                break
+            case LINE_TYPE.command_ENTER_CHARATER:
+                newParam = { displaycharacters: [...displaycharacters, command.param] }
+                break
+            case LINE_TYPE.command_PLAY_BGM:
+                newParam = { bgm: command.param }
+                break
+            case LINE_TYPE.command_PAUSE_BGM:
+                if (ARKBGM) {
+                    ARKBGM.pause()
+                } else {
+                    throw new Error('bgmNotFound')
+                }
+                break
+            case LINE_TYPE.command_RESUME_BGM:
+                if (ARKBGM) {
+                    ARKBGM.play()
+                } else {
+                    throw new Error('bgmNotFound')
+                }
+                break
             default:
                 console.warn('invalidCommand')
-                break;
+                break
         }
+
         this.setState(newParam, () => { this.clickHandle() })
     }
     imgOnload() {
@@ -167,46 +191,48 @@ class MainGame extends React.Component<IProps, IState> {
         //     this.setState({ displayName: name || '', displayText: value })
         //     return 0
         // }
-        let flags = []
-        if (!value) {
-            return undefined
+        if (value.length > 0) {
+            this.textAnimationInner(1)
         }
-        if (name) {
-            setTimeout(() => {
-                this.setState({ displayName: name })
-            }, TEXT_DISPLAY_SPEEED)
-        }
-        for (let i = 0; i <= value.length; i++) {
-            const flag = setTimeout(() => {
-                this.setState({ displayText: value.slice(0, i) })
-            }, i * TEXT_DISPLAY_SPEEED)
-            flags.push(flag)//一个个字符显示
-        }
-        const lastFlag = setTimeout(() => {
-            this.clearTimers()
-            let { auto } = this.state
-            if (auto) {
-                this.clickHandle()
-            }
-        }, TEXT_DISPLAY_SPEEED * value.length)
-        flags.push(lastFlag)
-        this.setState({ timers: flags })
+        this.setState({
+            displayName: name || '',
+            rawLine: value
+        })
     }
-
+    textAnimationInner(index: number) {
+        const flag = setTimeout(() => {
+            const { stop, displayText, rawLine } = this.state
+            const end = displayText === rawLine
+            this.setState({ displayText: rawLine.slice(0, index) })
+            if (!stop && !end) {
+                const flag = setTimeout(() => this.textAnimationInner(index + 1), TEXT_DISPLAY_SPEEED)
+                this.setState({ timers: flag })
+            } else {
+                this.setState({ timers: null, displayText: rawLine })
+                let { auto } = this.state
+                if (auto) {
+                    this.clickHandle()
+                }
+                console.log('stop or end')
+            }
+        }, TEXT_DISPLAY_SPEEED)
+        this.setState({ timers: flag })
+    }
     clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
         const { chapterPointer, timers, auto, linePointer } = this.state
         const { data: { chapters } } = this.props
         config = config || {}
         if (ev) {//手动点击取消自动播放
             if (auto) this.setState({ auto: false })
-            if (timers.length) this.clearTimers()
+            if (timers) this.clearTimers()
         }
         const currentChapter = chapters[chapterPointer] as Chapter
-        if (!timers.length) {//如果一行播放结束
+        if (!timers) {//如果一行播放结束
             if (linePointer >= currentChapter.length - 1) {//一章结束
                 return this.nextChapter()
             } else {
                 const nextLine = currentChapter[linePointer + 1] as (DisplayLine | CommandLine)
+                console.log(nextLine)
                 this.setState({ linePointer: linePointer + 1 })
                 this.start(nextLine)
             }
@@ -214,9 +240,10 @@ class MainGame extends React.Component<IProps, IState> {
             this.skipThisLine(currentChapter[linePointer])
         }
     }
+
     render() {
         const { data: { chapters } } = this.props
-        const { chapterPointer, auto, background, displayName, displayText, linePointer, displaycharacters } = this.state
+        const { chapterPointer, auto, background, displayName, displayText, linePointer, displaycharacters, bgm } = this.state
         return <React.Fragment>
             <div className={styles.ctrlPanle}>
                 <p>第<button data-chapterpointer={chapterPointer} id="chapterPointer">{chapterPointer}</button>章</p>
@@ -224,6 +251,7 @@ class MainGame extends React.Component<IProps, IState> {
                 <p>{displaycharacters.map(v => v.name)}</p>
                 <p>第<button data-linepointer='0' id="linPointer" onClick={(ev) => this.clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
                 <button data-auto={auto} id="auto" onClick={this.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
+                <BGMplayer src={bgm} />
             </div>
             <div className={styles.container}
                 style={{
