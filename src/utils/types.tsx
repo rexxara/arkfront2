@@ -32,7 +32,10 @@ export const LINE_TYPE = {
     command_ENTER_CHARATER:'showCh',
     command_PLAY_BGM:'playBgm',
     command_PAUSE_BGM:'pauseBgm',
-    command_RESUME_BGM:'resumeBgm'
+    command_RESUME_BGM:'resumeBgm',
+    command_REMOVE_BACKGROUND:'removeBg',
+    command_SHOW_CG:'showCg',
+    command_REMOVE_CG:'removeCg'
 }
 export type Chapter =(CommandLine|DisplayLine)[]
 export interface Emotions{
@@ -52,5 +55,6 @@ export interface RawScript{
     chapters:string[],
     variables:Object,
     backgrounds:Object,
-    BGMs:Object
+    BGMs:Object,
+    cgs:Object
 }

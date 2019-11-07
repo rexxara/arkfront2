@@ -46,19 +46,19 @@ function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
 }
 
 const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game => {
-    const { chapters, variables, backgrounds, BGMs } = game
+    const { chapters, variables, backgrounds, BGMs, cgs } = game
     const charaters = charatersPreProcess(game.charaters)
     const res = {
         chapters: chapters.map(v =>
             ChapterLoader(needDecode ?
-                b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, IsCRLF, charaters, backgrounds, BGMs)),
+                b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)),
         charaters, backgrounds
     }
     console.log(res)
     return res
 }
 
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object, BGMs: Object) {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object, BGMs: Object, cgs: Object) {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
@@ -92,7 +92,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                         break;
                     case LINE_TYPE.command:
                         if (extra) {
-                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs)
+                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs)
                         } else {
                             throw new Error(lineStr)
                         }
@@ -115,7 +115,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
     }
     return chapter
 }
-function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Charaters: Charater[], BGMs: any): CommandLine {
+function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Charaters: Charater[], BGMs: any, cgs: any): CommandLine {
     const [command, key] = matchedRawLine[1].split(":")
 
     switch (command) {
@@ -128,6 +128,10 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Char
             return {
                 command: LINE_TYPE.command_LEAVE_CHARATER,
                 param: key as string
+            }
+        case LINE_TYPE.command_REMOVE_BACKGROUND:
+            return {
+                command: LINE_TYPE.command_REMOVE_BACKGROUND
             }
         case LINE_TYPE.command_ENTER_CHARATER:
             const hitedCharater = Charaters.find(charater => {
@@ -161,6 +165,15 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Char
         case LINE_TYPE.command_RESUME_BGM:
             return {
                 command: LINE_TYPE.command_RESUME_BGM
+            }
+        case LINE_TYPE.command_SHOW_CG:
+            return {
+                command: LINE_TYPE.command_SHOW_CG,
+                param: cgs[key] as string
+            }
+        case LINE_TYPE.command_REMOVE_CG:
+            return {
+                command: LINE_TYPE.command_REMOVE_CG
             }
         default:
             //warn：unKnowCommand

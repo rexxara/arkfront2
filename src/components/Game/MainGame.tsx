@@ -20,6 +20,7 @@ interface IState {
     rawLine: string
     stop: boolean
     bgm: selectedBGM
+    cg: string
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -44,7 +45,8 @@ class MainGame extends React.Component<IProps, IState> {
             displaycharacters: [],
             rawLine: '',
             stop: false,
-            bgm: { name: '', src: '' }
+            bgm: { name: '', src: '' },
+            cg: ''
         }
         this.clickHandle = this.clickHandle.bind(this)
         this.textAnimation = this.textAnimation.bind(this)
@@ -161,20 +163,20 @@ class MainGame extends React.Component<IProps, IState> {
             case LINE_TYPE.command_PLAY_BGM:
                 newParam = { bgm: command.param }
                 break
+            case LINE_TYPE.command_REMOVE_BACKGROUND:
+                newParam = { background: '' }
             case LINE_TYPE.command_PAUSE_BGM:
-                if (ARKBGM) {
-                    ARKBGM.pause()
-                } else {
-                    throw new Error('bgmNotFound')
-                }
+                if (ARKBGM) { ARKBGM.pause() } else { throw new Error('bgmNotFound') }
                 break
             case LINE_TYPE.command_RESUME_BGM:
-                if (ARKBGM) {
-                    ARKBGM.play()
-                } else {
-                    throw new Error('bgmNotFound')
-                }
+                if (ARKBGM) { ARKBGM.play() } else { throw new Error('bgmNotFound') }
                 break
+            case LINE_TYPE.command_SHOW_CG:
+                newParam = { cg: command.param }
+                break
+            case LINE_TYPE.command_REMOVE_CG:
+                newParam={cg:'',displaycharacters:[]}
+            break
             default:
                 console.warn('invalidCommand')
                 break
@@ -243,7 +245,7 @@ class MainGame extends React.Component<IProps, IState> {
 
     render() {
         const { data: { chapters } } = this.props
-        const { chapterPointer, auto, background, displayName, displayText, linePointer, displaycharacters, bgm } = this.state
+        const { chapterPointer, auto, background, displayName, displayText, linePointer, displaycharacters, bgm,cg} = this.state
         return <React.Fragment>
             <div className={styles.ctrlPanle}>
                 <p>第<button data-chapterpointer={chapterPointer} id="chapterPointer">{chapterPointer}</button>章</p>
@@ -266,7 +268,11 @@ class MainGame extends React.Component<IProps, IState> {
                         key={v.name}
                         src={require(`../../scripts/charatersImages/${v.name}/${v.emotion}`)} /> : <p key={v.name} />)}
                 </div>
-
+                <div className={styles.cgCon}
+                    style={{
+                        background: cg ?
+                            `url(${require(`../../scripts/CGs/${cg}`)})` : undefined
+                    }}></div>
                 <div className={styles.dialog}>
                     <div className={styles.owner}>{displayName}</div>
                     <div className={styles.textarea} >{displayText}</div>

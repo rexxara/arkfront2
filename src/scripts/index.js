@@ -56,12 +56,15 @@ const BGMs={
     晴天前夜:'ウォルピスカーター - 晴天前夜.mp3'
 }
 
-const cgs={}
+const cgs={
+    HE1:'TIM图片20190918160845.jpg'
+}
 
 export default {
     charaters,
     chapters,
     variables,
     backgrounds,
-    BGMs
+    BGMs,
+    cgs
 }

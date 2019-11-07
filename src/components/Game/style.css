@@ -1,57 +1,79 @@
-.container{
-    height: 48vw;
-    text-align: left;
-    cursor: pointer;
-    user-select: none;
-    background-repeat:no-repeat;
-    background-size:100% 100% !important;
-    -moz-background-size:100% 100% !important;
+.container {
+  height: 48vw;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  background-repeat: no-repeat;
+  background-size: 100% 100% !important;
+  -moz-background-size: 100% 100% !important;
+  z-index: 10;
 }
-.dialog{
-    opacity: 0.8;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    min-height: 222px;
-    background: #aaaaaa;
-    width: 100%;
+
+.dialog {
+  opacity: 0.8;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  min-height: 222px;
+  background: #aaaaaa;
+  width: 100%;
+  z-index: 9;
 }
-.owner{
-    padding-left:20px;
-    height: 48px;
-    line-height: 48px;
-    font-size: 32px;
-    background: #eeeeee;
-    width: 100%;
+
+.owner {
+  padding-left: 20px;
+  height: 48px;
+  line-height: 48px;
+  font-size: 32px;
+  background: #eeeeee;
+  width: 100%;
+  z-index: 9;
 }
-.textarea{
-    text-indent: 2em;
-    padding:15px;
-    min-height: 174px;
-    line-height: 36px;
-    font-size: 24px;
-    width: 100%;
+
+.textarea {
+  text-indent: 2em;
+  padding: 15px;
+  min-height: 174px;
+  line-height: 36px;
+  font-size: 24px;
+  width: 100%;
+  z-index: 9;
 }
-.ctrlPanle{
-    background: #272822;
-    color:#0c7d9b;
-    position: absolute;
-    right: 0;
-    width: 200px;
-    z-index: 10;
+
+.ctrlPanle {
+  background: #272822;
+  color: #0c7d9b;
+  position: absolute;
+  right: 0;
+  width: 200px;
+  z-index: 10;
 }
-.displayCharactersCon{
-    overflow: hidden;
-    width: 100%;
-    height:100%;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
+
+.displayCharactersCon {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
 }
-.displayCharacter{
-    width: 45%;
-    filter: brightness(80%);
+
+.displayCharacter {
+  width: 45%;
+  filter: brightness(80%);
 }
-.active{
-    filter: brightness(100%) !important;
+
+.active {
+  filter: brightness(100%) !important;
+}
+
+.cgCon {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-size: cover !important;
+  -moz-background-size: 100% 100% !important;
+  z-index: 8;
 }

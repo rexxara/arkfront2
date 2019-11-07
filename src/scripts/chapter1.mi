@@ -9,11 +9,13 @@
 
 [showCh:塔露拉]
 
+//[removeBg]
+
 临光    （笑） )))))  ：CCCCCCCC${userName}哈哈${userName}
 
 临光（none）：不显示立绘DDDDDDD
 
-[playBgm:晴天前夜]
+//[playBgm:晴天前夜]
 
 临光：我又回来了EEEEEEEEE
 
@@ -21,11 +23,11 @@
 
 塔露拉（死妈脸）：哈哈哈哈哈${userName}FFFFFF
 
-[pauseBgm]
+//[pauseBgm]
 
 在这停顿
 
-[resumeBgm]
+//[resumeBgm]
 
 临光：2222222
 
@@ -33,12 +35,14 @@
 
 [leave:临光]
 
+[showCg:HE1]
 
 塔露拉：我们遇到什么困难 也不要怕 微笑的面对它
+消除恐惧的最好办法就是面对恐惧
 
+[removeCg]
 
 嗯？？？？？
-
 
 塔露拉：加油 奥利给！(这句加人名就有问题)
 
