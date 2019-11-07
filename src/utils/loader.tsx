@@ -77,7 +77,8 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
         const currentChar = script.charAt(i)
         lineText[linePointer++] = currentChar
         if (isArrayEqual(lineCache, currentSpaceLine)) {
-            if (strlen(lineText.join("")) > SplitLimit) {
+            const lineStr = lineText.join("")
+            if (strlen(lineStr) > SplitLimit) {
                 //提示有过长段落
             }
             if (lineText.length > currentSingleSpaceLine.length) {//回车长度为2
@@ -93,8 +94,10 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                         if (extra) {
                             chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs)
                         } else {
-                            //warn invalid command
+                            throw new Error(lineStr)
                         }
+                        break;
+                    case LINE_TYPE.comment:
                         break;
                     default:
                         chapter[chapterPointer++] = lineTextProcess(lineText, variables, currentSpaceLine, Charaters)
@@ -114,6 +117,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
 }
 function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Charaters: Charater[], BGMs: any): CommandLine {
     const [command, key] = matchedRawLine[1].split(":")
+
     switch (command) {
         case LINE_TYPE.command_SHOW_BACKGROUND:
             return {
@@ -169,7 +173,11 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Char
 }
 function lineTypeJudger(lineText: string[], currentSpaceLine: number[], currentSingleSpaceLine: number[]) {
     const rawLine = lineText.join("")
-    const actionReg = /(?<=\[)(\S+)(?=\])/
+    const actionReg = /(?<!\/\/)\[(.*)\]/
+    const commentReg = /\/\//
+    if (rawLine.match(commentReg)) {
+        return { type: LINE_TYPE.comment }
+    }
     const isCommand = rawLine.match(actionReg)
     if (isCommand) {
         return { type: LINE_TYPE.command, extra: isCommand }

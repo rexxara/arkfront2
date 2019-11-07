@@ -24,6 +24,7 @@ export const LINE_TYPE = {
     spaceLine: 'spaceLine',
     chat: 'chat',
     monologue: 'monologue',
+    comment:"comment",
     //comand
     command: 'command',
     command_SHOW_BACKGROUND:'showbg',
