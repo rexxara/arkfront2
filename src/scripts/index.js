@@ -27,37 +27,38 @@ import chapter2 from './chapter2.mi'
 
 // 　　第十二章　我的话
 
-const charaters=[{
-    name:'临光',
-    images:
+const charaters = {
+    临光: {
+        images:
         {
-            default:'char_148_nearl_1.png.merge.png',
-            笑:"char_148_nearl_2.png.merge.png",
-            不笑:"char_148_nearl_9.png.merge.png"
+            default: 'char_148_nearl_1.png.merge.png',
+            笑: "char_148_nearl_2.png.merge.png",
+            不笑: "char_148_nearl_9.png.merge.png"
         }
-},{
-    name:'塔露拉',
-    images:{
-        default:'char_011_talula_1.png.merge.png',
-        死妈脸:'char_011_talula_2.png.merge.png',
-        气急败坏:'char_011_talula_2.png.merge.png',
+    },
+    塔露拉: {
+        images: {
+            default: 'char_011_talula_1.png.merge.png',
+            死妈脸: 'char_011_talula_2.png.merge.png',
+            气急败坏: 'char_011_talula_2.png.merge.png',
+        }
     }
-}]
-const chapters=[chapter1]
-const variables={
-    userName:"rexxara"
 }
-const backgrounds={
-    大街:'bg_abyss_1.png',
-    龙门:"bg_lungmen_m.png",
+const chapters = [chapter1,chapter2]
+const variables = {
+    userName: "rexxara"
 }
-const BGMs={
-    無花果:'ウォルピスカーター - 無花果.mp3',
-    晴天前夜:'ウォルピスカーター - 晴天前夜.mp3'
+const backgrounds = {
+    大街: 'bg_abyss_1.png',
+    龙门: "bg_lungmen_m.png",
+}
+const BGMs = {
+    無花果: 'ウォルピスカーター - 無花果.mp3',
+    晴天前夜: 'ウォルピスカーター - 晴天前夜.mp3'
 }
 
-const cgs={
-    HE1:'TIM图片20190918160845.jpg'
+const cgs = {
+    HE1: 'TIM图片20190918160845.jpg'
 }
 
 export default {

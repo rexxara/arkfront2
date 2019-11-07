@@ -21,6 +21,7 @@ interface IState {
     stop: boolean
     bgm: selectedBGM
     cg: string
+    preloadJSX: any
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -28,26 +29,27 @@ interface clickHandleConfig {
 }
 
 const TEXT_DISPLAY_SPEEED = 50
-
+const iniState = {
+    auto: false,
+    chapterPointer: 0,
+    displayText: '',
+    displayName: '',
+    cacheDisplayLineText: '',
+    cacheDisplayLineName: '',
+    background: '',
+    timers: undefined,
+    linePointer: 0,
+    displaycharacters: [],
+    rawLine: '',
+    stop: false,
+    bgm: { name: '', src: '' },
+    cg: '',
+    preloadJSX: undefined
+}
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props)
-        this.state = {
-            auto: false,
-            chapterPointer: 0,
-            displayText: '',
-            displayName: '',
-            cacheDisplayLineText: '',
-            cacheDisplayLineName: '',
-            background: '',
-            timers: undefined,
-            linePointer: 0,
-            displaycharacters: [],
-            rawLine: '',
-            stop: false,
-            bgm: { name: '', src: '' },
-            cg: ''
-        }
+        this.state = iniState
         this.clickHandle = this.clickHandle.bind(this)
         this.textAnimation = this.textAnimation.bind(this)
         this.imgOnload = this.imgOnload.bind(this)
@@ -60,14 +62,36 @@ class MainGame extends React.Component<IProps, IState> {
         this.skipThisLine = this.skipThisLine.bind(this)
         this.start = this.start.bind(this)
         this.textAnimationInner = this.textAnimationInner.bind(this)
+        this.cgAndBackgroundOnload = this.cgAndBackgroundOnload.bind(this)
+        this.setImgCache = this.setImgCache.bind(this)
+
     }
 
     componentDidMount() {
         window.reset = this.reset
         const { data: { chapters } } = this.props
         const currentChapter = chapters[0]
-        const currentLine = currentChapter[0]
+        this.setImgCache(currentChapter)
+        const currentLine = currentChapter.line[0]
         this.start(currentLine)
+    }
+    setImgCache(currentChapter: Chapter) {
+        const { preLoadBackgrounds } = currentChapter
+        let preloadBGs = []
+        for (const key in preLoadBackgrounds) {
+            if (preLoadBackgrounds.hasOwnProperty(key)) {
+                const element = preLoadBackgrounds[key]
+                preloadBGs.push(element)
+            }
+        }
+        const preloadJSX=<div>
+            {preloadBGs.map(imgsrc=><img
+                        className={styles.cacheImg}
+                        key={imgsrc}
+                        src={require(`../../scripts/backgrounds/${imgsrc}`)} />
+                )}
+        </div>
+        this.setState({ preloadJSX})
     }
     skipThisLine(line: (DisplayLine | CommandLine)) {
         this.clearTimers()
@@ -124,7 +148,7 @@ class MainGame extends React.Component<IProps, IState> {
         })
         this.clearTimers()
         const currentChapter = chapters[0]
-        const currentLine = currentChapter[0]
+        const currentLine = currentChapter.line[0]
         this.start(currentLine)
     }
     nextChapter() {
@@ -134,8 +158,8 @@ class MainGame extends React.Component<IProps, IState> {
             //end
         } else {
             //nextChapter
-            this.setState({ chapterPointer: chapterPointer + 1, linePointer: 0 })
-            const currentLine = chapters[chapterPointer + 1][0]
+            this.setState({ ...iniState, chapterPointer: chapterPointer + 1 })
+            const currentLine = chapters[chapterPointer + 1].line[0]
             this.start(currentLine)
         }
     }
@@ -149,16 +173,19 @@ class MainGame extends React.Component<IProps, IState> {
     commandLineProcess(command: CommandLine) {
         const ARKBGM = document.getElementById('ARKBGM') as HTMLAudioElement
         let newParam = {}
+        let needLoadImg = false
         const { displaycharacters } = this.state
         switch (command.command) {
             case LINE_TYPE.command_SHOW_BACKGROUND:
+                needLoadImg = true
                 newParam = { background: command.param }
                 break
             case LINE_TYPE.command_LEAVE_CHARATER:
                 newParam = { displaycharacters: displaycharacters.filter(v => v.name !== command.param) }
                 break
             case LINE_TYPE.command_ENTER_CHARATER:
-                newParam = { displaycharacters: [...displaycharacters, command.param] }
+                needLoadImg = true
+                newParam = { displaycharacters: [...displaycharacters, command.param], cacheDisplayLineName: '', cacheDisplayLineText: '' }
                 break
             case LINE_TYPE.command_PLAY_BGM:
                 newParam = { bgm: command.param }
@@ -172,21 +199,33 @@ class MainGame extends React.Component<IProps, IState> {
                 if (ARKBGM) { ARKBGM.play() } else { throw new Error('bgmNotFound') }
                 break
             case LINE_TYPE.command_SHOW_CG:
+                needLoadImg = true
                 newParam = { cg: command.param }
                 break
             case LINE_TYPE.command_REMOVE_CG:
-                newParam={cg:'',displaycharacters:[]}
-            break
+                newParam = { cg: '', displaycharacters: [] }
+                break
             default:
                 console.warn('invalidCommand')
                 break
         }
-
-        this.setState(newParam, () => { this.clickHandle() })
+        if (needLoadImg) {
+            this.setState(newParam)
+        } else {
+            this.setState(newParam, () => { this.clickHandle() })
+        }
     }
     imgOnload() {
         const { cacheDisplayLineName, cacheDisplayLineText } = this.state
-        this.textAnimation(cacheDisplayLineText, cacheDisplayLineName, true)
+        if (cacheDisplayLineName && cacheDisplayLineText) {
+            this.textAnimation(cacheDisplayLineText, cacheDisplayLineName, true)
+        } else {
+            this.clickHandle()
+        }
+    }
+    cgAndBackgroundOnload() {
+        console.log('onload')
+        this.clickHandle()
     }
     textAnimation(value: string, name?: string, notAnimate?: boolean) {
         // if (notAnimate) {
@@ -230,29 +269,31 @@ class MainGame extends React.Component<IProps, IState> {
         }
         const currentChapter = chapters[chapterPointer] as Chapter
         if (!timers) {//如果一行播放结束
-            if (linePointer >= currentChapter.length - 1) {//一章结束
+            if (linePointer >= currentChapter.line.length - 1) {//一章结束
                 return this.nextChapter()
             } else {
-                const nextLine = currentChapter[linePointer + 1] as (DisplayLine | CommandLine)
+                const nextLine = currentChapter.line[linePointer + 1] as (DisplayLine | CommandLine)
                 console.log(nextLine)
                 this.setState({ linePointer: linePointer + 1 })
                 this.start(nextLine)
             }
         } else {
-            this.skipThisLine(currentChapter[linePointer])
+            this.skipThisLine(currentChapter.line[linePointer])
         }
     }
 
     render() {
         const { data: { chapters } } = this.props
-        const { chapterPointer, auto, background, displayName, displayText, linePointer, displaycharacters, bgm,cg} = this.state
+        const { chapterPointer, auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, preloadJSX } = this.state
         return <React.Fragment>
             <div className={styles.ctrlPanle}>
-                <p>第<button data-chapterpointer={chapterPointer} id="chapterPointer">{chapterPointer}</button>章</p>
-                <p>在场人物<span data-displaycharacters='' id="displaycharacters"></span></p>
+                <p>第<button >{chapterPointer}</button>章</p>
+                <p>在场人物<span></span></p>
                 <p>{displaycharacters.map(v => v.name)}</p>
-                <p>第<button data-linepointer='0' id="linPointer" onClick={(ev) => this.clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
-                <button data-auto={auto} id="auto" onClick={this.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
+                <p>第<button onClick={(ev) => this.clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
+                <button onClick={this.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
+                <button>save</button>
+                <button>load</button>
                 <BGMplayer src={bgm} />
             </div>
             <div className={styles.container}
@@ -278,6 +319,9 @@ class MainGame extends React.Component<IProps, IState> {
                     <div className={styles.textarea} >{displayText}</div>
                 </div>
             </div>
+            {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}
+            {cg && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/CGs/${cg}`)} alt="" />}
+                    {preloadJSX}
         </React.Fragment>
     }
 }

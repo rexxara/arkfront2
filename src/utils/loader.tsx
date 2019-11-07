@@ -3,13 +3,13 @@
 32:空格
 66:目前配置下一行最长66个字符,显示四行
 */
-import { DisplayLine, CommandLine, Game, RawScript, LINE_TYPE, Charater, NO_IMG } from './types'
+import { DisplayLine, CommandLine, Game, RawScript, LINE_TYPE, Charater, NO_IMG, Chapter } from './types'
 import { strlen } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
 const CRLF = [13, 10]
 const LF = [10]
-const emotionProcessor = (str: String) => {
+const emotionProcessor = (str: string) => {
     const emoReg = /(?<=[\(|（])[^\(\)|）]*(?=[\)|）])/g
     const nameReg = /^(.*)(?:\s*)(?=[\(|（])/g
     const emotion = str.match(emoReg)
@@ -29,11 +29,14 @@ function filterSpace(str: string): string {
 export function b64_to_utf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)))
 }
-function charatersPreProcess(characters: Charater[]) {
-    return characters.map((v: any) => {
-        v.images.none = NO_IMG
-        return v
-    })
+function charatersPreProcess(characters: any) {
+    for (const key in characters) {
+        if (characters.hasOwnProperty(key)) {
+            const character = characters[key]
+            character.images.none = NO_IMG
+        }
+    }
+    return characters
 }
 function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
     if (arr.length !== currentSpaceLine.length) {
@@ -52,18 +55,20 @@ const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game
         chapters: chapters.map(v =>
             ChapterLoader(needDecode ?
                 b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)),
-        charaters, backgrounds
     }
     console.log(res)
     return res
 }
 
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object, BGMs: Object, cgs: Object) {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object, BGMs: Object, cgs: Object): Chapter {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
     let linePointer = 0
     let voidLineCounter = 0
+    let preLoadBackgrounds = {}
+    let preLoadCgs = {}
+    let preLoadCharaters = {}
     const currentSingleSpaceLine = IsCRLF ? CRLF : LF
     const currentSpaceLine = [...currentSingleSpaceLine, ...currentSingleSpaceLine]
     let lineCache = new Array(currentSpaceLine.length).fill(233)//随便填点什么
@@ -86,13 +91,13 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                 const { type, extra } = lineTypeJudger(lineText, currentSpaceLine, currentSingleSpaceLine)
                 switch (type) {
                     case LINE_TYPE.monologue:
-                        const res = monologueProcess(lineTextProcess(lineText, variables, currentSpaceLine, Charaters), currentSingleSpaceLine)
+                        const res = monologueProcess(lineTextProcess(lineText, variables, currentSpaceLine, Charaters, preLoadCharaters), currentSingleSpaceLine)
                         chapter = [...chapter, ...res]
                         chapterPointer += res.length
                         break;
                     case LINE_TYPE.command:
                         if (extra) {
-                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs)
+                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters)
                         } else {
                             throw new Error(lineStr)
                         }
@@ -100,7 +105,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                     case LINE_TYPE.comment:
                         break;
                     default:
-                        chapter[chapterPointer++] = lineTextProcess(lineText, variables, currentSpaceLine, Charaters)
+                        chapter[chapterPointer++] = lineTextProcess(lineText, variables, currentSpaceLine, Charaters, preLoadCharaters)
                         break;
                 }
             } else {
@@ -113,16 +118,21 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
             linePointer = 0
         }
     }
-    return chapter
+    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs }
 }
-function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Charaters: Charater[], BGMs: any, cgs: any): CommandLine {
+function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Charaters: any, BGMs: any, cgs: any, preLoadBackgrounds: any, preLoadCgs: any, preLoadCharaters: any): CommandLine {
     const [command, key] = matchedRawLine[1].split(":")
 
     switch (command) {
         case LINE_TYPE.command_SHOW_BACKGROUND:
-            return {
-                command: LINE_TYPE.command_SHOW_BACKGROUND,
-                param: backgrounds[key] as string
+            if (backgrounds[key]) {
+                preLoadBackgrounds[key] = backgrounds[key]
+                return {
+                    command: LINE_TYPE.command_SHOW_BACKGROUND,
+                    param: backgrounds[key] as string
+                }
+            } else {
+                throw new Error(`background ${key} isn't registered`)
             }
         case LINE_TYPE.command_LEAVE_CHARATER:
             return {
@@ -134,29 +144,41 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Char
                 command: LINE_TYPE.command_REMOVE_BACKGROUND
             }
         case LINE_TYPE.command_ENTER_CHARATER:
-            const hitedCharater = Charaters.find(charater => {
-                if (key === charater.name) {
-                    return true
+            const characterName = emotionProcessor(key)
+            const character = Charaters[characterName.name]
+            if (character) {
+                const emotion = character.images[characterName.emotionKey]
+                if (emotion) {
+                    if (!preLoadCharaters[characterName.name]) {
+                        preLoadCharaters[characterName.name] = []
+                    }
+                    if (!preLoadCharaters[characterName.name].find(v => v === emotion)) {
+                        preLoadCharaters[characterName.name] = [...preLoadCharaters[characterName.name], emotion]
+                    }
+                    return {
+                        command: LINE_TYPE.command_ENTER_CHARATER,
+                        param: {
+                            name: characterName.name,
+                            emotion: emotion
+                        }
+                    }
+                } else {
+                    throw new Error(`Charater ${characterName.name}'s emotion ${characterName.emotionKey}  isn't registered`)
                 }
-            })
-            if (hitedCharater) {
+            } else {
+                throw new Error(`Charater ${characterName.name} isn't registered`)
+            }
+        case LINE_TYPE.command_PLAY_BGM:
+            if (BGMs[key]) {
                 return {
-                    command: LINE_TYPE.command_ENTER_CHARATER,
+                    command: LINE_TYPE.command_PLAY_BGM,
                     param: {
-                        name: hitedCharater.name,
-                        emotion: hitedCharater.images.default
+                        name: key,
+                        src: BGMs[key] as string
                     }
                 }
             } else {
-                throw new Error('no such charater')
-            }
-        case LINE_TYPE.command_PLAY_BGM:
-            return {
-                command: LINE_TYPE.command_PLAY_BGM,
-                param: {
-                    name: key,
-                    src: BGMs[key] as string
-                }
+                throw new Error(`BGM ${key} isn't registered`)
             }
         case LINE_TYPE.command_PAUSE_BGM:
             return {
@@ -167,9 +189,14 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Char
                 command: LINE_TYPE.command_RESUME_BGM
             }
         case LINE_TYPE.command_SHOW_CG:
-            return {
-                command: LINE_TYPE.command_SHOW_CG,
-                param: cgs[key] as string
+            if (cgs[key]) {
+                preLoadCgs[key] = cgs[key]
+                return {
+                    command: LINE_TYPE.command_SHOW_CG,
+                    param: cgs[key] as string
+                }
+            } else {
+                throw new Error(`CG ${key} isn't registered`)
             }
         case LINE_TYPE.command_REMOVE_CG:
             return {
@@ -213,7 +240,7 @@ function variableLoader(text: string, variables: any): string {
     })
     return res
 }
-function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine: number[], Charaters: Charater[]): DisplayLine {
+function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine: number[], Charaters: any, preLoadCharaters: any): DisplayLine {
     const reg = /[/:|：]/g
     const rawLine = lineText.join("")
     const lineWithVariable = variableLoader(rawLine, variables)
@@ -222,18 +249,23 @@ function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine
         const res = lineWithVariable.split(haveComma[0])
         const textBeforeComma = res[0]
         const value = res[1]
-        const charaterWithEmotion = emotionProcessor(filterSpace(textBeforeComma))
-        const hitedCharater = Charaters.find(charater => {
-            if (charaterWithEmotion.name === charater.name) {
-                return true
-            }
-        })
+        const characterName = emotionProcessor(filterSpace(textBeforeComma))
+        const hitedCharater = Charaters[characterName.name]
         if (hitedCharater) {
+            const emotion = hitedCharater.images[characterName.emotionKey] as string
+            if (emotion !== NO_IMG) {
+                if (!preLoadCharaters[characterName.name]) {
+                    preLoadCharaters[characterName.name] = []
+                }
+                if (!preLoadCharaters[characterName.name].find(v => v === emotion)) {
+                    preLoadCharaters[characterName.name] = [...preLoadCharaters[characterName.name], emotion]
+                }
+            }
             const res: DisplayLine = {
                 type: LINE_TYPE.chat,
-                name: hitedCharater.name,
+                name: characterName.name,
                 value,
-                emotion: hitedCharater.images[charaterWithEmotion.emotionKey] as string
+                emotion
             }
             return res
         } else {

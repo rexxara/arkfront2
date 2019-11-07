@@ -77,3 +77,14 @@
   -moz-background-size: 100% 100% !important;
   z-index: 8;
 }
+.hide{
+  position: absolute;
+  opacity: 0.5;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.cacheImg{
+  opacity: 0.5;
+}
