@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './index.css';
 import 'animate.css'
 import { Router, Route } from 'react-router'
-import { createBrowserHistory as createHistory } from 'history'
+import { createHashHistory } from 'history'
 import IniPage from './IniPage'
 import copyrightPage from './copyrightPage'
 import alertPage from './alertPage'
@@ -13,7 +13,7 @@ import loginPage from './loginPage'
 import warpedAnimation from '../components/HOC/animation'
 import MainGame from './MainGame'
 import HomePage from './HomePage'
-const history = createHistory()
+const history = createHashHistory()
 const WarpedIniPage = warpedAnimation(IniPage)
 const WarpedCopyrightPage = warpedAnimation(copyrightPage)
 const WarpedLoginPage = warpedAnimation(loginPage)

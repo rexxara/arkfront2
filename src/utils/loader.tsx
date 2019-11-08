@@ -1,9 +1,9 @@
-/*charCode:
-10:回车
-32:空格
-66:目前配置下一行最长66个字符,显示四行
-*/
-import { DisplayLine, CommandLine, Game, RawScript, LINE_TYPE, Charater, NO_IMG, Chapter } from './types'
+import {
+    DisplayLine, CommandLine, Game,
+    RawScript, LINE_TYPE, NO_IMG, Chapter,
+    CGS, BGMs, Backgrounds, Characters,
+    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds
+} from './types'
 import { strlen } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
@@ -29,7 +29,7 @@ function filterSpace(str: string): string {
 export function b64_to_utf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)))
 }
-function charatersPreProcess(characters: any) {
+function charatersPreProcess(characters: Characters) {
     for (const key in characters) {
         if (characters.hasOwnProperty(key)) {
             const character = characters[key]
@@ -60,7 +60,7 @@ const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game
     return res
 }
 
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Charater[], backgrounds: Object, BGMs: Object, cgs: Object): Chapter {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS): Chapter {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
@@ -120,7 +120,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
     }
     return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs }
 }
-function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Charaters: any, BGMs: any, cgs: any, preLoadBackgrounds: any, preLoadCgs: any, preLoadCharaters: any): CommandLine {
+function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: Backgrounds, Charaters: Characters, BGMs: BGMs, cgs: CGS, preLoadBackgrounds: PreLoadBackgrounds, preLoadCgs: PreLoadCgs, preLoadCharaters: PreLoadCharaters): CommandLine {
     const [command, key] = matchedRawLine[1].split(":")
 
     switch (command) {
@@ -193,7 +193,7 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: any, Char
                 preLoadCgs[key] = cgs[key]
                 return {
                     command: LINE_TYPE.command_SHOW_CG,
-                    param: cgs[key] as string
+                    param: cgs[key]
                 }
             } else {
                 throw new Error(`CG ${key} isn't registered`)
@@ -232,18 +232,19 @@ function lineTypeJudger(lineText: string[], currentSpaceLine: number[], currentS
 
     return { type: LINE_TYPE.raw }
 }
-function variableLoader(text: string, variables: any): string {
-    const reg = /\$\{[^}]+\}/g
-    const res = text.replace(reg, function (rs) {
-        const key = rs.slice(2, rs.length - 1)
-        return variables[key]
-    })
-    return res
-}
-function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine: number[], Charaters: any, preLoadCharaters: any): DisplayLine {
+// function variableLoader(text: string, variables: Object): string {
+//     const reg = /\$\{[^}]+\}/g
+//     const res = text.replace(reg, function (rs) {
+//         const key = rs.slice(2, rs.length - 1)
+//         return variables[key]
+//     })
+//     return res
+// }
+function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine: number[], Charaters: Characters, preLoadCharaters: PreLoadCharaters): DisplayLine {
     const reg = /[/:|：]/g
     const rawLine = lineText.join("")
-    const lineWithVariable = variableLoader(rawLine, variables)
+    // const lineWithVariable = variableLoader(rawLine, variables)
+    const lineWithVariable = rawLine
     const haveComma = lineWithVariable.match(reg)
     if (haveComma) {//有冒号
         const res = lineWithVariable.split(haveComma[0])

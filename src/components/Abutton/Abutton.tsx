@@ -1,5 +1,6 @@
 import React from 'react';
 import './style.css'
+import { Link } from 'react-router-dom'
 interface IProps {
     text: string,
     onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void
@@ -7,9 +8,9 @@ interface IProps {
 }
 const Abutton = (props: IProps) => {
 
-    const res = props.to ? <a href={props.to}><button {...props} onClick={props.onClick} className="Abutton">
+    const res = props.to ? <Link to={props.to}><button {...props} onClick={props.onClick} className="Abutton">
         {props.text}
-    </button></a> : <button {...props} onClick={props.onClick} className="Abutton">
+    </button></Link> : <button {...props} onClick={props.onClick} className="Abutton">
             {props.text}
         </button>
     return res

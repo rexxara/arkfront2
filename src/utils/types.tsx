@@ -1,22 +1,4 @@
-export interface displayCharacter {
-    name: string
-    emotion: string
-}
 
-export interface CommandLine {
-    command: string,
-    param?: string | displayCharacter | selectedBGM
-}
-export interface selectedBGM {
-    name: string,
-    src: string
-}
-export interface DisplayLine {
-    type: string,
-    value: string,
-    name?: string
-    emotion?: string
-}
 export const NO_IMG = "不显示立绘"
 export const LINE_TYPE = {
     raw: 'raw',
@@ -24,7 +6,6 @@ export const LINE_TYPE = {
     chat: 'chat',
     monologue: 'monologue',
     comment: "comment",
-    //comand
     command: 'command',
     command_SHOW_BACKGROUND: 'showbg',
     command_LEAVE_CHARATER: 'leave',
@@ -36,30 +17,73 @@ export const LINE_TYPE = {
     command_SHOW_CG: 'showCg',
     command_REMOVE_CG: 'removeCg'
 }
+export interface Game {
+    chapters: Chapter[]
+}
 export interface Chapter {
     line: (CommandLine | DisplayLine)[]
-    preLoadCharaters?: Object
-    preLoadBackgrounds?: Object
-    preLoadCgs?: Object
+    preLoadCharaters?: PreLoadCharaters
+    preLoadBackgrounds?: PreLoadBackgrounds
+    preLoadCgs?: PreLoadCgs
+}
+
+export interface PreLoadCharaters{
+    [arg: string]: string[]
+}
+
+export interface PreLoadCgs{
+    [arg: string]: string
+}
+
+export interface PreLoadBackgrounds{
+    [arg: string]: string
+}
+export interface DisplayLine {
+    type: string,
+    value: string,
+    name?: string
+    emotion?: string
+}
+export interface CommandLine {
+    command: string,
+    param?: string | displayCharacter | selectedBGM
+}
+export interface DisplayCharacters{
+    [arg:string]:displayCharacter
+}
+export interface displayCharacter {
+    name: string
+    emotion: string
+}
+
+export interface selectedBGM {
+    name: string,
+    src: string
 }
 export interface Emotions {
-    default: string
+    default: string,
+    [arg:string]:string
 }
 export interface Charater {
     images: Emotions
 }
-export interface Game {
-    chapters: Chapter[]
+export interface Characters {
+    [arg:string]:Charater
 }
 export interface RawScript {
-    charaters: Charater[],
+    charaters: Characters,
     chapters: string[],
     variables: Object,
-    backgrounds: Object,
-    BGMs: Object,
-    cgs: Object
+    backgrounds: Backgrounds,
+    BGMs: BGMs,
+    cgs: CGS
 }
-
-export interface Charaters {
-    any: Charater
+export interface CGS{
+    [arg: string]: string
+}
+export interface BGMs{
+    [arg: string]: string
+}
+export interface Backgrounds{
+    [arg: string]: string
 }
