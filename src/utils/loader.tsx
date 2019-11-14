@@ -40,7 +40,7 @@ const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
                     if (chapter.hasOwnProperty(sectionKey)) {
                         const sectionString = chapter[sectionKey] as unknown as string
                         const kkk = res.chapters[key] as unknown as ChapterWithSection
-                        kkk.section[sectionKey] = ChapterLoader(needDecode ?
+                        kkk[sectionKey] = ChapterLoader(needDecode ?
                             b64_to_utf8(sectionString.slice("data:;base64,".length)) : sectionString, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)
                         kkk[sectionKey].index = sectionIndex
                         kkk[sectionKey].name = sectionKey
