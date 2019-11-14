@@ -25,60 +25,49 @@ export function strlen(str: string = "") {
 //   }
 //   return tmp;
 // }
-
-export function get(id: string, key: string, dataType: string): any {
-  const dataCon = document.getElementById(id)
-  let data = ""
-  if (dataCon) {
-    data = dataCon.getAttribute(key) || ""
-  }
-  switch (dataType) {
-    case "int":
-      let res = parseInt(data)
-      if (isNaN(res)) {
-        res = 0
-        console.warn('value is NaN,automatically return 0')
-      }
-      return res
-    case "bool":
-      return data === "true" ? true : false
-    case 'displayCharacters':
-      if (data.length) {
-        let characters = data.split(';').filter(v=>v)
-        return characters.map(v => {
-          if (v) {
-            const res = v.split(":")
-            const emo=res[1]==='null'?null:res[1]
-            return { name: res[0], emotion: emo }
-          }
-        })
-      }else{
-        return []
-      }
-    default:
-      return data
-  }
-}
-export function set(id: string, key: string, value: any,type?:string): any {
-  const dataCon = document.getElementById(id)
-  if (dataCon) {
-    switch (type) {
-      case 'displayCharacters':
-          let dataStr = ''
-          value.map(v => {
-              dataStr += `${v.name}:${v.emotion};`
-          })
-          dataCon.setAttribute(key, dataStr)
-        break;
-      default:
-          dataCon.setAttribute(key, value)
-        break;
+export const emotionProcessor = (str: string) => {
+  const emoReg = /(?<=[\(|（])[^\(\)|）]*(?=[\)|）])/g
+  const nameReg = /^(.*)(?:\s*)(?=[\(|（])/g
+  const emotion = str.match(emoReg)
+  const name = str.match(nameReg)
+  if (emotion && name) {
+    return {
+      name: name[0].trim(),
+      emotionKey: emotion[0].trim()
     }
   } else {
-    console.error('no such element!')
+    return { name: str, emotionKey: 'default' }
   }
 }
-
 export function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+export function filterSpace(str: string): string {
+  return str.replace(/\s/g, '')
+}
+export function b64_to_utf8(str: string) {
+  return decodeURIComponent(escape(window.atob(str)))
+}
+export function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
+  if (arr.length !== currentSpaceLine.length) {
+    return false
+  }
+  const res = arr.find((v, k) => {
+    return v !== currentSpaceLine[k]
+  })
+  return res ? false : true
+}
+export function getValueByObjKeyValue(object: any, kkey: string, value: any) {
+  let res = {}
+  for (const key in object) {
+    if (object.hasOwnProperty(key)) {
+      const element = object[key]
+      if (element[kkey] === value) {
+        res = element
+        break
+      }
+    }
+  }
+  return res
 }

@@ -1,0 +1,9 @@
+
+这里是第三章第一节 做个选择吧
+
+//[showChoose:(
+    跳去第二节:[toSection:chapter3_section2]
+    跳去第三节:[toSection:chapter3_section3]
+)]
+
+章内小节跳转前

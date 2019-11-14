@@ -1,4 +1,4 @@
-import { b64_to_utf8 } from '../utils/loader'
+import { b64_to_utf8 } from '../utils/utils'
 import script from '../scripts/index'
 const initalState = {
     script: b64_to_utf8(script.chapters[0].slice("data:;base64,".length)),

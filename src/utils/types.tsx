@@ -17,25 +17,37 @@ export const LINE_TYPE = {
     command_SHOW_CG: 'showCg',
     command_REMOVE_CG: 'removeCg'
 }
-export interface Game {
-    chapters: Chapter[]
+
+export interface Game{
+    chapters:NewChapters,
+    total:number
 }
-export interface Chapter {
-    line: (CommandLine | DisplayLine)[]
-    preLoadCharaters?: PreLoadCharaters
-    preLoadBackgrounds?: PreLoadBackgrounds
-    preLoadCgs?: PreLoadCgs
+export interface NewChapters {
+    [arg: string]: (Chapter | ChapterWithSection)
 }
 
-export interface PreLoadCharaters{
+export interface ChapterWithSection {
+    [arg: string]: Chapter
+}
+export interface Chapter {
+    line?: (CommandLine | DisplayLine)[]
+    preLoadCharaters?: PreLoadCharaters
+    preLoadBackgrounds?: PreLoadBackgrounds
+    preLoadCgs?: PreLoadCgs,
+    name?:string,
+    index?:number
+    section?:Chapter
+}
+
+export interface PreLoadCharaters {
     [arg: string]: string[]
 }
 
-export interface PreLoadCgs{
+export interface PreLoadCgs {
     [arg: string]: string
 }
 
-export interface PreLoadBackgrounds{
+export interface PreLoadBackgrounds {
     [arg: string]: string
 }
 export interface DisplayLine {
@@ -48,8 +60,8 @@ export interface CommandLine {
     command: string,
     param?: string | displayCharacter | selectedBGM
 }
-export interface DisplayCharacters{
-    [arg:string]:displayCharacter
+export interface DisplayCharacters {
+    [arg: string]: displayCharacter
 }
 export interface displayCharacter {
     name: string
@@ -62,28 +74,36 @@ export interface selectedBGM {
 }
 export interface Emotions {
     default: string,
-    [arg:string]:string
+    [arg: string]: string
 }
 export interface Charater {
     images: Emotions
 }
 export interface Characters {
-    [arg:string]:Charater
+    [arg: string]: Charater
 }
+/////////before load////
 export interface RawScript {
     charaters: Characters,
     chapters: string[],
     variables: Object,
     backgrounds: Backgrounds,
     BGMs: BGMs,
-    cgs: CGS
+    cgs: CGS,
+    newChapterModel: NewChapterModel
 }
-export interface CGS{
+export interface NewChapterModel {
+    [arg: string]: string | SectionString
+}
+export interface SectionString {
     [arg: string]: string
 }
-export interface BGMs{
+export interface CGS {
     [arg: string]: string
 }
-export interface Backgrounds{
+export interface BGMs {
+    [arg: string]: string
+}
+export interface Backgrounds {
     [arg: string]: string
 }

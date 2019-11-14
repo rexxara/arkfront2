@@ -1,5 +1,6 @@
 import React from 'react'
-import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM } from '../../utils/types'
+import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, NewChapters } from '../../utils/types'
+import { getValueByObjKeyValue } from '../../utils/utils'
 import classnames from 'classnames'
 import _omit from 'lodash/omit'
 import styles from './style.css'
@@ -24,6 +25,8 @@ interface IState {
     cg: string
     preloadJSX: any,
     clickDisable: boolean
+    newChapterIndex: number
+    newSectionIndex?: number
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -47,7 +50,9 @@ const iniState = {
     bgm: { name: '', src: '' },
     cg: '',
     preloadJSX: undefined,
-    clickDisable: false
+    clickDisable: false,
+    newChapterIndex: 1,
+    newSectionIndex: undefined
 }
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
@@ -67,16 +72,34 @@ class MainGame extends React.Component<IProps, IState> {
         this.textAnimationInner = this.textAnimationInner.bind(this)
         this.cgAndBackgroundOnload = this.cgAndBackgroundOnload.bind(this)
         this.setImgCache = this.setImgCache.bind(this)
+        this.startFromSelectedChapterAndSection = this.startFromSelectedChapterAndSection.bind(this)
 
     }
 
     componentDidMount() {
         window.reset = this.reset
-        const { data: { chapters } } = this.props
-        const currentChapter = chapters[0]
-        this.setImgCache(currentChapter)
-        const currentLine = currentChapter.line[0]
-        this.start(currentLine)
+        console.log(this.props)
+        const { data: { chapters }  } = this.props
+        this.startFromSelectedChapterAndSection(chapters, 1, 1)
+    }
+    startFromSelectedChapterAndSection(chapters: NewChapters, chapterIndex: number, sectionIndex?: number) {
+        sectionIndex = 1
+        const newChapter = getValueByObjKeyValue(chapters, 'index', chapterIndex)
+        if ('line' in newChapter) {
+            this.setImgCache(newChapter as Chapter)
+            const currentLine = (newChapter as Chapter).line[0]
+            this.start(currentLine)
+        } else {
+            const newChapterSection = getValueByObjKeyValue(newChapter, 'index', sectionIndex)
+            console.log(newChapter, newChapterSection)
+            this.setImgCache(newChapterSection as Chapter)
+            const currentLine = (newChapterSection as Chapter).line[0]
+            this.start(currentLine)
+        }
+        this.setState({
+            newChapterIndex: chapterIndex,
+            newSectionIndex: sectionIndex
+        })
     }
     setImgCache(currentChapter: Chapter) {
         const { preLoadBackgrounds, preLoadCgs, preLoadCharaters } = currentChapter
@@ -95,8 +118,7 @@ class MainGame extends React.Component<IProps, IState> {
         }
         for (const key in preLoadCharaters) {
             if (preLoadCharaters.hasOwnProperty(key)) {
-                const element = preLoadCharaters[key]
-                element.map(v => {
+                preLoadCharaters[key].map(v => {
                     const str = `${key}/${v}`
                     preloadChArray.push(str)
                 })
@@ -171,29 +193,20 @@ class MainGame extends React.Component<IProps, IState> {
     }
     reset() {
         const { data: { chapters } } = this.props
-        this.setState({
-            auto: false,
-            chapterPointer: 0,
-            displayText: '',
-            displayName: '',
-            linePointer: 0
-        })
+        this.setState(iniState)
         this.clearTimers()
-        const currentChapter = chapters[0]
-        const currentLine = currentChapter.line[0]
-        this.start(currentLine)
+        this.startFromSelectedChapterAndSection(chapters, 1, 1)
     }
     nextChapter() {
-        const { chapterPointer } = this.state
-        const { data: { chapters } } = this.props
-        if (chapterPointer === chapters.length - 1) {
+        const { newChapterIndex } = this.state
+        const { data: { chapters,total } } = this.props
+        if (newChapterIndex === total) {
             //end
+            console.log('完结撒花')
         } else {
             //nextChapter
-            this.setState({ ...iniState, chapterPointer: chapterPointer + 1 })
-            const currentLine = chapters[chapterPointer + 1].line[0]
-            this.start(currentLine)
-            this.setImgCache(chapters[chapterPointer + 1])
+            this.setState(iniState)
+            this.startFromSelectedChapterAndSection(chapters, newChapterIndex + 1)
         }
     }
     start(currentLine: (CommandLine | DisplayLine)) {
@@ -319,7 +332,8 @@ class MainGame extends React.Component<IProps, IState> {
             if (auto) this.setState({ auto: false })
             if (timers) this.clearTimers()
         }
-        const currentChapter = chapters[chapterPointer] as Chapter
+        const currentChapter = getValueByObjKeyValue(chapters, 'index', this.state.newChapterIndex)as Chapter
+        console.log(currentChapter)
         if (!timers) {//如果一行播放结束
             if (linePointer >= currentChapter.line.length - 1) {//一章结束
                 return this.nextChapter()
@@ -334,7 +348,6 @@ class MainGame extends React.Component<IProps, IState> {
     }
 
     render() {
-        const { data: { chapters } } = this.props
         const { chapterPointer, auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, preloadJSX } = this.state
         const displaycharactersArray = Object.keys(displaycharacters).map(v => {
             return {
@@ -345,6 +358,7 @@ class MainGame extends React.Component<IProps, IState> {
         return <React.Fragment>
             <div className={styles.ctrlPanle}>
                 <p>第<button >{chapterPointer}</button>章</p>
+                <button onClick={this.nextChapter}>下一章</button>
                 <p>在场人物<span></span></p>
                 <p>{displaycharactersArray.map(v => v.name)}</p>
                 <p>第<button onClick={(ev) => this.clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>

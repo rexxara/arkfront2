@@ -1,7 +1,9 @@
 
 import chapter1 from './chapter1.mi'
 import chapter2 from './chapter2.mi'
-
+import chapter3_section1 from './chapter3/section1.mi'
+import chapter3_section2 from './chapter3/section2.mi'
+import chapter3_section3 from './chapter3/section3.mi'
 
 // 　　第一章　Greengreen
 
@@ -44,7 +46,21 @@ const charaters = {
         }
     }
 }
-const chapters = [chapter1,chapter2]
+const chapters = [chapter1, chapter2]
+const newChapterModel = {
+    chapter1,
+    chapter2,
+    chapter3: {
+        日常: chapter3_section1,
+        选了A: chapter3_section2,
+        选了B: chapter3_section3
+    },
+    chapter4: {
+        chapter3_section1: chapter3_section1,
+        chapter3_section2: chapter3_section2,
+        chapter3_section3: chapter3_section3
+    }
+}
 const variables = {
     userName: "rexxara"
 }
@@ -67,5 +83,6 @@ export default {
     variables,
     backgrounds,
     BGMs,
-    cgs
+    cgs,
+    newChapterModel
 }

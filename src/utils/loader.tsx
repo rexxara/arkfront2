@@ -1,34 +1,17 @@
 import {
-    DisplayLine, CommandLine, Game,
+    DisplayLine, CommandLine,
     RawScript, LINE_TYPE, NO_IMG, Chapter,
     CGS, BGMs, Backgrounds, Characters,
-    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds
+    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, Game, ChapterWithSection
 } from './types'
-import { strlen } from './utils'
+import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
 const CRLF = [13, 10]
 const LF = [10]
-const emotionProcessor = (str: string) => {
-    const emoReg = /(?<=[\(|（])[^\(\)|）]*(?=[\)|）])/g
-    const nameReg = /^(.*)(?:\s*)(?=[\(|（])/g
-    const emotion = str.match(emoReg)
-    const name = str.match(nameReg)
-    if (emotion && name) {
-        return {
-            name: name[0].trim(),
-            emotionKey: emotion[0].trim()
-        }
-    } else {
-        return { name: str, emotionKey: 'default' }
-    }
-}
-function filterSpace(str: string): string {
-    return str.replace(/\s/g, '')
-}
-export function b64_to_utf8(str: string) {
-    return decodeURIComponent(escape(window.atob(str)))
-}
+
+
+
 function charatersPreProcess(characters: Characters) {
     for (const key in characters) {
         if (characters.hasOwnProperty(key)) {
@@ -38,27 +21,43 @@ function charatersPreProcess(characters: Characters) {
     }
     return characters
 }
-function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
-    if (arr.length !== currentSpaceLine.length) {
-        return false
+const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
+    const { chapters, variables, backgrounds, BGMs, cgs } = rawScript
+    const charaters = charatersPreProcess(rawScript.charaters)
+    const { newChapterModel } = rawScript
+    let res: Game = { chapters: {}, total: 0 }
+    let chapterIndex = 1;
+    for (const key in newChapterModel) {
+        if (newChapterModel.hasOwnProperty(key)) {
+            const chapter = newChapterModel[key]
+            res.chapters[key]={}
+            if (typeof chapter === 'string') {
+                res.chapters[key] = ChapterLoader(needDecode ?
+                    b64_to_utf8(chapter.slice("data:;base64,".length)) : chapter, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)
+            } else if (typeof chapter === 'object') {
+                let sectionIndex = 1
+                for (const sectionKey in chapter) {
+                    if (chapter.hasOwnProperty(sectionKey)) {
+                        const sectionString = chapter[sectionKey] as unknown as string
+                        const kkk = res.chapters[key] as unknown as ChapterWithSection
+                        kkk.section[sectionKey] = ChapterLoader(needDecode ?
+                            b64_to_utf8(sectionString.slice("data:;base64,".length)) : sectionString, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)
+                        kkk[sectionKey].index = sectionIndex
+                        kkk[sectionKey].name = sectionKey
+                        sectionIndex++
+                    }
+                }
+            }
+            res.chapters[key].index = chapterIndex
+            res.chapters[key].name = key
+            chapterIndex++
+        }
     }
-    const res = arr.find((v, k) => {
-        return v !== currentSpaceLine[k]
-    })
-    return res ? false : true
-}
-
-const GameLoader = (game: RawScript, needDecode: boolean, IsCRLF: boolean): Game => {
-    const { chapters, variables, backgrounds, BGMs, cgs } = game
-    const charaters = charatersPreProcess(game.charaters)
-    const res = {
-        chapters: chapters.map(v =>
-            ChapterLoader(needDecode ?
-                b64_to_utf8(v.slice("data:;base64,".length)) : v, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)),
-    }
+    res.total = chapterIndex - 1
     console.log(res)
     return res
 }
+
 
 function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS): Chapter {
     let chapter: (DisplayLine | CommandLine)[] = []
@@ -301,4 +300,4 @@ function monologueProcess(line: DisplayLine, currentSingleSpaceLine: number[]): 
     }
     return values
 }
-export default GameLoader
+export default main

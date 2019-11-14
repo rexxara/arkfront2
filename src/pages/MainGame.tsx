@@ -9,7 +9,6 @@ interface IProps {
 }
 
 const playGround = (props: IProps) => {
-  console.log('playgroundWasCalled')
   const data = loader(GameData as RawScript, true,true)
   return <div className={styles.App}>
     <MainGame
