@@ -36,7 +36,7 @@ export interface Chapter {
     preLoadCgs?: PreLoadCgs,
     name?:string,
     index?:number
-    section?:Chapter
+    sections?:ChapterWithSection
 }
 
 export interface PreLoadCharaters {

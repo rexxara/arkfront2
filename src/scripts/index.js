@@ -74,7 +74,7 @@ const BGMs = {
 }
 
 const cgs = {
-    HE1: 'TIM图片20190918160845.jpg'
+    HE1: 'avg_11_1.png'
 }
 
 export default {

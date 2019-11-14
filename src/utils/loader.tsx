@@ -30,20 +30,22 @@ const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
     for (const key in newChapterModel) {
         if (newChapterModel.hasOwnProperty(key)) {
             const chapter = newChapterModel[key]
-            res.chapters[key]={}
+            res.chapters[key] = {}
             if (typeof chapter === 'string') {
                 res.chapters[key] = ChapterLoader(needDecode ?
                     b64_to_utf8(chapter.slice("data:;base64,".length)) : chapter, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)
             } else if (typeof chapter === 'object') {
                 let sectionIndex = 1
+                res.chapters[key].sections={}
                 for (const sectionKey in chapter) {
                     if (chapter.hasOwnProperty(sectionKey)) {
                         const sectionString = chapter[sectionKey] as unknown as string
-                        const kkk = res.chapters[key] as unknown as ChapterWithSection
-                        kkk[sectionKey] = ChapterLoader(needDecode ?
+                        const sectionContainer = res.chapters[key].sections as unknown as ChapterWithSection
+                        sectionContainer[sectionKey] = ChapterLoader(needDecode ?
                             b64_to_utf8(sectionString.slice("data:;base64,".length)) : sectionString, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)
-                        kkk[sectionKey].index = sectionIndex
-                        kkk[sectionKey].name = sectionKey
+
+                            sectionContainer[sectionKey].index = sectionIndex
+                        sectionContainer[sectionKey].name = sectionKey
                         sectionIndex++
                     }
                 }
