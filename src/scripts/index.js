@@ -4,6 +4,9 @@ import chapter2 from './chapter2.mi'
 import chapter3_section1 from './chapter3/section1.mi'
 import chapter3_section2 from './chapter3/section2.mi'
 import chapter3_section3 from './chapter3/section3.mi'
+import chapter3_section4 from './chapter3/section4.mi'
+import chapter3_section5 from './chapter3/section5.mi'
+import chapter3_section6 from './chapter3/section6.mi'
 
 // 　　第一章　Greengreen
 
@@ -52,10 +55,22 @@ const newChapterModel = {
     chapter2,
     chapter3: {
         日常: chapter3_section1,
-        选了A: chapter3_section2,
-        选了B: chapter3_section3
+        不痛不痒选项A: chapter3_section2,
+        不痛不痒选项B: chapter3_section3,
+        中间的一段:chapter3_section4,
+        正常主线C:chapter3_section6,
+        选了就暴毙D:chapter3_section5,
     }
 }
+// const chooises = {
+//     第三章选择A: [{
+//         text: '跳去A',
+//         execCommand: '[toSection:]',
+//         callback: (global) => {
+//             console.log('???')
+//         }
+//     }]
+// }
 const variables = {
     userName: "rexxara"
 }

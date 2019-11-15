@@ -15,12 +15,13 @@ export const LINE_TYPE = {
     command_RESUME_BGM: 'resumeBgm',
     command_REMOVE_BACKGROUND: 'removeBg',
     command_SHOW_CG: 'showCg',
-    command_REMOVE_CG: 'removeCg'
+    command_REMOVE_CG: 'removeCg',
+    command_SHOW_CHOOSE: 'showChoose'
 }
 
-export interface Game{
-    chapters:NewChapters,
-    total:number
+export interface Game {
+    chapters: NewChapters,
+    total: number
 }
 export interface NewChapters {
     [arg: string]: (Chapter | ChapterWithSection)
@@ -34,10 +35,10 @@ export interface Chapter {
     preLoadCharaters?: PreLoadCharaters
     preLoadBackgrounds?: PreLoadBackgrounds
     preLoadCgs?: PreLoadCgs,
-    name?:string,
-    index?:number
-    sections?:ChapterWithSection,
-    total?:number
+    name?: string,
+    index?: number
+    sections?: ChapterWithSection,
+    total?: number
 }
 
 export interface PreLoadCharaters {

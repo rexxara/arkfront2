@@ -4,7 +4,7 @@ import {
     CGS, BGMs, Backgrounds, Characters,
     PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, Game, ChapterWithSection
 } from './types'
-import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual } from './utils'
+import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey,ChooseLoader } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
 const CRLF = [13, 10]
@@ -36,19 +36,18 @@ const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
                     b64_to_utf8(chapter.slice("data:;base64,".length)) : chapter, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)
             } else if (typeof chapter === 'object') {
                 let sectionIndex = 1
-                res.chapters[key].sections={}
+                res.chapters[key].sections = {}
                 for (const sectionKey in chapter) {
                     if (chapter.hasOwnProperty(sectionKey)) {
                         const sectionString = chapter[sectionKey] as unknown as string
                         const sectionContainer = res.chapters[key].sections as unknown as ChapterWithSection
                         sectionContainer[sectionKey] = ChapterLoader(needDecode ?
                             b64_to_utf8(sectionString.slice("data:;base64,".length)) : sectionString, variables, IsCRLF, charaters, backgrounds, BGMs, cgs)
-
-                            sectionContainer[sectionKey].index = sectionIndex
+                        sectionContainer[sectionKey].index = sectionIndex
                         sectionContainer[sectionKey].name = sectionKey
                         sectionIndex++
                     }
-                    res.chapters[key].total=sectionIndex-1
+                    res.chapters[key].total = sectionIndex - 1
                 }
             }
             res.chapters[key].index = chapterIndex
@@ -80,6 +79,9 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
             lineCache.shift()
         }
         const currentCharCode = script.charCodeAt(i)
+        if(currentCharCode===32){
+            continue//跳过tab
+        }
         lineCache.push(currentCharCode)
         const currentChar = script.charAt(i)
         lineText[linePointer++] = currentChar
@@ -123,8 +125,8 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
     return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs }
 }
 function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: Backgrounds, Charaters: Characters, BGMs: BGMs, cgs: CGS, preLoadBackgrounds: PreLoadBackgrounds, preLoadCgs: PreLoadCgs, preLoadCharaters: PreLoadCharaters): CommandLine {
-    const [command, key] = matchedRawLine[1].split(":")
-
+    console.log(matchedRawLine)
+    const [command, key] = splitFromFirstKey(matchedRawLine[1], ":")
     switch (command) {
         case LINE_TYPE.command_SHOW_BACKGROUND:
             if (backgrounds[key]) {
@@ -179,17 +181,11 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: Backgroun
                         src: BGMs[key] as string
                     }
                 }
-            } else {
-                throw new Error(`BGM ${key} isn't registered`)
-            }
+            } else { throw new Error(`BGM ${key} isn't registered`) }
         case LINE_TYPE.command_PAUSE_BGM:
-            return {
-                command: LINE_TYPE.command_PAUSE_BGM
-            }
+            return { command: LINE_TYPE.command_PAUSE_BGM }
         case LINE_TYPE.command_RESUME_BGM:
-            return {
-                command: LINE_TYPE.command_RESUME_BGM
-            }
+            return { command: LINE_TYPE.command_RESUME_BGM }
         case LINE_TYPE.command_SHOW_CG:
             if (cgs[key]) {
                 preLoadCgs[key] = cgs[key]
@@ -197,12 +193,16 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: Backgroun
                     command: LINE_TYPE.command_SHOW_CG,
                     param: cgs[key]
                 }
-            } else {
-                throw new Error(`CG ${key} isn't registered`)
-            }
+            } else { throw new Error(`CG ${key} isn't registered`) }
         case LINE_TYPE.command_REMOVE_CG:
             return {
                 command: LINE_TYPE.command_REMOVE_CG
+            }
+        case LINE_TYPE.command_SHOW_CHOOSE:
+            console.log('command_SHOW_CHOOSE',key)
+            //res:['loadedCommand','loadedCommand']
+            return{
+                command:LINE_TYPE.command_SHOW_CHOOSE
             }
         default:
             //warn：unKnowCommand
@@ -214,7 +214,8 @@ function commandProcess(matchedRawLine: RegExpMatchArray, backgrounds: Backgroun
 
 }
 function lineTypeJudger(lineText: string[], currentSpaceLine: number[], currentSingleSpaceLine: number[]) {
-    const rawLine = lineText.join("")
+    const rawLine = filterSpace(lineText.join(""))
+    //const rawLine = lineText.join("")
     const actionReg = /(?<!\/\/)\[(.*)\]/
     const commentReg = /\/\//
     if (rawLine.match(commentReg)) {
@@ -222,6 +223,7 @@ function lineTypeJudger(lineText: string[], currentSpaceLine: number[], currentS
     }
     const isCommand = rawLine.match(actionReg)
     if (isCommand) {
+        console.log(isCommand,rawLine)
         return { type: LINE_TYPE.command, extra: isCommand }
     }
     const isMonologue = lineText.find((v, i) => {
@@ -230,7 +232,9 @@ function lineTypeJudger(lineText: string[], currentSpaceLine: number[], currentS
             return isArrayEqual(enter, currentSingleSpaceLine)
         } else { return 0 }
     })
-    if (isMonologue) { return { type: LINE_TYPE.monologue } }
+    if (isMonologue) {
+        return { type: LINE_TYPE.monologue }
+    }
 
     return { type: LINE_TYPE.raw }
 }
@@ -281,10 +285,11 @@ function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine
     }
     return {
         type: LINE_TYPE.raw,
-        value: rawLine.slice(0, rawLine.length - currentSpaceLine.length)//去掉两行空行
+        value: rawLine
     }
 }
 function monologueProcess(line: DisplayLine, currentSingleSpaceLine: number[]): DisplayLine[] {
+
     let values = []
     const rawValue = line.value
     let rawValuePointer = 0

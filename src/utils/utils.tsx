@@ -1,3 +1,4 @@
+import { Chapter } from './types'
 export function strlen(str: string = "") {
   let len = 0;
   for (let i = 0; i < str.length; i++) {
@@ -26,6 +27,7 @@ export function strlen(str: string = "") {
 //   return tmp;
 // }
 export const emotionProcessor = (str: string) => {
+
   const emoReg = /(?<=[\(|（])[^\(\)|）]*(?=[\)|）])/g
   const nameReg = /^(.*)(?:\s*)(?=[\(|（])/g
   const emotion = str.match(emoReg)
@@ -58,7 +60,7 @@ export function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
   })
   return res ? false : true
 }
-export function getValueByObjKeyValue(object: any, kkey: string, value: any) {
+export function getValueByObjKeyValue(object: any, kkey: string, value: any): Chapter {
   let res = {}
   for (const key in object) {
     if (object.hasOwnProperty(key)) {
@@ -70,4 +72,10 @@ export function getValueByObjKeyValue(object: any, kkey: string, value: any) {
     }
   }
   return res
+}
+export function splitFromFirstKey(str:string,key:string): string[] {
+  const index=str.indexOf(key)
+  const pre=str.substring(0,index)
+  const last=str.substring(index+1)
+  return [pre,last]
 }

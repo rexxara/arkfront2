@@ -1,9 +1,5 @@
+前
 
-这里是第三章第一节 做个选择吧
+[showCh:塔露拉]
 
-章内小节跳转前
-
-[showChoose:(
-    跳去第二节:[toSection:chapter3_section2]
-    跳去第三节:[toSection:chapter3_section3]
-)]
+[showChoose:第三章选择A]
