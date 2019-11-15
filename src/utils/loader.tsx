@@ -48,6 +48,7 @@ const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
                         sectionContainer[sectionKey].name = sectionKey
                         sectionIndex++
                     }
+                    res.chapters[key].total=sectionIndex-1
                 }
             }
             res.chapters[key].index = chapterIndex

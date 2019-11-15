@@ -54,11 +54,6 @@ const newChapterModel = {
         日常: chapter3_section1,
         选了A: chapter3_section2,
         选了B: chapter3_section3
-    },
-    chapter4: {
-        chapter3_section1: chapter3_section1,
-        chapter3_section2: chapter3_section2,
-        chapter3_section3: chapter3_section3
     }
 }
 const variables = {

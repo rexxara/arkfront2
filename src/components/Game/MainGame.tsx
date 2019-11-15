@@ -23,10 +23,13 @@ interface IState {
     stop: boolean
     bgm: selectedBGM
     cg: string
-    preloadJSX: any,
+    preloadJSX: any
     clickDisable: boolean
     newChapterIndex: number
-    newSectionIndex?: number
+    newSectionIndex: number
+    currentLines: Chapter["line"],
+    totalChapter: number,
+    totalSection: number
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -52,7 +55,9 @@ const iniState = {
     preloadJSX: undefined,
     clickDisable: false,
     newChapterIndex: 1,
-    newSectionIndex: undefined
+    newSectionIndex: 0,
+    totalChapter: 0,
+    totalSection: 0
 }
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
@@ -79,26 +84,36 @@ class MainGame extends React.Component<IProps, IState> {
     componentDidMount() {
         window.reset = this.reset
         console.log(this.props)
-        const { data: { chapters }  } = this.props
+        const { data: { chapters } } = this.props
         this.startFromSelectedChapterAndSection(chapters, 1, 1)
     }
     startFromSelectedChapterAndSection(chapters: NewChapters, chapterIndex: number, sectionIndex?: number) {
-        sectionIndex = 1
-        const newChapter = getValueByObjKeyValue(chapters, 'index', chapterIndex)
-        if ('line' in newChapter) {
-            this.setImgCache(newChapter as Chapter)
-            const currentLine = (newChapter as Chapter).line[0]
+        sectionIndex = sectionIndex || 1
+        const { data: { total } } = this.props
+        const newChapter: Chapter = getValueByObjKeyValue(chapters, 'index', chapterIndex) as Chapter
+        let currentLines: Chapter["line"] = []
+        let totalSection = 0
+        if (newChapter.line) {
+            this.setImgCache(newChapter)
+            const currentLine = newChapter.line[0]
+            currentLines = newChapter.line
             this.start(currentLine)
         } else {
-            const newChapterSection = getValueByObjKeyValue(newChapter, 'index', sectionIndex)
-            console.log(newChapter, newChapterSection)
-            this.setImgCache(newChapterSection as Chapter)
-            const currentLine = (newChapterSection as Chapter).line[0]
-            this.start(currentLine)
+            const newChapterSection = getValueByObjKeyValue(newChapter.sections, 'index', sectionIndex) as Chapter
+            totalSection = newChapter.total || 0
+            if (newChapterSection.line) {
+                currentLines = newChapterSection.line
+                this.setImgCache(newChapterSection)
+                const currentLine = newChapterSection.line[0]
+                this.start(currentLine)
+            }
         }
         this.setState({
             newChapterIndex: chapterIndex,
-            newSectionIndex: sectionIndex
+            newSectionIndex: sectionIndex,
+            currentLines: currentLines,
+            totalChapter: total,
+            totalSection: totalSection
         })
     }
     setImgCache(currentChapter: Chapter) {
@@ -198,15 +213,21 @@ class MainGame extends React.Component<IProps, IState> {
         this.startFromSelectedChapterAndSection(chapters, 1, 1)
     }
     nextChapter() {
-        const { newChapterIndex } = this.state
-        const { data: { chapters,total } } = this.props
-        if (newChapterIndex === total) {
+        this.clearTimers()
+        const { newChapterIndex, newSectionIndex, totalChapter, totalSection } = this.state
+        console.log(newChapterIndex, totalChapter, 'ch')
+        console.log(newSectionIndex, totalSection, 'se')
+        const { data: { chapters } } = this.props
+        if (newChapterIndex === totalChapter && newSectionIndex === totalSection) {
             //end
             console.log('完结撒花')
         } else {
-            //nextChapter
             this.setState(iniState)
-            this.startFromSelectedChapterAndSection(chapters, newChapterIndex + 1)
+            if (newSectionIndex < totalSection) {//next section
+                this.startFromSelectedChapterAndSection(chapters, newChapterIndex, newSectionIndex + 1)
+            } else {//nextChapter
+                this.startFromSelectedChapterAndSection(chapters, newChapterIndex + 1)
+            }
         }
     }
     start(currentLine: (CommandLine | DisplayLine)) {
@@ -320,8 +341,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.setState({ timers: flag })
     }
     clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
-        const { chapterPointer, timers, auto, linePointer, clickDisable } = this.state
-        const { data: { chapters } } = this.props
+        const { timers, auto, linePointer, clickDisable, currentLines } = this.state
         if (ev && clickDisable) {
             console.log('你也点的太快了')
             return 0
@@ -332,18 +352,20 @@ class MainGame extends React.Component<IProps, IState> {
             if (auto) this.setState({ auto: false })
             if (timers) this.clearTimers()
         }
-        const currentChapter = getValueByObjKeyValue(chapters, 'index', this.state.newChapterIndex)as Chapter
-        console.log(currentChapter)
-        if (!timers) {//如果一行播放结束
-            if (linePointer >= currentChapter.line.length - 1) {//一章结束
-                return this.nextChapter()
+        if (currentLines) {
+            if (!timers) {//如果一行播放结束
+                if (linePointer >= currentLines.length - 1) {//一章或者一节结束
+                    return this.nextChapter()
+                } else {
+                    const nextLine = currentLines[linePointer + 1] as (DisplayLine | CommandLine)
+                    this.setState({ linePointer: linePointer + 1 })
+                    this.start(nextLine)
+                }
             } else {
-                const nextLine = currentChapter.line[linePointer + 1] as (DisplayLine | CommandLine)
-                this.setState({ linePointer: linePointer + 1 })
-                this.start(nextLine)
+                this.skipThisLine(currentLines[linePointer])//跳过动画
             }
         } else {
-            this.skipThisLine(currentChapter.line[linePointer])
+            console.log('我也不知道发生了啥')
         }
     }
 
