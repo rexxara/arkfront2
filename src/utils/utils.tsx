@@ -13,7 +13,14 @@ export function strlen(str: string = "") {
   }
   return len;
 }
-
+export function variableLoader(text: string, variables: any): any {
+    const reg = /\$\{[^}]+\}/g
+    const res = text.replace(reg, function (rs) {
+        const key = rs.slice(2, rs.length - 1)
+        return variables[key]
+    })
+    return res
+}
 // export function ToDBC(txtstring: string) {
 //   var tmp = "";
 //   for (var i = 0; i < txtstring.length; i++) {

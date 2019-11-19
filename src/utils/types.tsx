@@ -21,7 +21,8 @@ export const LINE_TYPE = {
 
 export interface Game {
     chapters: NewChapters,
-    total: number
+    total: number,
+    variables:any
 }
 export interface NewChapters {
     [arg: string]: (Chapter | ChapterWithSection)
@@ -60,7 +61,7 @@ export interface DisplayLine {
 }
 export interface CommandLine {
     command: string,
-    param?: string | displayCharacter | selectedBGM
+    param?: string | displayCharacter | selectedBGM|Option[]
 }
 export interface DisplayCharacters {
     [arg: string]: displayCharacter
@@ -92,7 +93,8 @@ export interface RawScript {
     backgrounds: Backgrounds,
     BGMs: BGMs,
     cgs: CGS,
-    newChapterModel: NewChapterModel
+    newChapterModel: NewChapterModel,
+    chooses:Chooses
 }
 export interface NewChapterModel {
     [arg: string]: string | SectionString
@@ -108,4 +110,11 @@ export interface BGMs {
 }
 export interface Backgrounds {
     [arg: string]: string
+}
+export interface Chooses{
+    [arg: string]: Option[]
+}
+export interface Option{
+    text:string,
+    callback:Function
 }

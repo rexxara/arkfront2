@@ -49,30 +49,36 @@ const charaters = {
         }
     }
 }
-const chapters = [chapter1, chapter2]
 const newChapterModel = {
-    chapter1,
-    chapter2,
     chapter3: {
         日常: chapter3_section1,
         不痛不痒选项A: chapter3_section2,
         不痛不痒选项B: chapter3_section3,
-        中间的一段:chapter3_section4,
-        正常主线C:chapter3_section6,
-        选了就暴毙D:chapter3_section5,
+        中间的一段: chapter3_section4,
+        正常主线C: chapter3_section6,
+        选了就暴毙D: chapter3_section5,
     }
 }
-// const chooises = {
-//     第三章选择A: [{
-//         text: '跳去A',
-//         execCommand: '[toSection:]',
-//         callback: (global) => {
-//             console.log('???')
-//         }
-//     }]
-// }
+const chooses = {
+    第三章选择A: [{
+        text: '女主好感+1',
+        command:'[plus]',
+        callback: (execCommand, variables) => {
+            console.log('AAAAAAAAAAAAAAA')
+            //execCommand('[toSection:不痛不痒选项A]')
+            return { ...variables, 女主好感度: variables.女主好感度 + 1 }
+        }
+    }, {
+        text: '女主好感-1',
+        callback: (execCommand, variables) => {
+            console.log('BBBBBB')
+            //execCommand('[toSection:不痛不痒选项B]')
+            return { ...variables, 女主好感度: variables.女主好感度 - 1 }
+        }
+    }]
+}
 const variables = {
-    userName: "rexxara"
+    女主好感度: 233
 }
 const backgrounds = {
     大街: 'bg_abyss_1.png',
@@ -89,10 +95,10 @@ const cgs = {
 
 export default {
     charaters,
-    chapters,
     variables,
     backgrounds,
     BGMs,
     cgs,
-    newChapterModel
+    newChapterModel,
+    chooses
 }
