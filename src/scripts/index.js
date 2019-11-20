@@ -2,11 +2,11 @@
 import chapter1 from './chapter1.mi'
 import chapter2 from './chapter2.mi'
 import chapter3_section1 from './chapter3/section1.mi'
-import chapter3_section2 from './chapter3/section2.mi'
-import chapter3_section3 from './chapter3/section3.mi'
-import chapter3_section4 from './chapter3/section4.mi'
-import chapter3_section5 from './chapter3/section5.mi'
-import chapter3_section6 from './chapter3/section6.mi'
+import chapter3_section2_1 from './chapter3/section2.mi'
+import chapter3_section2_2 from './chapter3/section3.mi'
+import chapter3_section3 from './chapter3/section4.mi'
+import chapter3_section4_1 from './chapter3/section5.mi'
+import chapter3_section4_2 from './chapter3/section6.mi'
 
 // 　　第一章　Greengreen
 
@@ -59,21 +59,39 @@ const newChapterModel = {
         选了就暴毙D: chapter3_section5,
     }
 }
+//next:string(下一章的key),array[选项]，null结局 function=>string|null|array
+const Chapters = [
+    { name: 'chapter1', script: chapter1, next: 'chapter2' },
+    { name: 'chapter2', script: chapter2, next: 'chapter3_section1' },
+    { name: 'chapter3_section1', script: chapter3_section1, next: ['chapter3_section2_1', 'chapter3_section2_2'] },
+    { name: 'chapter3_section2_1', script: chapter3_section2_1, next: 'chapter3_section3' },
+    { name: 'chapter3_section2_2', script: chapter3_section2_2, next: 'chapter3_section3' },
+    { name: 'chapter3_section3', script: chapter3_section3, next: ({ 女主好感度 }) => 女主好感度 > 233 ? 'chapter3_section4_1' : 'chapter3_section4_2' },
+    { name: 'chapter3_section4_1', script: chapter3_section4_1 },
+    { name: 'chapter3_section4_2', script: chapter3_section4_2 },
+]
+
 const chooses = {
     第三章选择A: [{
         text: '女主好感+1',
-        command:'[plus]',
         callback: (execCommand, variables) => {
-            console.log('AAAAAAAAAAAAAAA')
-            //execCommand('[toSection:不痛不痒选项A]')
             return { ...variables, 女主好感度: variables.女主好感度 + 1 }
         }
     }, {
         text: '女主好感-1',
         callback: (execCommand, variables) => {
-            console.log('BBBBBB')
-            //execCommand('[toSection:不痛不痒选项B]')
             return { ...variables, 女主好感度: variables.女主好感度 - 1 }
+        }
+    }],
+    第三章选择B: [{
+        text: 'playBgm:無花果',
+        callback: (execCommand, variables) => {
+            execCommand('[playBgm:無花果]')
+        }
+    }, {
+        text: 'playBgm:晴天前夜',
+        callback: (execCommand, variables) => {
+            execCommand('[playBgm:晴天前夜]')
         }
     }]
 }
@@ -100,5 +118,6 @@ export default {
     BGMs,
     cgs,
     newChapterModel,
-    chooses
+    chooses,
+    chapters
 }

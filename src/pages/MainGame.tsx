@@ -13,6 +13,7 @@ const playGround = (props: IProps) => {
   return <div className={styles.App}>
     <MainGame
       data={data}
+      RawScript={GameData}
     />
   </div>
 }

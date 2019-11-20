@@ -124,7 +124,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
     }
     return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs }
 }
-function commandProcess(matchedRawLine: RegExpMatchArray,
+export function commandProcess(matchedRawLine: RegExpMatchArray,
     backgrounds: Backgrounds,
     Charaters: Characters,
     BGMs: BGMs,
@@ -220,10 +220,10 @@ function commandProcess(matchedRawLine: RegExpMatchArray,
             }
     }
 }
+export const actionReg = /(?<!\/\/)\[(.*)\]/
 function lineTypeJudger(lineText: string[], currentSpaceLine: number[], currentSingleSpaceLine: number[]) {
     const rawLine = filterSpace(lineText.join(""))
     //const rawLine = lineText.join("")
-    const actionReg = /(?<!\/\/)\[(.*)\]/
     const commentReg = /\/\//
     if (rawLine.match(commentReg)) {
         return { type: LINE_TYPE.comment }

@@ -1,13 +1,15 @@
 import React from 'react'
-import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, NewChapters, Option } from '../../utils/types'
+import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, NewChapters, Option, RawScript } from '../../utils/types'
 import { getValueByObjKeyValue, variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
 import _omit from 'lodash/omit'
 import styles from './style.css'
 import BGMplayer from './BGMplayer'
+import { commandProcess, actionReg } from '../../utils/loader'
 
 interface IProps {
-    data: Game
+    data: Game,
+    RawScript: RawScript
 }
 interface IState {
     auto: boolean
@@ -81,12 +83,12 @@ class MainGame extends React.Component<IProps, IState> {
         this.setImgCache = this.setImgCache.bind(this)
         this.startChapterOrSection = this.startChapterOrSection.bind(this)
         this.onSelect = this.onSelect.bind(this)
-        this.execCommand=this.execCommand.bind(this)
+        this.execCommand = this.execCommand.bind(this)
     }
 
     componentDidMount() {
         window.reset = this.reset
-        console.log(this.props.data)
+        console.log(this.props)
         const { data: { chapters, variables } } = this.props
         this.setState({ gameVariables: variables })
         this.startChapterOrSection(chapters, 1, 1)
@@ -356,13 +358,19 @@ class MainGame extends React.Component<IProps, IState> {
     onSelect(callBack: Function) {
         const { gameVariables } = this.state
         const newGameVariables = callBack(this.execCommand, gameVariables)
-        console.log(newGameVariables)
         this.setState({ gameVariables: newGameVariables, choose: [], clickDisable: false }, () => {
             this.clickHandle()
         })
     }
     execCommand(commandString: string) {
-        console.log(commandString)
+        const isCommand = commandString.match(actionReg)
+        const {backgrounds,charaters, BGMs, cgs, chooses}=this.props.RawScript
+        if (isCommand) {
+            const commandJSON=commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {}, {},{}, chooses)
+            this.commandLineProcess(commandJSON)
+        } else {
+            console.warn(commandString + 'unrecognized')
+        }
     }
     clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
         const { timers, auto, linePointer, clickDisable, newChapterIndex, newSectionIndex } = this.state
