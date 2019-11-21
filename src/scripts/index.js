@@ -52,33 +52,38 @@ const charaters = {
 const newChapterModel = {
     chapter3: {
         日常: chapter3_section1,
-        不痛不痒选项A: chapter3_section2,
-        不痛不痒选项B: chapter3_section3,
-        中间的一段: chapter3_section4,
-        正常主线C: chapter3_section6,
-        选了就暴毙D: chapter3_section5,
+        不痛不痒选项A: chapter3_section2_1,
+        不痛不痒选项B: chapter3_section2_2,
+        中间的一段: chapter3_section3,
+        正常主线C: chapter3_section4_1,
+        选了就暴毙D: chapter3_section4_2,
     }
 }
 //next:string(下一章的key),array[选项]，null结局 function=>string|null|array
-const Chapters = [
-    { name: 'chapter1', script: chapter1, next: 'chapter2' },
+const chapters = [
+    { name: 'chapter1', script: chapter1, next: 'chapter2', isBegin: true },
     { name: 'chapter2', script: chapter2, next: 'chapter3_section1' },
-    { name: 'chapter3_section1', script: chapter3_section1, next: ['chapter3_section2_1', 'chapter3_section2_2'] },
+    {
+        name: 'chapter3_section1', script: chapter3_section1, next: [
+            { text: '去音乐会', jumpKey: 'chapter3_section2_1', disable: ({ 女主好感度 }) => 女主好感度 < 1 },
+            { text: '去新年参拜', jumpKey: 'chapter3_section2_2' }
+        ]
+    },
     { name: 'chapter3_section2_1', script: chapter3_section2_1, next: 'chapter3_section3' },
     { name: 'chapter3_section2_2', script: chapter3_section2_2, next: 'chapter3_section3' },
-    { name: 'chapter3_section3', script: chapter3_section3, next: ({ 女主好感度 }) => 女主好感度 > 233 ? 'chapter3_section4_1' : 'chapter3_section4_2' },
+    { name: 'chapter3_section3', script: chapter3_section3, next: ({ 女主好感度 }) => 女主好感度 > 1 ? 'chapter3_section4_1' : 'chapter3_section4_2' },
     { name: 'chapter3_section4_1', script: chapter3_section4_1 },
     { name: 'chapter3_section4_2', script: chapter3_section4_2 },
 ]
 
 const chooses = {
     第三章选择A: [{
-        text: '女主好感+1',
+        text: '冬马好感+1',
         callback: (execCommand, variables) => {
             return { ...variables, 女主好感度: variables.女主好感度 + 1 }
         }
     }, {
-        text: '女主好感-1',
+        text: '冬马好感-1',
         callback: (execCommand, variables) => {
             return { ...variables, 女主好感度: variables.女主好感度 - 1 }
         }
@@ -96,7 +101,7 @@ const chooses = {
     }]
 }
 const variables = {
-    女主好感度: 233
+    女主好感度: 1
 }
 const backgrounds = {
     大街: 'bg_abyss_1.png',

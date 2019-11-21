@@ -19,28 +19,6 @@ export const LINE_TYPE = {
     command_SHOW_CHOOSE: 'showChoose'
 }
 
-export interface Game {
-    chapters: NewChapters,
-    total: number,
-    variables:any
-}
-export interface NewChapters {
-    [arg: string]: (Chapter | ChapterWithSection)
-}
-
-export interface ChapterWithSection {
-    [arg: string]: Chapter
-}
-export interface Chapter {
-    line?: (CommandLine | DisplayLine)[]
-    preLoadCharaters?: PreLoadCharaters
-    preLoadBackgrounds?: PreLoadBackgrounds
-    preLoadCgs?: PreLoadCgs,
-    name?: string,
-    index?: number
-    sections?: ChapterWithSection,
-    total?: number
-}
 
 export interface PreLoadCharaters {
     [arg: string]: string[]
@@ -59,13 +37,15 @@ export interface DisplayLine {
     name?: string
     emotion?: string
 }
+
 export interface CommandLine {
     command: string,
-    param?: string | displayCharacter | selectedBGM|Option[]
+    param?: string | displayCharacter | selectedBGM | Option[]
 }
 export interface DisplayCharacters {
     [arg: string]: displayCharacter
 }
+
 export interface displayCharacter {
     name: string
     emotion: string
@@ -85,23 +65,43 @@ export interface Charater {
 export interface Characters {
     [arg: string]: Charater
 }
+
 /////////before load////
 export interface RawScript {
     charaters: Characters,
-    chapters: string[],
+    chapters: ChapterModel3[],
     variables: Object,
     backgrounds: Backgrounds,
     BGMs: BGMs,
     cgs: CGS,
-    newChapterModel: NewChapterModel,
-    chooses:Chooses
+    chooses: Chooses
 }
-export interface NewChapterModel {
-    [arg: string]: string | SectionString
+
+export interface GameModel3 {
+    chapters: LoadedChapterModel3[],
+    variables: any
 }
-export interface SectionString {
-    [arg: string]: string
+export interface LoadedChapterModel3 {
+    line: (CommandLine | DisplayLine)[]
+    preLoadCharaters: PreLoadCharaters
+    preLoadBackgrounds: PreLoadBackgrounds
+    preLoadCgs: PreLoadCgs,
+    name: string,
+    next?: string | Function | JumpOption[],
+    isBegin?: boolean
 }
+export interface ChapterModel3 {
+    name: string,
+    script: string,
+    next: string | Function | null | JumpOption[],
+    isBegin?: boolean
+}
+export interface JumpOption {
+    text: string,
+    jumpKey: string,
+    disable?: () => boolean
+}
+
 export interface CGS {
     [arg: string]: string
 }
@@ -111,10 +111,12 @@ export interface BGMs {
 export interface Backgrounds {
     [arg: string]: string
 }
-export interface Chooses{
+export interface Chooses {
     [arg: string]: Option[]
 }
-export interface Option{
-    text:string,
-    callback:Function
+export interface Option {
+    text: string,
+    callback?: Function,
+    jumpKey?: string,
+    disable?: (variables: any) => boolean
 }

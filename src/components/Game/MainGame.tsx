@@ -1,14 +1,15 @@
 import React from 'react'
-import { Chapter, LINE_TYPE, DisplayLine, CommandLine, Game, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, NewChapters, Option, RawScript } from '../../utils/types'
-import { getValueByObjKeyValue, variableLoader } from '../../utils/utils'
+import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3 } from '../../utils/types'
+import { variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
 import _omit from 'lodash/omit'
 import styles from './style.css'
-import BGMplayer from './BGMplayer'
+import ARKBGMplayer from './BGMplayer'
 import { commandProcess, actionReg } from '../../utils/loader'
+import ARKOption from './Option'
 
 interface IProps {
-    data: Game,
+    data: GameModel3,
     RawScript: RawScript
 }
 interface IState {
@@ -27,12 +28,9 @@ interface IState {
     cg: string
     preloadJSX: any
     clickDisable: boolean
-    newChapterIndex: number
-    newSectionIndex: number
-    totalChapter: number,
-    totalSection: number,
     choose: Option[],
-    gameVariables: any
+    gameVariables: any,
+    currentChapter: LoadedChapterModel3
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -56,17 +54,22 @@ const iniState = {
     cg: '',
     preloadJSX: undefined,
     clickDisable: false,
-    newChapterIndex: 1,
-    newSectionIndex: 0,
-    totalChapter: 0,
-    totalSection: 0,
     choose: [],
-    gameVariables: {}
+    currentChapter: {
+        line: [],
+        name: '',
+        next: '',
+        preLoadCgs: {},
+        preLoadBackgrounds: {},
+        preLoadCharaters: {}
+    }
 }
+const gameVariables = {}
+
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props)
-        this.state = iniState
+        this.state = { ...iniState, gameVariables }
         this.clickHandle = this.clickHandle.bind(this)
         this.textAnimation = this.textAnimation.bind(this)
         this.imgOnload = this.imgOnload.bind(this)
@@ -81,7 +84,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.textAnimationInner = this.textAnimationInner.bind(this)
         this.cgAndBackgroundOnload = this.cgAndBackgroundOnload.bind(this)
         this.setImgCache = this.setImgCache.bind(this)
-        this.startChapterOrSection = this.startChapterOrSection.bind(this)
+        this.startChapter = this.startChapter.bind(this)
         this.onSelect = this.onSelect.bind(this)
         this.execCommand = this.execCommand.bind(this)
     }
@@ -89,43 +92,31 @@ class MainGame extends React.Component<IProps, IState> {
     componentDidMount() {
         window.reset = this.reset
         console.log(this.props)
-        const { data: { chapters, variables } } = this.props
-        this.setState({ gameVariables: variables })
-        this.startChapterOrSection(chapters, 1, 1)
+        const { data: { variables } } = this.props
+        this.setState({ gameVariables: variables }, this.startChapter)
     }
-    startChapterOrSection(chapters: NewChapters, chapterIndex: number, sectionIndex?: number) {
-        console.log(sectionIndex)
-        sectionIndex = sectionIndex || 0
-        const { data: { total } } = this.props
-        const newChapter: Chapter = getValueByObjKeyValue(chapters, 'index', chapterIndex) as Chapter
-        let totalSection = 0
-        if (newChapter.line) {
-            this.setImgCache(newChapter)
-            const currentLine = newChapter.line[0]
+    startChapter(chapterKey?: string) {
+        const { data: { chapters } } = this.props
+        this.clearTimers()
+        const { gameVariables } = this.state
+        this.setState({ ...iniState, gameVariables })
+        let chapter = undefined
+        if (!chapterKey) {
+            chapter = chapters.find(v => v.isBegin)
+            console.warn('chapter is undefined ,Auto start same from first chapter')
+        } else {
+            chapter = chapters.find(v => v.name === chapterKey)
+        }
+        if (chapter) {
+            this.setImgCache(chapter)
+            const currentLine = chapter.line[0]
             this.start(currentLine)
             this.setState({
-                newChapterIndex: chapterIndex,
-                totalChapter: total,
-                totalSection: totalSection
-            })
-        } else {
-            if (sectionIndex === 0) sectionIndex = 1//如果是第一个小节的话section默认还是0
-            const newChapterSection = getValueByObjKeyValue(newChapter.sections, 'index', sectionIndex) as Chapter
-            totalSection = newChapter.total || 0
-            if (newChapterSection.line) {
-                this.setImgCache(newChapterSection)
-                const currentLine = newChapterSection.line[0]
-                this.start(currentLine)
-            }
-            this.setState({
-                newChapterIndex: chapterIndex,
-                newSectionIndex: sectionIndex,
-                totalChapter: total,
-                totalSection: totalSection
+                currentChapter: chapter
             })
         }
     }
-    setImgCache(currentChapter: Chapter) {
+    setImgCache(currentChapter: LoadedChapterModel3) {
         const { preLoadBackgrounds, preLoadCgs, preLoadCharaters } = currentChapter
         let preloadBGArray: string[] = []
         let preloadCGArray: string[] = []
@@ -222,23 +213,23 @@ class MainGame extends React.Component<IProps, IState> {
         const { data: { chapters } } = this.props
         this.setState(iniState)
         this.clearTimers()
-        this.startChapterOrSection(chapters, 1, 1)
+        this.startChapter()
     }
     nextChapter() {
-        this.clearTimers()
-        const { newChapterIndex, newSectionIndex, totalChapter, totalSection } = this.state
-        const { data: { chapters } } = this.props
-        if (newChapterIndex === totalChapter && newSectionIndex === totalSection) {
-            //end
-            console.log('完结撒花')
-        } else {
-            this.setState(iniState)
-            if (newSectionIndex < totalSection) {//next section
-                this.startChapterOrSection(chapters, newChapterIndex, newSectionIndex + 1)
-            } else {//nextChapter
-                this.startChapterOrSection(chapters, newChapterIndex + 1)
-            }
+        const { currentChapter: { next } ,gameVariables} = this.state
+        switch (typeof next) {
+            case 'string':
+                return this.startChapter(next)
+            case "object":
+                return this.commandLineProcess({ "command": "showChoose", "param": next })
+            case 'function':
+                return  this.startChapter(next(gameVariables))
+                break
+            default:
+                console.log('gameOver')
+                break
         }
+        //console.error('no Next Chapter Or GameOver')
     }
     start(currentLine: (CommandLine | DisplayLine)) {
         if ('command' in currentLine) {
@@ -297,6 +288,7 @@ class MainGame extends React.Component<IProps, IState> {
             case LINE_TYPE.command_SHOW_CHOOSE:
                 needStop = true
                 newParam = { choose: command.param, clickDisable: true }
+                break
             default:
                 //'invalidCommand')
                 break
@@ -355,51 +347,48 @@ class MainGame extends React.Component<IProps, IState> {
         }, TEXT_DISPLAY_SPEEED)
         this.setState({ timers: flag })
     }
-    onSelect(callBack: Function) {
+    onSelect(selectedOption: Option, options: Option[]) {
         const { gameVariables } = this.state
-        const newGameVariables = callBack(this.execCommand, gameVariables)
+        let newGameVariables = {}
+        const { callback, jumpKey } = selectedOption
+        if (callback) {
+            newGameVariables = { ...gameVariables, ...callback(this.execCommand, gameVariables) }
+        }
+        if (jumpKey) {
+            return this.startChapter(jumpKey)
+        }
         this.setState({ gameVariables: newGameVariables, choose: [], clickDisable: false }, () => {
             this.clickHandle()
         })
     }
     execCommand(commandString: string) {
         const isCommand = commandString.match(actionReg)
-        const {backgrounds,charaters, BGMs, cgs, chooses}=this.props.RawScript
+        const { backgrounds, charaters, BGMs, cgs, chooses } = this.props.RawScript
         if (isCommand) {
-            const commandJSON=commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {}, {},{}, chooses)
+            const commandJSON = commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {}, {}, {}, chooses)
             this.commandLineProcess(commandJSON)
         } else {
             console.warn(commandString + 'unrecognized')
         }
     }
     clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
-        const { timers, auto, linePointer, clickDisable, newChapterIndex, newSectionIndex } = this.state
-        const { data: { chapters } } = this.props
+        const { timers, auto, linePointer, clickDisable, currentChapter } = this.state
+        config = config || {}
         if (ev && clickDisable) {
-            //不然点你还点，点的太快了
+            //不让点你还点，点的太快了
             return 0
         }
-        let currentChapter = getValueByObjKeyValue(chapters, 'index', newChapterIndex) as Chapter
-        let currentLines: Chapter['line'] = []
-        if (currentChapter.line) {
-            currentLines = currentChapter.line
-        } else {
-            currentChapter = getValueByObjKeyValue(currentChapter.sections, 'index', newSectionIndex) as Chapter
-            if (currentChapter.line) {
-                currentLines = currentChapter.line
-            }
-        }
-        config = config || {}
         if (ev) {//手动点击取消自动播放
             if (auto) this.setState({ auto: false })
             if (timers) this.clearTimers()
         }
-        if (currentLines) {
+        if (currentChapter) {
+            const currentLines = currentChapter.line
             if (!timers) {//如果一行播放结束
                 if (linePointer >= currentLines.length - 1) {//一章或者一节结束
                     return this.nextChapter()
                 } else {
-                    const nextLine = currentLines[linePointer + 1] as (DisplayLine | CommandLine)
+                    const nextLine = currentLines[linePointer + 1]
                     this.setState({ linePointer: linePointer + 1 })
                     this.start(nextLine)
                 }
@@ -407,23 +396,15 @@ class MainGame extends React.Component<IProps, IState> {
                 this.skipThisLine(currentLines[linePointer])//跳过动画
             }
         } else {
-            console.log('我也不知道发生了啥')
+            console.warn('noChapter')
         }
     }
 
     render() {
-        const { data: { chapters } } = this.props
-        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, preloadJSX, newChapterIndex, newSectionIndex, choose } = this.state
-        let chapterName = (getValueByObjKeyValue(chapters, 'index', newChapterIndex)).name
-        let sectionName = ""
-        if (newSectionIndex) {
-            sectionName = (getValueByObjKeyValue((getValueByObjKeyValue(chapters, 'index', newChapterIndex)).sections, 'index', newSectionIndex)).name || ""
-        }
+        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, preloadJSX, choose, gameVariables } = this.state
         const displaycharactersArray = Object.keys(displaycharacters).map(v => { return { name: v, ...displaycharacters[v] } })
         return <React.Fragment>
             <div className={styles.ctrlPanle}>
-                <p>第<button >{newChapterIndex}</button>章:{chapterName}</p>
-                <p>第<button >{newSectionIndex}</button>节:{sectionName}</p>
                 <p>第<button onClick={(ev) => this.clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
                 <button onClick={this.nextChapter}>下一章</button>
                 <p>在场人物<span></span></p>
@@ -431,7 +412,7 @@ class MainGame extends React.Component<IProps, IState> {
                 <button onClick={this.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
                 <button>save</button>
                 <button>load</button>
-                <BGMplayer src={bgm} />
+                <ARKBGMplayer src={bgm} />
             </div>
             <div className={styles.container}
                 style={{
@@ -439,9 +420,7 @@ class MainGame extends React.Component<IProps, IState> {
                         `url(${require(`../../scripts/backgrounds/${background}`)})` : undefined
                 }}
                 onClick={this.clickHandle}>
-                <div className={choose.length && styles.chooseCon}>{choose.map((v, k) => {
-                    return <p className={styles.choose} onClick={() => { this.onSelect(v.callback) }} key={k}>{v.text}</p>
-                })}</div>
+                <div className={choose.length && styles.chooseCon}>{choose.map((v, k) => <ARKOption gameVariables={gameVariables} key={k} onClick={this.onSelect} v={v} choose={choose} />)}</div>
                 <div className={styles.displayCharactersCon}>
                     {displaycharactersArray.map(v => v.emotion ? <img
                         onLoad={this.imgOnload}

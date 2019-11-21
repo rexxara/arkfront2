@@ -1,4 +1,3 @@
-import { Chapter } from './types'
 export function strlen(str: string = "") {
   let len = 0;
   for (let i = 0; i < str.length; i++) {
@@ -14,7 +13,7 @@ export function strlen(str: string = "") {
   return len;
 }
 export function variableLoader(text: string, variables: any): any {
-    const reg = /\$\{[^}]+\}/g
+  const reg = /\$\{[^}]+\}/g
     const res = text.replace(reg, function (rs) {
         const key = rs.slice(2, rs.length - 1)
         return variables[key]
@@ -67,19 +66,7 @@ export function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
   })
   return res ? false : true
 }
-export function getValueByObjKeyValue(object: any, kkey: string, value: any): Chapter {
-  let res = {}
-  for (const key in object) {
-    if (object.hasOwnProperty(key)) {
-      const element = object[key]
-      if (element[kkey] === value) {
-        res = element
-        break
-      }
-    }
-  }
-  return res
-}
+
 export function splitFromFirstKey(str:string,key:string): string[] {
   const index=str.indexOf(key)
   const pre=str.substring(0,index)

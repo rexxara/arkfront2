@@ -1,8 +1,8 @@
 import {
     DisplayLine, CommandLine,
-    RawScript, LINE_TYPE, NO_IMG, Chapter,
-    CGS, BGMs, Backgrounds, Characters,Chooses,
-    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, Game, ChapterWithSection
+    RawScript, LINE_TYPE, NO_IMG,
+    CGS, BGMs, Backgrounds, Characters, Chooses,
+    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds,GameModel3, LoadedChapterModel3
 } from './types'
 import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
@@ -21,47 +21,30 @@ function charatersPreProcess(characters: Characters) {
     }
     return characters
 }
-const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
-    const { variables, backgrounds, BGMs, cgs ,chooses} = rawScript
+const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):GameModel3 => {
+    const { variables, backgrounds, BGMs, cgs, chooses, chapters } = rawScript
     const charaters = charatersPreProcess(rawScript.charaters)
-    const { newChapterModel } = rawScript
-    let res: Game = { chapters: {}, total: 0 ,variables}
-    let chapterIndex = 1;
-    for (const key in newChapterModel) {
-        if (newChapterModel.hasOwnProperty(key)) {
-            const chapter = newChapterModel[key]
-            res.chapters[key] = {}
-            if (typeof chapter === 'string') {
-                res.chapters[key] = ChapterLoader(needDecode ?
-                    b64_to_utf8(chapter.slice("data:;base64,".length)) : chapter, variables, IsCRLF, charaters, backgrounds, BGMs, cgs,chooses)
-            } else if (typeof chapter === 'object') {
-                let sectionIndex = 1
-                res.chapters[key].sections = {}
-                for (const sectionKey in chapter) {
-                    if (chapter.hasOwnProperty(sectionKey)) {
-                        const sectionString = chapter[sectionKey] as unknown as string
-                        const sectionContainer = res.chapters[key].sections as unknown as ChapterWithSection
-                        sectionContainer[sectionKey] = ChapterLoader(needDecode ?
-                            b64_to_utf8(sectionString.slice("data:;base64,".length)) : sectionString, variables, IsCRLF, charaters, backgrounds, BGMs, cgs,chooses)
-                        sectionContainer[sectionKey].index = sectionIndex
-                        sectionContainer[sectionKey].name = sectionKey
-                        sectionIndex++
-                    }
-                    res.chapters[key].total = sectionIndex - 1
-                }
-            }
-            res.chapters[key].index = chapterIndex
-            res.chapters[key].name = key
-            chapterIndex++
+    const res = chapters.map(chapter => {
+        const {name,next,isBegin}=chapter
+        return {
+            ...ChapterLoader(needDecode ?
+                b64_to_utf8(chapter.script.slice("data:;base64,".length)) : chapter.script, variables, IsCRLF, charaters, backgrounds, BGMs, cgs, chooses),
+                name:name,
+                next:next,
+                isBegin:isBegin,
         }
+    })
+    return {
+        variables,
+        chapters:res as LoadedChapterModel3[]
     }
-    res.total = chapterIndex - 1
-    console.log(res)
-    return res
+}
+const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
+    return gameLoader(rawScript, true, true)
 }
 
 
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS,chooses:Chooses): Chapter {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS, chooses: Chooses): LoadedChapterModel3 {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
@@ -101,7 +84,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                         break;
                     case LINE_TYPE.command:
                         if (extra) {
-                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters,chooses)
+                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters, chooses)
                         } else {
                             throw new Error(lineStr)
                         }
@@ -122,7 +105,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
             linePointer = 0
         }
     }
-    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs }
+    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs,name:''}
 }
 export function commandProcess(matchedRawLine: RegExpMatchArray,
     backgrounds: Backgrounds,
@@ -132,8 +115,8 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
     preLoadBackgrounds: PreLoadBackgrounds,
     preLoadCgs: PreLoadCgs,
     preLoadCharaters: PreLoadCharaters,
-    chooses:Chooses
-    ): CommandLine {
+    chooses: Chooses
+): CommandLine {
 
     const [command, key] = splitFromFirstKey(matchedRawLine[1], ":")
     switch (command) {
@@ -210,7 +193,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
         case LINE_TYPE.command_SHOW_CHOOSE:
             return {
                 command: LINE_TYPE.command_SHOW_CHOOSE,
-                param:chooses[key]
+                param: chooses[key]
             }
         default:
             //warn：unKnowCommand

@@ -2,7 +2,7 @@ import React from 'react';
 import GameData from '../scripts'
 import MainGame from '../components/Game'
 import loader from '../utils/loader'
-import { Game, RawScript } from '../utils/types'
+import { RawScript } from '../utils/types'
 import styles from './index.css'
 interface IProps {
   script: string
