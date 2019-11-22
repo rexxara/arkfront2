@@ -7,12 +7,12 @@ import styles from './style.css'
 import ARKBGMplayer from './BGMplayer'
 import { commandProcess, actionReg } from '../../utils/loader'
 import ARKOption from './Option'
-
+import action from './actions'
 interface IProps {
     data: GameModel3,
     RawScript: RawScript
 }
-interface IState {
+export interface IState {
     auto: boolean
     displayText: string
     displayName: string
@@ -87,8 +87,15 @@ class MainGame extends React.Component<IProps, IState> {
         this.startChapter = this.startChapter.bind(this)
         this.onSelect = this.onSelect.bind(this)
         this.execCommand = this.execCommand.bind(this)
+        this.quickSave = this.quickSave.bind(this)
+        this.quickLoad = this.quickLoad.bind(this)
     }
-
+    quickSave() {
+        action.save(this.state)
+    }
+    quickLoad() {
+        action.load()
+    }
     componentDidMount() {
         window.reset = this.reset
         console.log(this.props)
@@ -216,14 +223,14 @@ class MainGame extends React.Component<IProps, IState> {
         this.startChapter()
     }
     nextChapter() {
-        const { currentChapter: { next } ,gameVariables} = this.state
+        const { currentChapter: { next }, gameVariables } = this.state
         switch (typeof next) {
             case 'string':
                 return this.startChapter(next)
             case "object":
                 return this.commandLineProcess({ "command": "showChoose", "param": next })
             case 'function':
-                return  this.startChapter(next(gameVariables))
+                return this.startChapter(next(gameVariables))
                 break
             default:
                 console.log('gameOver')
@@ -410,8 +417,8 @@ class MainGame extends React.Component<IProps, IState> {
                 <p>在场人物<span></span></p>
                 <p>{displaycharactersArray.map(v => v.name)}</p>
                 <button onClick={this.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
-                <button>save</button>
-                <button>load</button>
+                <button onClick={this.quickSave}>quickSave</button>
+                <button onClick={this.quickLoad}>quickLoad</button>
                 <ARKBGMplayer src={bgm} />
             </div>
             <div className={styles.container}
