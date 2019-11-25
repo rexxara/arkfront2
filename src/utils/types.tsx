@@ -79,7 +79,8 @@ export interface RawScript {
 
 export interface GameModel3 {
     chapters: LoadedChapterModel3[],
-    variables: any
+    variables: any,
+    chooses:Chooses
 }
 export interface LoadedChapterModel3 {
     line: (CommandLine | DisplayLine)[]
@@ -116,6 +117,7 @@ export interface Chooses {
 }
 export interface Option {
     text: string,
+    chooseKey?:string,
     callback?: Function,
     jumpKey?: string,
     disable?: (variables: any) => boolean

@@ -31,6 +31,10 @@ export interface IState {
     choose: Option[],
     gameVariables: any,
     currentChapter: LoadedChapterModel3
+    skipResourseCount: number//这玩意我得解释一下。加载新的图片资源（立绘，cg，背景）都
+    //是异步加载然后callback点击调用clickhandle的因为脚本里showCg啊这些是不算displayLine的 必须自动帮玩家跳过，。然后玩家手动点击
+    //但是加载存档的时候也会加载图片，这时候自动调用clickHandle就会跳到下一行，react的setstate也会集中更新所以虽然加载好几个图片触发clickhandle却只是跳到下一行，
+    //然后在没有任何资源的行保存就不会跳 所以就试着在加载的时候保存这个counter，在onload的时候读取，判断是否为0，为零就clickHandle，不为零就--
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -54,6 +58,7 @@ const iniState = {
     cg: '',
     preloadJSX: undefined,
     clickDisable: false,
+    skipResourseCount: 0,
     choose: [],
     currentChapter: {
         line: [],
@@ -83,7 +88,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.start = this.start.bind(this)
         this.textAnimationInner = this.textAnimationInner.bind(this)
         this.cgAndBackgroundOnload = this.cgAndBackgroundOnload.bind(this)
-        this.setImgCache = this.setImgCache.bind(this)
+        this.getImgCache = this.getImgCache.bind(this)
         this.startChapter = this.startChapter.bind(this)
         this.onSelect = this.onSelect.bind(this)
         this.execCommand = this.execCommand.bind(this)
@@ -91,10 +96,49 @@ class MainGame extends React.Component<IProps, IState> {
         this.quickLoad = this.quickLoad.bind(this)
     }
     quickSave() {
+        console.log(this.state)
         action.save(this.state)
     }
-    quickLoad() {
-        action.load()
+    async quickLoad() {
+        //currentChapter(string)=>array //rawLine=displaytext//preloadJSX//chooseKey=>choose//isNext=>choose
+        const { data: { chapters, chooses } } = this.props
+        const { currentChapter, linePointer } = this.state
+        this.skipThisLine(currentChapter.line[linePointer])
+        let newData = await action.load()
+        if (newData) {
+            const { currentChapterName } = newData
+            const loadedChapter = chapters.find(v => v.name === currentChapterName)
+            if (loadedChapter) {
+            delete newData.currentChapterName
+            let choose: Option[] = []
+            if (newData.chooseKey) {
+                choose = chooses[newData.chooseKey]
+                delete newData.chooseKey
+            }
+            if(newData.isNextChoose&&Array.isArray(loadedChapter.next)){
+                choose=loadedChapter.next
+            }
+            let skipResourseCount = 0
+            if (newData.background.length) skipResourseCount++
+            if (newData.cg.length) skipResourseCount++
+            skipResourseCount += Object.keys(newData.displaycharacters).length
+                const preloadJSX = this.getImgCache(loadedChapter)
+                const rawLine = newData.displayText
+                const mergedData = {
+                    ...iniState,
+                    ...newData,
+                    preloadJSX,
+                    rawLine,
+                    choose,
+                    currentChapter: loadedChapter,
+                    skipResourseCount: skipResourseCount
+                }
+                console.log(mergedData)
+                this.setState(mergedData)
+            }
+        } else {
+            console.log('noQuick load Data')
+        }
     }
     componentDidMount() {
         window.reset = this.reset
@@ -115,15 +159,15 @@ class MainGame extends React.Component<IProps, IState> {
             chapter = chapters.find(v => v.name === chapterKey)
         }
         if (chapter) {
-            this.setImgCache(chapter)
             const currentLine = chapter.line[0]
             this.start(currentLine)
             this.setState({
-                currentChapter: chapter
+                currentChapter: chapter,
+                preloadJSX: this.getImgCache(chapter)
             })
         }
     }
-    setImgCache(currentChapter: LoadedChapterModel3) {
+    getImgCache(currentChapter: LoadedChapterModel3) {
         const { preLoadBackgrounds, preLoadCgs, preLoadCharaters } = currentChapter
         let preloadBGArray: string[] = []
         let preloadCGArray: string[] = []
@@ -163,7 +207,7 @@ class MainGame extends React.Component<IProps, IState> {
                 src={require(`../../scripts/charatersImages/${imgsrc}`)} />
             )}
         </div>
-        this.setState({ preloadJSX })
+        return preloadJSX
     }
     skipThisLine(line: (DisplayLine | CommandLine)) {
         this.clearTimers()
@@ -231,7 +275,6 @@ class MainGame extends React.Component<IProps, IState> {
                 return this.commandLineProcess({ "command": "showChoose", "param": next })
             case 'function':
                 return this.startChapter(next(gameVariables))
-                break
             default:
                 console.log('gameOver')
                 break
@@ -309,7 +352,10 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     imgOnload() {
-        this.setState({ clickDisable: false })
+        const { skipResourseCount } = this.state
+        if (!skipResourseCount) {
+            this.setState({ clickDisable: false })
+        }
         const { cacheDisplayLineName, cacheDisplayLineText } = this.state
         if (cacheDisplayLineName && cacheDisplayLineText) {
             this.textAnimation(cacheDisplayLineText, cacheDisplayLineName, true)
@@ -318,9 +364,12 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     cgAndBackgroundOnload() {
-        this.setState({ clickDisable: false }, () => {
-            this.clickHandle()
-        })
+        const { skipResourseCount } = this.state
+        if (!skipResourseCount) {
+            this.setState({ clickDisable: false }, () => {
+                this.clickHandle()
+            })
+        }
     }
     textAnimation(value: string, name?: string, notAnimate?: boolean) {
         // if (notAnimate) {
@@ -379,8 +428,17 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
-        const { timers, auto, linePointer, clickDisable, currentChapter } = this.state
+        const { skipResourseCount, timers, auto, linePointer, clickDisable, currentChapter } = this.state
         config = config || {}
+        if (skipResourseCount) {//这块和imgOnLoad的逻辑有重复，不过没bug就先不改了
+            this.setState(state => {
+                return {
+                    ...state,
+                    skipResourseCount: state.skipResourseCount - 1
+                }
+            })
+            return
+        }
         if (ev && clickDisable) {
             //不让点你还点，点的太快了
             return 0

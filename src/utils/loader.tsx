@@ -2,7 +2,7 @@ import {
     DisplayLine, CommandLine,
     RawScript, LINE_TYPE, NO_IMG,
     CGS, BGMs, Backgrounds, Characters, Chooses,
-    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds,GameModel3, LoadedChapterModel3
+    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, LoadedChapterModel3
 } from './types'
 import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
@@ -11,8 +11,19 @@ const CRLF = [13, 10]
 const LF = [10]
 
 
-
-function charatersPreProcess(characters: Characters) {
+function choosePreProcess(chooses: Chooses):Chooses {
+    let res: Chooses = {}
+    for (const key in chooses) {
+        if (chooses.hasOwnProperty(key)) {
+            const element = chooses[key]
+            res[key] = element.map(v => {
+                return { ...v, chooseKey: key }
+            })
+        }
+    }
+    return res
+}
+function charatersPreProcess(characters: Characters):Characters {
     for (const key in characters) {
         if (characters.hasOwnProperty(key)) {
             const character = characters[key]
@@ -21,22 +32,24 @@ function charatersPreProcess(characters: Characters) {
     }
     return characters
 }
-const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):GameModel3 => {
-    const { variables, backgrounds, BGMs, cgs, chooses, chapters } = rawScript
+const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean): GameModel3 => {
+    const { variables, backgrounds, BGMs, cgs, chapters } = rawScript
     const charaters = charatersPreProcess(rawScript.charaters)
+    const chooses = choosePreProcess(rawScript.chooses)
     const res = chapters.map(chapter => {
-        const {name,next,isBegin}=chapter
+        const { name, next, isBegin } = chapter
         return {
             ...ChapterLoader(needDecode ?
                 b64_to_utf8(chapter.script.slice("data:;base64,".length)) : chapter.script, variables, IsCRLF, charaters, backgrounds, BGMs, cgs, chooses),
-                name:name,
-                next:next,
-                isBegin:isBegin,
+            name: name,
+            next: next,
+            isBegin: isBegin,
         }
     })
     return {
         variables,
-        chapters:res as LoadedChapterModel3[]
+        chapters: res as LoadedChapterModel3[],
+        chooses
     }
 }
 const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
@@ -105,7 +118,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
             linePointer = 0
         }
     }
-    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs,name:''}
+    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs, name: '' }
 }
 export function commandProcess(matchedRawLine: RegExpMatchArray,
     backgrounds: Backgrounds,

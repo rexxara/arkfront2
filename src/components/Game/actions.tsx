@@ -1,7 +1,6 @@
 import message from '../AMessage/index'
 import { IState } from './MainGame'
-import _omit from 'lodash/omit'
-
+import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3 } from '../../utils/types'
 interface DBModel {
     name: string,
     version: number,
@@ -23,44 +22,36 @@ const dataBase: DBModel = {
 const INDEXDB = {
     indexedDB: window.indexedDB,
     IDBKeyRange: window.IDBKeyRange,
-    openDB: function (dbname: string, dbversion: number, callback?: Function) {
-        //建立或打开数据库，建立对象存储空间(ObjectStore)
-        let self = this;
-        let version = dbversion || 1;
-        let request = self.indexedDB.open(dbname, version);
-        request.onerror = function (e) {
-            console.error('error on Open database')
-        };
-        request.onsuccess = function (e) {
-            dataBase.db = request.result
-
-            console.log('成功建立并打开数据库:' + dataBase.name + ' version' + dbversion);
-            if (callback) {
-                callback()
+    openDB: (dbname: string, dbversion: number, callback?: Function): Promise<boolean> => {
+        return new Promise((res, rej) => {
+            let version = dbversion || 1;
+            let request = indexedDB.open(dbname, version)
+            request.onerror = function (e) {
+                rej('error on Open database')
+            };
+            request.onsuccess = function (e) {
+                dataBase.db = request.result
+                console.log('成功建立并打开数据库:' + dataBase.name + ' version' + dbversion)
+                res(true)
             }
-        };
-        request.onupgradeneeded = function (e) {
-            let db = request.result
-            let transaction = request.transaction
-            let store
-            if (!db.objectStoreNames.contains(dataBase.objectStore.name)) {
-                //没有该对象空间时创建该对象空间
-                store = db.createObjectStore(dataBase.objectStore.name, { keyPath: 'quickSave' })
-                console.log('成功建立对象存储空间：' + dataBase.objectStore.name);
+            request.onupgradeneeded = function (e) {
+                let db = request.result
+                let store
+                if (!db.objectStoreNames.contains(dataBase.objectStore.name)) {
+                    store = db.createObjectStore(dataBase.objectStore.name, { keyPath: 'quickSave' })
+                    console.log('成功建立对象存储空间：' + dataBase.objectStore.name)
+                }
+                res(true)
             }
-        }
+        })
 
     },
     deletedb: function (dbname: string) {
-        //删除数据库
         let self = this;
         self.indexedDB.deleteDatabase(dbname);
-        console.log(dbname + '数据库已删除')
     },
     closeDB: function (db: IDBDatabase) {
-        //关闭数据库
         db.close();
-        console.log('数据库已关闭')
     },
     addData: function (db: IDBDatabase, storename: string, data: any) {
         //添加数据，重复添加会报错
@@ -74,27 +65,25 @@ const INDEXDB = {
         };
 
     },
-    putData: function (db: IDBDatabase, storename: string, data: any) {
-        //添加数据，重复添加会更新原有数据
-        let store = db.transaction(storename, 'readwrite').objectStore(storename), request;
-        request = store.put(data)
-        request.onerror = function () {
-            console.error('put添加数据库中已有该数据')
-        };
-        request.onsuccess = function () {
-            console.log('put添加数据已存入数据库')
-        };
+    putData: function (db: IDBDatabase, storename: string, data: any): Promise<boolean> {
+        return new Promise((res, rej) => {
+            let store = db.transaction(storename, 'readwrite').objectStore(storename), request;
+            request = store.put(data)
+            request.onerror = () => rej(false)
+            request.onsuccess = () => res(false)
+        })
     },
-    getDataByKey: function (db: IDBDatabase, storename: string, key: any) {
-        let store = db.transaction(storename, 'readwrite').objectStore(storename);
-        let request = store.get(key)
-        request.onerror = function () {
-            console.error('getDataByKey error');
-        };
-        request.onsuccess = function (e: any) {
-            console.log('查找数据成功')
-            console.log(request.result)
-        };
+    getDataByKey: function (db: IDBDatabase, storename: string, key: any): Promise<SaveData> {
+        return new Promise((res, rej) => {
+            let store = db.transaction(storename, 'readwrite').objectStore(storename);
+            let request = store.get(key)
+            request.onerror = function () {
+                rej()
+            };
+            request.onsuccess = function (e: any) {
+                res(request.result)
+            };
+        })
     },
     deleteData: function (db: IDBDatabase, storename: string, key: string) {
         //删除某一条记录
@@ -110,57 +99,53 @@ const INDEXDB = {
     }
 }
 
-const iniState = {
-    auto: false,//
-    displayText: '',//动态
-    displayName: '',
-    cacheDisplayLineText: '',//
-    cacheDisplayLineName: '',//
-    background: '',
-    timers: undefined,//
-    linePointer: 0,
-    displaycharacters: {},
-    rawLine: '',
-    stop: false,
-    bgm: { name: '', src: '' },
-    cg: '',
-    preloadJSX: undefined,//
-    clickDisable: false,
-    choose: [],
-    currentChapter: {
-        line: [],
-        name: '',
-        next: '',
-        preLoadCgs: {},
-        preLoadBackgrounds: {},
-        preLoadCharaters: {}
-    },
-    gamevariables: {}
+interface SaveData {
+    auto: boolean,
+    background: string,
+    bgm: selectedBGM,
+    cg: string,
+    chooseKey?: string,
+    isNextChoose?: true,
+    clickDisable: boolean,
+    currentChapterName: string,
+    displayName: string,
+    displayText: string,
+    displaycharacters: DisplayCharacters,
+    gameVariables: any,
+    linePointer: number,
+    quickSave: 1,
+    stop: boolean
 }
+
 const actions = {
     skipThisLine: () => message.info('skipThisLine'),
-    save: (state: IState): boolean => {
+    save: async (state: IState) => {
         const { auto, displayName, background, linePointer, displaycharacters, rawLine, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapter } = state
-        const dataTobeSaved = {
+        console.log(choose)
+        let dataTobeSaved: SaveData = {
             quickSave: 1,
-            auto, displayName, displayText: rawLine, background, linePointer, displaycharacters, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapterName: currentChapter.name
+            auto, displayName, displayText: rawLine, background, linePointer, displaycharacters, stop, bgm, cg, clickDisable, gameVariables, currentChapterName: currentChapter.name
         }
-        console.log(dataTobeSaved)
-        INDEXDB.openDB(dataBase.name, dataBase.version, () => {
-            if (dataBase.db) {
-                INDEXDB.putData(dataBase.db, dataBase.objectStore.name, dataTobeSaved)
+        if (choose[1]) {
+            if (!choose[1].chooseKey) {
+                dataTobeSaved.isNextChoose = true
+            } else {
+                dataTobeSaved.chooseKey = choose[1].chooseKey
             }
-        })
-        return true
+        } else {
+            console.log('没有选择')
+        }
+        const openSuccess = await INDEXDB.openDB(dataBase.name, dataBase.version)
+        if (openSuccess && dataBase.db) {
+            const saveSuccess = await INDEXDB.putData(dataBase.db, dataBase.objectStore.name, dataTobeSaved)
+            console.log(saveSuccess)
+        }
     },
-    load: () => {
-        console.log('123')
-        INDEXDB.openDB(dataBase.name, dataBase.version, () => {
-            if (dataBase.db) {
-                INDEXDB.getDataByKey(dataBase.db, dataBase.objectStore.name, 1)
-            }
-        })
-        return iniState
+    load: async () => {
+        const openSuccess = await INDEXDB.openDB(dataBase.name, dataBase.version)
+        if (openSuccess && dataBase.db) {
+            return await INDEXDB.getDataByKey(dataBase.db, dataBase.objectStore.name, 1)
+        }
     }
 }
 export default actions
