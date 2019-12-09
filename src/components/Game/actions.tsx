@@ -10,36 +10,35 @@ interface DBModel {
         key: string
     }
 }
-const dataBase: DBModel = {
+let saveData: DBModel = {
     name: 'saveData',
     version: 1,
     objectStore: {
-        name: 'saveData',//存储空间表的名字
+        name: 'saveData',//quickSave
         key: 'id'//主键
     }
 }
-
 const INDEXDB = {
     indexedDB: window.indexedDB,
     IDBKeyRange: window.IDBKeyRange,
-    openDB: (dbname: string, dbversion: number, callback?: Function): Promise<boolean> => {
+    openDB: (dbModel: DBModel): Promise<boolean> => {
+        const { name } = dbModel
         return new Promise((res, rej) => {
-            let version = dbversion || 1;
-            let request = indexedDB.open(dbname, version)
+            let version = 1
+            let request = indexedDB.open(name, version)
             request.onerror = function (e) {
                 rej('error on Open database')
             };
             request.onsuccess = function (e) {
-                dataBase.db = request.result
-                console.log('成功建立并打开数据库:' + dataBase.name + ' version' + dbversion)
+                dbModel.db = request.result
+                console.log('成功建立并打开数据库:' + dbModel.name + ' version' + dbModel.version)
                 res(true)
             }
             request.onupgradeneeded = function (e) {
-                let db = request.result
-                let store
-                if (!db.objectStoreNames.contains(dataBase.objectStore.name)) {
-                    store = db.createObjectStore(dataBase.objectStore.name, { keyPath: 'quickSave' })
-                    console.log('成功建立对象存储空间：' + dataBase.objectStore.name)
+                const db = request.result
+                if (!db.objectStoreNames.contains(dbModel.objectStore.name)) {
+                    db.createObjectStore(dbModel.objectStore.name, { keyPath: 'id', autoIncrement: true })
+                    console.log('成功建立对象存储空间：' + dbModel.objectStore.name)
                 }
                 res(true)
             }
@@ -70,10 +69,23 @@ const INDEXDB = {
             let store = db.transaction(storename, 'readwrite').objectStore(storename), request;
             request = store.put(data)
             request.onerror = () => rej(false)
-            request.onsuccess = () => res(false)
+            request.onsuccess = () => res(true)
         })
     },
-    getDataByKey: function (db: IDBDatabase, storename: string, key: any): Promise<SaveData> {
+    loadAll: function (db: IDBDatabase, storename: string, key?: number): Promise<SaveData[]> {
+        return new Promise((res, rej) => {
+            let store = db.transaction(storename, 'readwrite').objectStore(storename);
+            let request = store.getAll()
+            request.onerror = function () {
+                rej()
+            };
+            request.onsuccess = function (e: any) {
+                res(request.result)
+
+            };
+        })
+    },
+    getDataByKey: function (db: IDBDatabase, storename: string, key: number): Promise<SaveData[]> {
         return new Promise((res, rej) => {
             let store = db.transaction(storename, 'readwrite').objectStore(storename);
             let request = store.get(key)
@@ -82,6 +94,7 @@ const INDEXDB = {
             };
             request.onsuccess = function (e: any) {
                 res(request.result)
+
             };
         })
     },
@@ -99,7 +112,7 @@ const INDEXDB = {
     }
 }
 
-interface SaveData {
+export interface SaveData {
     auto: boolean,
     background: string,
     bgm: selectedBGM,
@@ -113,38 +126,54 @@ interface SaveData {
     displaycharacters: DisplayCharacters,
     gameVariables: any,
     linePointer: number,
-    quickSave: 1,
+    id?: number,
     stop: boolean
 }
+const modifyToBeSaveData = (state: IState, id: number | string): SaveData => {
+    const { auto, displayName, background, linePointer, displaycharacters, rawLine, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapter } = state
+    let dataTobeSaved: SaveData = {
+        auto, displayName, displayText: rawLine, background, linePointer, displaycharacters, stop, bgm, cg, clickDisable, gameVariables, currentChapterName: currentChapter.name,
+        isNextChoose: undefined,
+        chooseKey: '',
+    }
+    if (typeof id === 'number') {
+        dataTobeSaved.id = id
+    }
+    if (choose[1]) {
+        if (!choose[1].chooseKey) {
+            dataTobeSaved.isNextChoose = true
+        } else {
+            dataTobeSaved.chooseKey = choose[1].chooseKey
+        }
+    } else {
+        console.log('没有选择')
+    }
+    console.log(dataTobeSaved)
+    return dataTobeSaved
+}
+INDEXDB.openDB(saveData)
 
 const actions = {
     skipThisLine: () => message.info('skipThisLine'),
-    save: async (state: IState) => {
-        const { auto, displayName, background, linePointer, displaycharacters, rawLine, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapter } = state
-        console.log(choose)
-        let dataTobeSaved: SaveData = {
-            quickSave: 1,
-            auto, displayName, displayText: rawLine, background, linePointer, displaycharacters, stop, bgm, cg, clickDisable, gameVariables, currentChapterName: currentChapter.name
-        }
-        if (choose[1]) {
-            if (!choose[1].chooseKey) {
-                dataTobeSaved.isNextChoose = true
-            } else {
-                dataTobeSaved.chooseKey = choose[1].chooseKey
-            }
-        } else {
-            console.log('没有选择')
-        }
-        const openSuccess = await INDEXDB.openDB(dataBase.name, dataBase.version)
-        if (openSuccess && dataBase.db) {
-            const saveSuccess = await INDEXDB.putData(dataBase.db, dataBase.objectStore.name, dataTobeSaved)
+    save: async (state: IState, id: number | string) => {
+        const openSuccess = await INDEXDB.openDB(saveData)
+        if (openSuccess && saveData.db) {
+            const saveSuccess = await INDEXDB.putData(saveData.db, saveData.objectStore.name, modifyToBeSaveData(state, id))
             console.log(saveSuccess)
+        } else {
+            console.log('databaseNotFound')
         }
     },
-    load: async () => {
-        const openSuccess = await INDEXDB.openDB(dataBase.name, dataBase.version)
-        if (openSuccess && dataBase.db) {
-            return await INDEXDB.getDataByKey(dataBase.db, dataBase.objectStore.name, 1)
+    load: async (key?: number) => {
+        const openSuccess = await INDEXDB.openDB(saveData)
+        if (openSuccess && saveData.db) {
+            return await INDEXDB.getDataByKey(saveData.db, saveData.objectStore.name, key)
+        }
+    },
+    loadAll: async () => {
+        const openSuccess = await INDEXDB.openDB(saveData)
+        if (openSuccess && saveData.db) {
+            return await INDEXDB.loadAll(saveData.db, saveData.objectStore.name)
         }
     }
 }

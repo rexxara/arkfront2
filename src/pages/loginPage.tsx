@@ -8,7 +8,7 @@ import AMessage from '../components/AMessage'
 import AInput from '../components/AInput'
 import {validateFunction} from '../components/AInput/interfaces'
 
-import { login } from '../services/index'
+// import { login } from '../services/index'
 const LoginPage: React.FC = () => {
   // useEffect(() => {
   //   // console.log('I will run only once');

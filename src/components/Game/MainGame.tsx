@@ -4,15 +4,19 @@ import { variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
 import _omit from 'lodash/omit'
 import styles from './style.css'
-import ARKBGMplayer from './BGMplayer'
+import ARKBGMplayer from './component/BGMplayer'
 import { commandProcess, actionReg } from '../../utils/loader'
 import ARKOption from './Option'
-import action from './actions'
+import action, { SaveData } from './actions'
+import SaveDataCon from './component/saveDataCon'
+import ImgCache from './component/ImgCache'
+import CtrlPanel from './component/ctrlPanel'
 interface IProps {
     data: GameModel3,
     RawScript: RawScript
 }
 export interface IState {
+    saveDataConOpen: boolean,
     auto: boolean
     displayText: string
     displayName: string
@@ -26,7 +30,6 @@ export interface IState {
     stop: boolean
     bgm: selectedBGM
     cg: string
-    preloadJSX: any
     clickDisable: boolean
     choose: Option[],
     gameVariables: any,
@@ -43,6 +46,7 @@ interface clickHandleConfig {
 
 const TEXT_DISPLAY_SPEEED = 50
 const iniState = {
+    saveDataConOpen: false,
     auto: false,
     displayText: '',
     displayName: '',
@@ -56,7 +60,6 @@ const iniState = {
     stop: false,
     bgm: { name: '', src: '' },
     cg: '',
-    preloadJSX: undefined,
     clickDisable: false,
     skipResourseCount: 0,
     choose: [],
@@ -70,7 +73,51 @@ const iniState = {
     }
 }
 const gameVariables = {}
-
+const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
+    //currentChapter(string)=>array //rawLine=displaytext//chooseKey=>choose//isNext=>choose
+    const { data: { chapters, chooses } } = props
+    const { background, cg, displaycharacters: oldCharater } = state
+    const { currentChapterName } = newData
+    const loadedChapter = chapters.find(v => v.name === currentChapterName)
+    if (loadedChapter) {
+        delete newData.currentChapterName
+        let choose: Option[] = []
+        if (newData.chooseKey) {
+            choose = chooses[newData.chooseKey]
+            delete newData.chooseKey
+        }
+        if (newData.isNextChoose && Array.isArray(loadedChapter.next)) {
+            choose = loadedChapter.next
+        }
+        let skipResourseCount = 0
+        const { displaycharacters } = newData
+        if (newData.background.length && newData.background !== background) skipResourseCount++
+        if (newData.cg.length && newData.cg !== cg) skipResourseCount++
+        skipResourseCount += Object.keys(displaycharacters).filter(key => {
+            const oldEmo = (oldCharater[key] || {}).emotion
+            const newEmo = displaycharacters[key].emotion
+            if (oldEmo === newEmo) {
+                return false
+            } else if (newEmo.length) {
+                return true
+            } else {
+                return false
+            }
+        }).length
+        const rawLine = newData.displayText
+        const mergedData = {
+            ...iniState,
+            ...newData,
+            rawLine,
+            choose,
+            currentChapter: loadedChapter,
+            skipResourseCount: skipResourseCount
+        }
+        return mergedData
+    } else {
+        console.warn('dataBroken')
+    }
+}
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props)
@@ -88,53 +135,37 @@ class MainGame extends React.Component<IProps, IState> {
         this.start = this.start.bind(this)
         this.textAnimationInner = this.textAnimationInner.bind(this)
         this.cgAndBackgroundOnload = this.cgAndBackgroundOnload.bind(this)
-        this.getImgCache = this.getImgCache.bind(this)
         this.startChapter = this.startChapter.bind(this)
         this.onSelect = this.onSelect.bind(this)
         this.execCommand = this.execCommand.bind(this)
         this.quickSave = this.quickSave.bind(this)
-        this.quickLoad = this.quickLoad.bind(this)
+        this.load = this.load.bind(this)
+        this.save = this.save.bind(this)
+        this.closeSaveCon = this.closeSaveCon.bind(this)
+        this.openSaveCon = this.openSaveCon.bind(this)
     }
     quickSave() {
-        console.log(this.state)
-        action.save(this.state)
+        action.save(this.state, 0)
     }
-    async quickLoad() {
-        //currentChapter(string)=>array //rawLine=displaytext//preloadJSX//chooseKey=>choose//isNext=>choose
-        const { data: { chapters, chooses } } = this.props
+    save(param: number) {
+        action.save(this.state, param)
+    }
+    openSaveCon() {
         const { currentChapter, linePointer } = this.state
         this.skipThisLine(currentChapter.line[linePointer])
-        let newData = await action.load()
+        this.setState({ saveDataConOpen: true })
+    }
+    closeSaveCon() {
+        this.setState({ saveDataConOpen: false })
+    }
+    async load(ev?: React.MouseEvent, savedata?: SaveData) {
+        const { currentChapter, linePointer, } = this.state
+        this.skipThisLine(currentChapter.line[linePointer])
+        let newData = savedata|| await action.load(0)
         if (newData) {
-            const { currentChapterName } = newData
-            const loadedChapter = chapters.find(v => v.name === currentChapterName)
-            if (loadedChapter) {
-            delete newData.currentChapterName
-            let choose: Option[] = []
-            if (newData.chooseKey) {
-                choose = chooses[newData.chooseKey]
-                delete newData.chooseKey
-            }
-            if(newData.isNextChoose&&Array.isArray(loadedChapter.next)){
-                choose=loadedChapter.next
-            }
-            let skipResourseCount = 0
-            if (newData.background.length) skipResourseCount++
-            if (newData.cg.length) skipResourseCount++
-            skipResourseCount += Object.keys(newData.displaycharacters).length
-                const preloadJSX = this.getImgCache(loadedChapter)
-                const rawLine = newData.displayText
-                const mergedData = {
-                    ...iniState,
-                    ...newData,
-                    preloadJSX,
-                    rawLine,
-                    choose,
-                    currentChapter: loadedChapter,
-                    skipResourseCount: skipResourseCount
-                }
-                console.log(mergedData)
-                this.setState(mergedData)
+            const data = saveDataAdapter(newData, this.props, this.state)
+            if (data) {
+                this.setState(data)
             }
         } else {
             console.log('noQuick load Data')
@@ -162,52 +193,9 @@ class MainGame extends React.Component<IProps, IState> {
             const currentLine = chapter.line[0]
             this.start(currentLine)
             this.setState({
-                currentChapter: chapter,
-                preloadJSX: this.getImgCache(chapter)
+                currentChapter: chapter
             })
         }
-    }
-    getImgCache(currentChapter: LoadedChapterModel3) {
-        const { preLoadBackgrounds, preLoadCgs, preLoadCharaters } = currentChapter
-        let preloadBGArray: string[] = []
-        let preloadCGArray: string[] = []
-        let preloadChArray: string[] = []
-        for (const key in preLoadBackgrounds) {
-            if (preLoadBackgrounds.hasOwnProperty(key)) {
-                preloadBGArray.push(preLoadBackgrounds[key])
-            }
-        }
-        for (const key in preLoadCgs) {
-            if (preLoadCgs.hasOwnProperty(key)) {
-                preloadCGArray.push(preLoadCgs[key])
-            }
-        }
-        for (const key in preLoadCharaters) {
-            if (preLoadCharaters.hasOwnProperty(key)) {
-                preLoadCharaters[key].map(v => {
-                    const str = `${key}/${v}`
-                    preloadChArray.push(str)
-                })
-            }
-        }
-        const preloadJSX = <div>
-            {preloadBGArray.map(imgsrc => <img
-                className={styles.cacheImg}
-                key={imgsrc}
-                src={require(`../../scripts/backgrounds/${imgsrc}`)} />
-            )}
-            {preloadCGArray.map(imgsrc => <img
-                className={styles.cacheImg}
-                key={imgsrc}
-                src={require(`../../scripts/CGs/${imgsrc}`)} />
-            )}
-            {preloadChArray.map(imgsrc => <img
-                className={styles.cacheImg}
-                key={imgsrc}
-                src={require(`../../scripts/charatersImages/${imgsrc}`)} />
-            )}
-        </div>
-        return preloadJSX
     }
     skipThisLine(line: (DisplayLine | CommandLine)) {
         this.clearTimers()
@@ -355,6 +343,13 @@ class MainGame extends React.Component<IProps, IState> {
         const { skipResourseCount } = this.state
         if (!skipResourseCount) {
             this.setState({ clickDisable: false })
+        } else {
+            this.setState((state) => {
+                return {
+                    ...state,
+                    skipResourseCount: state.skipResourseCount - 1
+                }
+            })
         }
         const { cacheDisplayLineName, cacheDisplayLineText } = this.state
         if (cacheDisplayLineName && cacheDisplayLineText) {
@@ -369,10 +364,17 @@ class MainGame extends React.Component<IProps, IState> {
             this.setState({ clickDisable: false }, () => {
                 this.clickHandle()
             })
+        } else {
+            this.setState((state) => {
+                return {
+                    ...state,
+                    skipResourseCount: state.skipResourseCount - 1
+                }
+            })
         }
     }
-    textAnimation(value: string, name?: string, notAnimate?: boolean) {
-        // if (notAnimate) {
+    textAnimation(value: string, name?: string, skip?: boolean) {
+        // if (skip) {
         //     this.setState({ displayName: name || '', displayText: value })
         //     return 0
         // }
@@ -403,7 +405,7 @@ class MainGame extends React.Component<IProps, IState> {
         }, TEXT_DISPLAY_SPEEED)
         this.setState({ timers: flag })
     }
-    onSelect(selectedOption: Option, options: Option[]) {
+    onSelect(selectedOption: Option) {
         const { gameVariables } = this.state
         let newGameVariables = {}
         const { callback, jumpKey } = selectedOption
@@ -430,13 +432,7 @@ class MainGame extends React.Component<IProps, IState> {
     clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
         const { skipResourseCount, timers, auto, linePointer, clickDisable, currentChapter } = this.state
         config = config || {}
-        if (skipResourseCount) {//这块和imgOnLoad的逻辑有重复，不过没bug就先不改了
-            this.setState(state => {
-                return {
-                    ...state,
-                    skipResourseCount: state.skipResourseCount - 1
-                }
-            })
+        if (skipResourseCount) {//这块和imgOnLoad的逻辑有重复，不过没bug就先不改了,没个j8,到处都是bug
             return
         }
         if (ev && clickDisable) {
@@ -464,21 +460,23 @@ class MainGame extends React.Component<IProps, IState> {
             console.warn('noChapter')
         }
     }
-
     render() {
-        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, preloadJSX, choose, gameVariables } = this.state
+        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose, gameVariables, saveDataConOpen, currentChapter } = this.state
         const displaycharactersArray = Object.keys(displaycharacters).map(v => { return { name: v, ...displaycharacters[v] } })
         return <React.Fragment>
-            <div className={styles.ctrlPanle}>
-                <p>第<button onClick={(ev) => this.clickHandle(ev, { reset: true })}>{linePointer}</button>行</p>
-                <button onClick={this.nextChapter}>下一章</button>
-                <p>在场人物<span></span></p>
-                <p>{displaycharactersArray.map(v => v.name)}</p>
-                <button onClick={this.toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</button>
-                <button onClick={this.quickSave}>quickSave</button>
-                <button onClick={this.quickLoad}>quickLoad</button>
-                <ARKBGMplayer src={bgm} />
-            </div>
+            <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
+                linePointer={linePointer}
+                auto={auto}
+                closeSaveCon={this.closeSaveCon}
+                openSaveCon={this.openSaveCon}
+                quickSave={this.quickSave}
+                quickLoad={this.load}
+                displaycharactersArray={displaycharactersArray}
+                nextChapter={this.nextChapter}
+                toogleAuto={this.toogleAuto}
+            />
+            <ARKBGMplayer src={bgm} />
+            {saveDataConOpen && <SaveDataCon saveData={this.save} loadData={this.load} />}
             <div className={styles.container}
                 style={{
                     background: background ?
@@ -505,7 +503,7 @@ class MainGame extends React.Component<IProps, IState> {
             </div>
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}
             {cg && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/CGs/${cg}`)} alt="" />}
-            {preloadJSX}
+            <ImgCache chapter={currentChapter} />
         </React.Fragment>
     }
 }
