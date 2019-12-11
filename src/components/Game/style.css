@@ -1,4 +1,3 @@
-
 .container {
   height: 48vw;
   text-align: left;
@@ -9,6 +8,15 @@
   -moz-background-size: 100% 100% !important;
   z-index: 10;
   position: relative;
+}
+
+.effects {
+  height: 48vw;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 8;
 }
 
 .dialog {
@@ -79,7 +87,8 @@
   -moz-background-size: 100% 100% !important;
   z-index: 8;
 }
-.hide{
+
+.hide {
   position: absolute;
   opacity: 0.0;
   top: 0;
@@ -87,7 +96,7 @@
   z-index: -1;
 }
 
-.cacheImg{
+.cacheImg {
   opacity: 0.0;
   position: absolute;
   top: 0;
@@ -95,7 +104,8 @@
   height: 48vw;
   z-index: -1;
 }
-.chooseCon{
+
+.chooseCon {
   position: absolute;
   display: flex;
   top: 0;
@@ -105,10 +115,11 @@
   user-select: none;
   background-color: rgba(30, 30, 30, 0.5);
   z-index: 11;
-  flex-direction:row;
+  flex-direction: row;
   flex-wrap: wrap;
 }
-.choose{
+
+.choose {
   width: 80%;
   margin: auto;
   text-align: center;
@@ -117,21 +128,25 @@
   background: #37373d;
   font-size: 24px;
 }
-.chooseDisable{
+
+.chooseDisable {
   color: black;
   border: 1px solid #1e1e1e;
   background: #37373d;
 }
-.chooseDisable:hover{
+
+.chooseDisable:hover {
   color: black !important;
   border: 1px solid #1e1e1e !important;
   background: #37373d !important;
 }
-.choose:hover{
+
+.choose:hover {
   background: white;
   color: black;
 }
-.SaveDataCon{
+
+.SaveDataCon {
   position: absolute;
   top: 0;
   left: 0;
@@ -141,12 +156,14 @@
   color: red;
   z-index: 11;
 }
-.saveDataItem{
+
+.saveDataItem {
   width: 100%;
   height: 30px;
   background: #66ccff;
 }
-.InputCon{
+
+.InputCon {
   z-index: 12;
   width: 200px;
   height: 150px;

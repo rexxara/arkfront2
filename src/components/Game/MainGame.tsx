@@ -13,6 +13,8 @@ import ImgCache from './component/ImgCache'
 import CtrlPanel from './component/ctrlPanel'
 import { Icon } from 'antd'
 import GAMEInput from './component/input'
+import effects from './effects'
+const effectCanvasId = 'effects'
 interface IProps {
     data: GameModel3,
     RawScript: RawScript
@@ -42,6 +44,7 @@ export interface IState {
     //然后在没有任何资源的行保存就不会跳 所以就试着在加载的时候保存这个counter，在onload的时候读取，判断是否为0，为零就clickHandle，不为零就--
     //然后这个counter计算的时候，还得减去现在已经显示的资源数
     input: Input
+    effectref?: any
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -285,7 +288,7 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     commandLineProcess(command: CommandLine) {
-        const { background, displaycharacters, cg } = this.state
+        const { background, displaycharacters, cg, effectref } = this.state
         const ARKBGM = document.getElementById('ARKBGM') as HTMLAudioElement
         let newParam = {}
         let needLoadImg = false
@@ -338,6 +341,19 @@ class MainGame extends React.Component<IProps, IState> {
             case LINE_TYPE.COMMAND_SHOW_INPUT:
                 needStop = true
                 newParam = { input: command.param, clickDisable: true }
+                break
+            case LINE_TYPE.COMMAND_SHOW_EFFECT:
+                newParam = { effectKey: command.param, effectref: effects[command.param as string](effectCanvasId) }
+                break
+            case LINE_TYPE.COMMAND_REMOVE_EFFECT:
+                console.log('COMMAND_REMOVE_EFFECT')
+                if (effectref) {
+                    effectref.stop()
+                } else {
+                    console.warn('effectRefNotfound')
+                }
+                newParam = { effectKey: '' }
+                break
             default:
                 //'invalidCommand')
                 break
@@ -520,6 +536,7 @@ class MainGame extends React.Component<IProps, IState> {
                         background: cg ?
                             `url(${require(`../../scripts/CGs/${cg}`)})` : undefined
                     }}></div>
+                <div className={styles.effects} id={effectCanvasId}></div>
                 <div className={styles.dialog}>
                     <div className={styles.owner}>{displayName}</div>
                     <div className={styles.textarea} >{displayText}{rawLine === displayText && <Icon type="step-forward" />}</div>

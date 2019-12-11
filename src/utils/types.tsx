@@ -17,7 +17,9 @@ export const LINE_TYPE = {
     COMMAND_SHOW_CG: 'showCg',
     COMMAND_REMOVE_CG: 'removeCg',
     COMMAND_SHOW_CHOOSE: 'showChoose',
-    COMMAND_SHOW_INPUT: 'showInput'
+    COMMAND_SHOW_INPUT: 'showInput',
+    COMMAND_SHOW_EFFECT: 'showEffect',
+    COMMAND_REMOVE_EFFECT: 'removeEffect',
 }
 
 
@@ -119,7 +121,7 @@ export interface Inputs {
     [arg: string]: Input
 }
 export interface Input {
-    key: string|undefined,
+    key: string | undefined,
     afterFix: (string: string) => string,
     id?: string
 }

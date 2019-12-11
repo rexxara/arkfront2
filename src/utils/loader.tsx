@@ -223,8 +223,18 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
                 command: LINE_TYPE.COMMAND_SHOW_INPUT,
                 param: inputs[key]
             }
+        case LINE_TYPE.COMMAND_SHOW_EFFECT:
+            return {
+                command: LINE_TYPE.COMMAND_SHOW_EFFECT,
+                param: key
+            }
+        case LINE_TYPE.COMMAND_REMOVE_EFFECT:
+            return {
+                command: LINE_TYPE.COMMAND_REMOVE_EFFECT
+            }
         default:
             //warn：unKnowCommand
+            console.log(command)
             return {
                 command: LINE_TYPE.command,
                 param: 'unKnowCommand'

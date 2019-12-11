@@ -14,11 +14,11 @@ export function strlen(str: string = "") {
 }
 export function variableLoader(text: string, variables: any): any {
   const reg = /\$\{[^}]+\}/g
-    const res = text.replace(reg, function (rs) {
-        const key = rs.slice(2, rs.length - 1)
-        return variables[key]
-    })
-    return res
+  const res = text.replace(reg, function (rs) {
+    const key = rs.slice(2, rs.length - 1)
+    return variables[key]
+  })
+  return res
 }
 // export function ToDBC(txtstring: string) {
 //   var tmp = "";
@@ -67,9 +67,12 @@ export function isArrayEqual(arr: number[], currentSpaceLine: number[]) {
   return res ? false : true
 }
 
-export function splitFromFirstKey(str:string,key:string): string[] {
-  const index=str.indexOf(key)
-  const pre=str.substring(0,index)
-  const last=str.substring(index+1)
-  return [pre,last]
+export function splitFromFirstKey(str: string, key: string): string[] {
+  const index = str.indexOf(key)
+  if (index === -1) {
+    return [str, '']
+  }
+  const pre = str.substring(0, index)
+  const last = str.substring(index + 1)
+  return [pre, last]
 }
