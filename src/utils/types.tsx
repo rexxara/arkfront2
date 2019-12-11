@@ -7,16 +7,17 @@ export const LINE_TYPE = {
     monologue: 'monologue',
     comment: "comment",
     command: 'command',
-    command_SHOW_BACKGROUND: 'showbg',
-    command_LEAVE_CHARATER: 'leave',
-    command_ENTER_CHARATER: 'showCh',
-    command_PLAY_BGM: 'playBgm',
-    command_PAUSE_BGM: 'pauseBgm',
-    command_RESUME_BGM: 'resumeBgm',
-    command_REMOVE_BACKGROUND: 'removeBg',
-    command_SHOW_CG: 'showCg',
-    command_REMOVE_CG: 'removeCg',
-    command_SHOW_CHOOSE: 'showChoose'
+    COMMAND_SHOW_BACKGROUND: 'showbg',
+    COMMAND_LEAVE_CHARATER: 'leave',
+    COMMAND_ENTER_CHARATER: 'showCh',
+    COMMAND_PLAY_BGM: 'playBgm',
+    COMMAND_PAUSE_BGM: 'pauseBgm',
+    COMMAND_RESUME_BGM: 'resumeBgm',
+    COMMAND_REMOVE_BACKGROUND: 'removeBg',
+    COMMAND_SHOW_CG: 'showCg',
+    COMMAND_REMOVE_CG: 'removeCg',
+    COMMAND_SHOW_CHOOSE: 'showChoose',
+    COMMAND_SHOW_INPUT: 'showInput'
 }
 
 
@@ -40,7 +41,7 @@ export interface DisplayLine {
 
 export interface CommandLine {
     command: string,
-    param?: string | displayCharacter | selectedBGM | Option[]
+    param?: string | displayCharacter | selectedBGM | Option[] | Input
 }
 export interface DisplayCharacters {
     [arg: string]: displayCharacter
@@ -74,13 +75,12 @@ export interface RawScript {
     backgrounds: Backgrounds,
     BGMs: BGMs,
     cgs: CGS,
-    chooses: Chooses
+    chooses: Chooses,
+    inputs: Inputs
 }
 
 export interface GameModel3 {
-    chapters: LoadedChapterModel3[],
-    variables: any,
-    chooses:Chooses
+    chapters: LoadedChapterModel3[]
 }
 export interface LoadedChapterModel3 {
     line: (CommandLine | DisplayLine)[]
@@ -115,9 +115,17 @@ export interface Backgrounds {
 export interface Chooses {
     [arg: string]: Option[]
 }
+export interface Inputs {
+    [arg: string]: Input
+}
+export interface Input {
+    key: string|undefined,
+    afterFix: (string: string) => string,
+    id?: string
+}
 export interface Option {
     text: string,
-    chooseKey?:string,
+    chooseKey?: string,
     callback?: Function,
     jumpKey?: string,
     disable?: (variables: any) => boolean

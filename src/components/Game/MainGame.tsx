@@ -1,5 +1,5 @@
 import React from 'react'
-import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3 } from '../../utils/types'
+import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3, Input } from '../../utils/types'
 import { variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
 import _omit from 'lodash/omit'
@@ -11,6 +11,8 @@ import action, { SaveData } from './actions'
 import SaveDataCon from './component/saveDataCon'
 import ImgCache from './component/ImgCache'
 import CtrlPanel from './component/ctrlPanel'
+import { Icon } from 'antd'
+import GAMEInput from './component/input'
 interface IProps {
     data: GameModel3,
     RawScript: RawScript
@@ -38,6 +40,8 @@ export interface IState {
     //是异步加载然后callback点击调用clickhandle的因为脚本里showCg啊这些是不算displayLine的 必须自动帮玩家跳过，。然后玩家手动点击
     //但是加载存档的时候也会加载图片，这时候自动调用clickHandle就会跳到下一行，react的setstate也会集中更新所以虽然加载好几个图片触发clickhandle却只是跳到下一行，
     //然后在没有任何资源的行保存就不会跳 所以就试着在加载的时候保存这个counter，在onload的时候读取，判断是否为0，为零就clickHandle，不为零就--
+    //然后这个counter计算的时候，还得减去现在已经显示的资源数
+    input: Input
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -63,6 +67,11 @@ const iniState = {
     clickDisable: false,
     skipResourseCount: 0,
     choose: [],
+    input: {
+        key: undefined,
+        afterFix: () => "",
+        id: ""
+    },
     currentChapter: {
         line: [],
         name: '',
@@ -75,9 +84,9 @@ const iniState = {
 const gameVariables = {}
 const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
     //currentChapter(string)=>array //rawLine=displaytext//chooseKey=>choose//isNext=>choose
-    const { data: { chapters, chooses } } = props
+    const { data: { chapters }, RawScript: { inputs, chooses } } = props
     const { background, cg, displaycharacters: oldCharater } = state
-    const { currentChapterName } = newData
+    const { currentChapterName, inputKey } = newData
     const loadedChapter = chapters.find(v => v.name === currentChapterName)
     if (loadedChapter) {
         delete newData.currentChapterName
@@ -110,12 +119,14 @@ const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
             ...newData,
             rawLine,
             choose,
+            input: inputKey ? inputs[inputKey] : iniState.input,
             currentChapter: loadedChapter,
             skipResourseCount: skipResourseCount
         }
+        console.log(mergedData)
         return mergedData
     } else {
-        console.warn('dataBroken')
+        console.warn('save_data_Broken')
     }
 }
 class MainGame extends React.Component<IProps, IState> {
@@ -143,6 +154,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.save = this.save.bind(this)
         this.closeSaveCon = this.closeSaveCon.bind(this)
         this.openSaveCon = this.openSaveCon.bind(this)
+        this.onInputSubmit = this.onInputSubmit.bind(this)
     }
     quickSave() {
         action.save(this.state, 0)
@@ -151,17 +163,15 @@ class MainGame extends React.Component<IProps, IState> {
         action.save(this.state, param)
     }
     openSaveCon() {
-        const { currentChapter, linePointer } = this.state
-        this.skipThisLine(currentChapter.line[linePointer])
+        this.skipThisLine()
         this.setState({ saveDataConOpen: true })
     }
     closeSaveCon() {
         this.setState({ saveDataConOpen: false })
     }
     async load(ev?: React.MouseEvent, savedata?: SaveData) {
-        const { currentChapter, linePointer, } = this.state
-        this.skipThisLine(currentChapter.line[linePointer])
-        let newData = savedata|| await action.load(0)
+        this.skipThisLine()
+        let newData = savedata || await action.load(0)
         if (newData) {
             const data = saveDataAdapter(newData, this.props, this.state)
             if (data) {
@@ -172,9 +182,8 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     componentDidMount() {
-        window.reset = this.reset
         console.log(this.props)
-        const { data: { variables } } = this.props
+        const { RawScript: { variables } } = this.props
         this.setState({ gameVariables: variables }, this.startChapter)
     }
     startChapter(chapterKey?: string) {
@@ -197,7 +206,9 @@ class MainGame extends React.Component<IProps, IState> {
             })
         }
     }
-    skipThisLine(line: (DisplayLine | CommandLine)) {
+    skipThisLine() {
+        const { currentChapter, linePointer } = this.state
+        const line = currentChapter.line[linePointer]
         this.clearTimers()
         if ('value' in line) {
             const { gameVariables } = this.state
@@ -249,7 +260,6 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     reset() {
-        const { data: { chapters } } = this.props
         this.setState(iniState)
         this.clearTimers()
         this.startChapter()
@@ -265,9 +275,7 @@ class MainGame extends React.Component<IProps, IState> {
                 return this.startChapter(next(gameVariables))
             default:
                 console.log('gameOver')
-                break
         }
-        //console.error('no Next Chapter Or GameOver')
     }
     start(currentLine: (CommandLine | DisplayLine)) {
         if ('command' in currentLine) {
@@ -283,16 +291,16 @@ class MainGame extends React.Component<IProps, IState> {
         let needLoadImg = false
         let needStop = false
         switch (command.command) {
-            case LINE_TYPE.command_SHOW_BACKGROUND:
+            case LINE_TYPE.COMMAND_SHOW_BACKGROUND:
                 needLoadImg = background !== command.param
                 if (needLoadImg) {
                     newParam = { background: command.param }
                 }
                 break
-            case LINE_TYPE.command_LEAVE_CHARATER:
+            case LINE_TYPE.COMMAND_LEAVE_CHARATER:
                 newParam = { displaycharacters: _omit(displaycharacters, [command.param as string]) }
                 break
-            case LINE_TYPE.command_ENTER_CHARATER:
+            case LINE_TYPE.COMMAND_ENTER_CHARATER:
                 const hitedCharater = displaycharacters[(command.param as displayCharacter).name]
                 if (hitedCharater) {
                     needLoadImg = hitedCharater.emotion !== (command.param as displayCharacter).emotion//有人表情不一样
@@ -303,30 +311,33 @@ class MainGame extends React.Component<IProps, IState> {
                     cacheDisplayLineText: ''
                 }
                 break
-            case LINE_TYPE.command_PLAY_BGM:
+            case LINE_TYPE.COMMAND_PLAY_BGM:
                 newParam = { bgm: command.param }
                 break
-            case LINE_TYPE.command_REMOVE_BACKGROUND:
+            case LINE_TYPE.COMMAND_REMOVE_BACKGROUND:
                 newParam = { background: '' }
-            case LINE_TYPE.command_PAUSE_BGM:
+            case LINE_TYPE.COMMAND_PAUSE_BGM:
                 if (ARKBGM) { ARKBGM.pause() } else { throw new Error('bgmNotFound') }
                 break
-            case LINE_TYPE.command_RESUME_BGM:
+            case LINE_TYPE.COMMAND_RESUME_BGM:
                 if (ARKBGM) { ARKBGM.play() } else { throw new Error('bgmNotFound') }
                 break
-            case LINE_TYPE.command_SHOW_CG:
+            case LINE_TYPE.COMMAND_SHOW_CG:
                 needLoadImg = cg !== command.param
                 if (needLoadImg) {
                     newParam = { cg: command.param }
                 }
                 break
-            case LINE_TYPE.command_REMOVE_CG:
+            case LINE_TYPE.COMMAND_REMOVE_CG:
                 newParam = { cg: '', displaycharacters: [] }
                 break
-            case LINE_TYPE.command_SHOW_CHOOSE:
+            case LINE_TYPE.COMMAND_SHOW_CHOOSE:
                 needStop = true
                 newParam = { choose: command.param, clickDisable: true }
                 break
+            case LINE_TYPE.COMMAND_SHOW_INPUT:
+                needStop = true
+                newParam = { input: command.param, clickDisable: true }
             default:
                 //'invalidCommand')
                 break
@@ -419,11 +430,23 @@ class MainGame extends React.Component<IProps, IState> {
             this.clickHandle()
         })
     }
+    onInputSubmit(value: string) {
+        const { gameVariables, input } = this.state
+        let newGameVariables: any = gameVariables
+        if (input.key) {
+            newGameVariables[input.key] = input.afterFix(value)
+        } else {
+            console.warn('input key is invalid')
+        }
+        this.setState({ gameVariables: newGameVariables, clickDisable: false, input: iniState.input }, () => {
+            this.clickHandle()
+        })
+    }
     execCommand(commandString: string) {
         const isCommand = commandString.match(actionReg)
-        const { backgrounds, charaters, BGMs, cgs, chooses } = this.props.RawScript
+        const { backgrounds, charaters, BGMs, cgs, chooses, inputs } = this.props.RawScript
         if (isCommand) {
-            const commandJSON = commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {}, {}, {}, chooses)
+            const commandJSON = commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {}, {}, {}, chooses, inputs)
             this.commandLineProcess(commandJSON)
         } else {
             console.warn(commandString + 'unrecognized')
@@ -454,14 +477,14 @@ class MainGame extends React.Component<IProps, IState> {
                     this.start(nextLine)
                 }
             } else {
-                this.skipThisLine(currentLines[linePointer])//跳过动画
+                this.skipThisLine()//跳过动画
             }
         } else {
             console.warn('noChapter')
         }
     }
     render() {
-        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose, gameVariables, saveDataConOpen, currentChapter } = this.state
+        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose, gameVariables, saveDataConOpen, currentChapter, rawLine, input } = this.state
         const displaycharactersArray = Object.keys(displaycharacters).map(v => { return { name: v, ...displaycharacters[v] } })
         return <React.Fragment>
             <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
@@ -476,6 +499,7 @@ class MainGame extends React.Component<IProps, IState> {
                 toogleAuto={this.toogleAuto}
             />
             <ARKBGMplayer src={bgm} />
+            {input.key && <GAMEInput clickCallback={this.onInputSubmit} />}
             {saveDataConOpen && <SaveDataCon saveData={this.save} loadData={this.load} />}
             <div className={styles.container}
                 style={{
@@ -498,7 +522,7 @@ class MainGame extends React.Component<IProps, IState> {
                     }}></div>
                 <div className={styles.dialog}>
                     <div className={styles.owner}>{displayName}</div>
-                    <div className={styles.textarea} >{displayText}</div>
+                    <div className={styles.textarea} >{displayText}{rawLine === displayText && <Icon type="step-forward" />}</div>
                 </div>
             </div>
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}

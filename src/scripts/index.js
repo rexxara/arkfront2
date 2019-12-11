@@ -75,7 +75,12 @@ const chapters = [
     { name: 'chapter3_section4_1', script: chapter3_section4_1 },
     { name: 'chapter3_section4_2', script: chapter3_section4_2 },
 ]
-
+const inputs = {
+    第一章输入姓名: {
+        key: 'userName',
+        afterFix: (string) => '傻逼' + string
+    }
+}
 const chooses = {
     第三章选择A: [{
         text: '冬马好感+1',
@@ -124,5 +129,6 @@ export default {
     cgs,
     newChapterModel,
     chooses,
-    chapters
+    chapters,
+    inputs
 }

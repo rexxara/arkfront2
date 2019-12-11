@@ -1,6 +1,6 @@
 import message from '../AMessage/index'
 import { IState } from './MainGame'
-import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3 } from '../../utils/types'
+import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3, Input } from '../../utils/types'
 interface DBModel {
     name: string,
     version: number,
@@ -85,7 +85,7 @@ const INDEXDB = {
             };
         })
     },
-    getDataByKey: function (db: IDBDatabase, storename: string, key: number): Promise<SaveData[]> {
+    getDataByKey: function (db: IDBDatabase, storename: string, key: number): Promise<SaveData> {
         return new Promise((res, rej) => {
             let store = db.transaction(storename, 'readwrite').objectStore(storename);
             let request = store.get(key)
@@ -94,7 +94,6 @@ const INDEXDB = {
             };
             request.onsuccess = function (e: any) {
                 res(request.result)
-
             };
         })
     },
@@ -128,13 +127,15 @@ export interface SaveData {
     linePointer: number,
     id?: number,
     stop: boolean
+    inputKey?: string
 }
 const modifyToBeSaveData = (state: IState, id: number | string): SaveData => {
-    const { auto, displayName, background, linePointer, displaycharacters, rawLine, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapter } = state
+    const { auto, displayName, background, linePointer, displaycharacters, rawLine, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapter, input } = state
     let dataTobeSaved: SaveData = {
         auto, displayName, displayText: rawLine, background, linePointer, displaycharacters, stop, bgm, cg, clickDisable, gameVariables, currentChapterName: currentChapter.name,
         isNextChoose: undefined,
         chooseKey: '',
+        inputKey: input.id
     }
     if (typeof id === 'number') {
         dataTobeSaved.id = id
@@ -164,7 +165,7 @@ const actions = {
             console.log('databaseNotFound')
         }
     },
-    load: async (key?: number) => {
+    load: async (key: number) => {
         const openSuccess = await INDEXDB.openDB(saveData)
         if (openSuccess && saveData.db) {
             return await INDEXDB.getDataByKey(saveData.db, saveData.objectStore.name, key)

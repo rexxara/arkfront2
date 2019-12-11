@@ -1,7 +1,7 @@
 import {
     DisplayLine, CommandLine,
     RawScript, LINE_TYPE, NO_IMG,
-    CGS, BGMs, Backgrounds, Characters, Chooses,
+    CGS, BGMs, Backgrounds, Characters, Chooses, Inputs,
     PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, LoadedChapterModel3
 } from './types'
 import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from './utils'
@@ -11,7 +11,7 @@ const CRLF = [13, 10]
 const LF = [10]
 
 
-function choosePreProcess(chooses: Chooses):Chooses {
+function choosePreProcess(chooses: Chooses): Chooses {
     let res: Chooses = {}
     for (const key in chooses) {
         if (chooses.hasOwnProperty(key)) {
@@ -23,7 +23,7 @@ function choosePreProcess(chooses: Chooses):Chooses {
     }
     return res
 }
-function charatersPreProcess(characters: Characters):Characters {
+function charatersPreProcess(characters: Characters): Characters {
     for (const key in characters) {
         if (characters.hasOwnProperty(key)) {
             const character = characters[key]
@@ -32,24 +32,34 @@ function charatersPreProcess(characters: Characters):Characters {
     }
     return characters
 }
+function inputPreprocess(inputs: Inputs): Inputs {
+    let res: Inputs = {}
+    for (const key in inputs) {
+        if (inputs.hasOwnProperty(key)) {
+            res[key] = inputs[key]
+            res[key].id = key
+        }
+    }
+    return inputs
+
+}
 const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean): GameModel3 => {
     const { variables, backgrounds, BGMs, cgs, chapters } = rawScript
+    const inputs = inputPreprocess(rawScript.inputs)
     const charaters = charatersPreProcess(rawScript.charaters)
     const chooses = choosePreProcess(rawScript.chooses)
     const res = chapters.map(chapter => {
         const { name, next, isBegin } = chapter
         return {
             ...ChapterLoader(needDecode ?
-                b64_to_utf8(chapter.script.slice("data:;base64,".length)) : chapter.script, variables, IsCRLF, charaters, backgrounds, BGMs, cgs, chooses),
+                b64_to_utf8(chapter.script.slice("data:;base64,".length)) : chapter.script, variables, IsCRLF, charaters, backgrounds, BGMs, cgs, chooses, inputs),
             name: name,
             next: next,
             isBegin: isBegin,
         }
     })
     return {
-        variables,
-        chapters: res as LoadedChapterModel3[],
-        chooses
+        chapters: res as LoadedChapterModel3[]
     }
 }
 const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
@@ -57,7 +67,7 @@ const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
 }
 
 
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS, chooses: Chooses): LoadedChapterModel3 {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS, chooses: Chooses, inputs: Inputs): LoadedChapterModel3 {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
@@ -97,7 +107,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                         break;
                     case LINE_TYPE.command:
                         if (extra) {
-                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters, chooses)
+                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters, chooses, inputs)
                         } else {
                             throw new Error(lineStr)
                         }
@@ -128,31 +138,31 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
     preLoadBackgrounds: PreLoadBackgrounds,
     preLoadCgs: PreLoadCgs,
     preLoadCharaters: PreLoadCharaters,
-    chooses: Chooses
+    chooses: Chooses,
+    inputs: Inputs
 ): CommandLine {
-
     const [command, key] = splitFromFirstKey(matchedRawLine[1], ":")
     switch (command) {
-        case LINE_TYPE.command_SHOW_BACKGROUND:
+        case LINE_TYPE.COMMAND_SHOW_BACKGROUND:
             if (backgrounds[key]) {
                 preLoadBackgrounds[key] = backgrounds[key]
                 return {
-                    command: LINE_TYPE.command_SHOW_BACKGROUND,
+                    command: LINE_TYPE.COMMAND_SHOW_BACKGROUND,
                     param: backgrounds[key] as string
                 }
             } else {
                 throw new Error(`background ${key} isn't registered`)
             }
-        case LINE_TYPE.command_LEAVE_CHARATER:
+        case LINE_TYPE.COMMAND_LEAVE_CHARATER:
             return {
-                command: LINE_TYPE.command_LEAVE_CHARATER,
+                command: LINE_TYPE.COMMAND_LEAVE_CHARATER,
                 param: key as string
             }
-        case LINE_TYPE.command_REMOVE_BACKGROUND:
+        case LINE_TYPE.COMMAND_REMOVE_BACKGROUND:
             return {
-                command: LINE_TYPE.command_REMOVE_BACKGROUND
+                command: LINE_TYPE.COMMAND_REMOVE_BACKGROUND
             }
-        case LINE_TYPE.command_ENTER_CHARATER:
+        case LINE_TYPE.COMMAND_ENTER_CHARATER:
             const characterName = emotionProcessor(key)
             const character = Charaters[characterName.name]
             if (character) {
@@ -165,7 +175,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
                         preLoadCharaters[characterName.name] = [...preLoadCharaters[characterName.name], emotion]
                     }
                     return {
-                        command: LINE_TYPE.command_ENTER_CHARATER,
+                        command: LINE_TYPE.COMMAND_ENTER_CHARATER,
                         param: {
                             name: characterName.name,
                             emotion: emotion
@@ -177,36 +187,41 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
             } else {
                 throw new Error(`Charater ${characterName.name} isn't registered`)
             }
-        case LINE_TYPE.command_PLAY_BGM:
+        case LINE_TYPE.COMMAND_PLAY_BGM:
             if (BGMs[key]) {
                 return {
-                    command: LINE_TYPE.command_PLAY_BGM,
+                    command: LINE_TYPE.COMMAND_PLAY_BGM,
                     param: {
                         name: key,
                         src: BGMs[key] as string
                     }
                 }
             } else { throw new Error(`BGM ${key} isn't registered`) }
-        case LINE_TYPE.command_PAUSE_BGM:
-            return { command: LINE_TYPE.command_PAUSE_BGM }
-        case LINE_TYPE.command_RESUME_BGM:
-            return { command: LINE_TYPE.command_RESUME_BGM }
-        case LINE_TYPE.command_SHOW_CG:
+        case LINE_TYPE.COMMAND_PAUSE_BGM:
+            return { command: LINE_TYPE.COMMAND_PAUSE_BGM }
+        case LINE_TYPE.COMMAND_RESUME_BGM:
+            return { command: LINE_TYPE.COMMAND_RESUME_BGM }
+        case LINE_TYPE.COMMAND_SHOW_CG:
             if (cgs[key]) {
                 preLoadCgs[key] = cgs[key]
                 return {
-                    command: LINE_TYPE.command_SHOW_CG,
+                    command: LINE_TYPE.COMMAND_SHOW_CG,
                     param: cgs[key]
                 }
             } else { throw new Error(`CG ${key} isn't registered`) }
-        case LINE_TYPE.command_REMOVE_CG:
+        case LINE_TYPE.COMMAND_REMOVE_CG:
             return {
-                command: LINE_TYPE.command_REMOVE_CG
+                command: LINE_TYPE.COMMAND_REMOVE_CG
             }
-        case LINE_TYPE.command_SHOW_CHOOSE:
+        case LINE_TYPE.COMMAND_SHOW_CHOOSE:
             return {
-                command: LINE_TYPE.command_SHOW_CHOOSE,
+                command: LINE_TYPE.COMMAND_SHOW_CHOOSE,
                 param: chooses[key]
+            }
+        case LINE_TYPE.COMMAND_SHOW_INPUT:
+            return {
+                command: LINE_TYPE.COMMAND_SHOW_INPUT,
+                param: inputs[key]
             }
         default:
             //warn：unKnowCommand
