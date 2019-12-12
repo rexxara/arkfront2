@@ -13,10 +13,12 @@ import loginPage from './loginPage'
 import warpedAnimation from '../components/HOC/animation'
 import MainGame from './MainGame'
 import HomePage from './HomePage'
+import Gallery from './Gallery'
 const history = createHashHistory()
 const WarpedIniPage = warpedAnimation(IniPage)
 const WarpedCopyrightPage = warpedAnimation(copyrightPage)
 const WarpedLoginPage = warpedAnimation(loginPage)
+const WarpedGallery = warpedAnimation(Gallery)
 const App: React.FC = () => {
   return (
     <div >
@@ -31,6 +33,7 @@ const App: React.FC = () => {
           <Route path="/homePage" component={HomePage} />
           <Route path="/mainGame" component={MainGame} />
           <Route path="/loginPage" children={props => <WarpedLoginPage {...props} />} />
+          <Route path="/gallery" children={props => <WarpedGallery {...props} />} />
         </div>
       </Router>
     </div>

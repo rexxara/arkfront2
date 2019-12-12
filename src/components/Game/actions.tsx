@@ -176,6 +176,9 @@ const actions = {
         if (openSuccess && saveData.db) {
             return await INDEXDB.loadAll(saveData.db, saveData.objectStore.name)
         }
+    },
+    unlockCg: async (cgKey:string) => {
+        console.log(cgKey)
     }
 }
 export default actions

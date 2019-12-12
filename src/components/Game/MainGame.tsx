@@ -328,6 +328,7 @@ class MainGame extends React.Component<IProps, IState> {
             case LINE_TYPE.COMMAND_SHOW_CG:
                 needLoadImg = cg !== command.param
                 if (needLoadImg) {
+                    action.unlockCg(command.param as string)
                     newParam = { cg: command.param }
                 }
                 break

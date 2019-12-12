@@ -202,13 +202,26 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
         case LINE_TYPE.COMMAND_RESUME_BGM:
             return { command: LINE_TYPE.COMMAND_RESUME_BGM }
         case LINE_TYPE.COMMAND_SHOW_CG:
-            if (cgs[key]) {
-                preLoadCgs[key] = cgs[key]
+            const dotIndex = key.indexOf('.')
+            if (dotIndex > -1) {//cg组
+                const folderKey = key.substring(0, dotIndex)
+                const srcKey = key.substring(dotIndex + 1)
+                const src = (cgs[folderKey] as any)[srcKey]
                 return {
                     command: LINE_TYPE.COMMAND_SHOW_CG,
-                    param: cgs[key]
+                    param: `${folderKey}/${src}`
                 }
-            } else { throw new Error(`CG ${key} isn't registered`) }
+            } else {//单张cg
+                if (cgs[key]) {
+                    const cgKey = cgs[key] as string
+                    preLoadCgs[key] = cgKey
+                    return {
+                        command: LINE_TYPE.COMMAND_SHOW_CG,
+                        param: cgKey
+                    }
+                } else { throw new Error(`CG ${key} isn't registered`) }
+            }
+
         case LINE_TYPE.COMMAND_REMOVE_CG:
             return {
                 command: LINE_TYPE.COMMAND_REMOVE_CG

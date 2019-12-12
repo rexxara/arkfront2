@@ -106,7 +106,9 @@ export interface JumpOption {
 }
 
 export interface CGS {
-    [arg: string]: string
+    [arg: string]: string | {
+        [arg: string]: string
+    }
 }
 export interface BGMs {
     [arg: string]: string

@@ -8,9 +8,15 @@
 
 下雪
 
-[showInput:第一章输入姓名]
+//[showInput:第一章输入姓名]
 
-你的名字是${userName}
+//你的名字是${userName}
+
+[showCg:set1.a]
+
+[showCg:set1.b]
+
+[showCg:set1.c]
 
 临光走到一边22222222222222222222
 
