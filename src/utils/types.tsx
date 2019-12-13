@@ -7,7 +7,7 @@ export const LINE_TYPE = {
     monologue: 'monologue',
     comment: "comment",
     command: 'command',
-    COMMAND_SHOW_BACKGROUND: 'showbg',
+    COMMAND_SHOW_BACKGROUND: 'showBg',
     COMMAND_LEAVE_CHARATER: 'leave',
     COMMAND_ENTER_CHARATER: 'showCh',
     COMMAND_PLAY_BGM: 'playBgm',
@@ -43,7 +43,11 @@ export interface DisplayLine {
 
 export interface CommandLine {
     command: string,
-    param?: string | displayCharacter | selectedBGM | Option[] | Input
+    param?: string | displayCharacter | selectedBGM | Option[] | Input|CGParama
+}
+export interface CGParama{
+    cgName:string,
+    src:string
 }
 export interface DisplayCharacters {
     [arg: string]: displayCharacter
@@ -96,7 +100,7 @@ export interface LoadedChapterModel3 {
 export interface ChapterModel3 {
     name: string,
     script: string,
-    next: string | Function | null | JumpOption[],
+    next?: string | Function | undefined | JumpOption[],
     isBegin?: boolean
 }
 export interface JumpOption {

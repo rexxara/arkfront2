@@ -1,5 +1,5 @@
 import React from 'react'
-import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3, Input } from '../../utils/types'
+import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3, Input, CGParama } from '../../utils/types'
 import { variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
 import _omit from 'lodash/omit'
@@ -44,7 +44,8 @@ export interface IState {
     //然后在没有任何资源的行保存就不会跳 所以就试着在加载的时候保存这个counter，在onload的时候读取，判断是否为0，为零就clickHandle，不为零就--
     //然后这个counter计算的时候，还得减去现在已经显示的资源数
     input: Input
-    effectref?: any
+    effectref?: any,
+    effectKey: string
 }
 interface clickHandleConfig {
     reset?: boolean
@@ -70,6 +71,7 @@ const iniState = {
     clickDisable: false,
     skipResourseCount: 0,
     choose: [],
+    effectKey: '',
     input: {
         key: undefined,
         afterFix: () => "",
@@ -178,6 +180,10 @@ class MainGame extends React.Component<IProps, IState> {
         if (newData) {
             const data = saveDataAdapter(newData, this.props, this.state)
             if (data) {
+                data.effectKey
+                if (data.effectKey.length) {
+                    this.commandLineProcess({ command: LINE_TYPE.COMMAND_SHOW_EFFECT, param: data.effectKey })
+                }
                 this.setState(data)
             }
         } else {
@@ -326,10 +332,11 @@ class MainGame extends React.Component<IProps, IState> {
                 if (ARKBGM) { ARKBGM.play() } else { throw new Error('bgmNotFound') }
                 break
             case LINE_TYPE.COMMAND_SHOW_CG:
-                needLoadImg = cg !== command.param
+                const params = command.param as CGParama
+                needLoadImg = cg !== params.src
                 if (needLoadImg) {
-                    action.unlockCg(command.param as string)
-                    newParam = { cg: command.param }
+                    action.unlockCg(params.cgName)
+                    newParam = { cg: params.src }
                 }
                 break
             case LINE_TYPE.COMMAND_REMOVE_CG:

@@ -1,6 +1,6 @@
 import message from '../AMessage/index'
 import { IState } from './MainGame'
-import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3, Input } from '../../utils/types'
+import { DisplayCharacters, selectedBGM } from '../../utils/types'
 interface DBModel {
     name: string,
     version: number,
@@ -16,6 +16,14 @@ let saveData: DBModel = {
     objectStore: {
         name: 'saveData',//quickSave
         key: 'id'//主键
+    }
+}
+let galleryData: DBModel = {
+    name: 'galleryData',
+    version: 1,
+    objectStore: {
+        name: 'galleryData',
+        key: 'id'
     }
 }
 const INDEXDB = {
@@ -72,7 +80,7 @@ const INDEXDB = {
             request.onsuccess = () => res(true)
         })
     },
-    loadAll: function (db: IDBDatabase, storename: string, key?: number): Promise<SaveData[]> {
+    loadAll: function (db: IDBDatabase, storename: string, key?: number): Promise<any[]> {
         return new Promise((res, rej) => {
             let store = db.transaction(storename, 'readwrite').objectStore(storename);
             let request = store.getAll()
@@ -127,12 +135,13 @@ export interface SaveData {
     linePointer: number,
     id?: number,
     stop: boolean
-    inputKey?: string
+    inputKey?: string,
+    effectKey:string
 }
 const modifyToBeSaveData = (state: IState, id: number | string): SaveData => {
-    const { auto, displayName, background, linePointer, displaycharacters, rawLine, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapter, input } = state
+    const { auto, displayName, background, linePointer, displaycharacters, rawLine, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapter, input, effectKey } = state
     let dataTobeSaved: SaveData = {
-        auto, displayName, displayText: rawLine, background, linePointer, displaycharacters, stop, bgm, cg, clickDisable, gameVariables, currentChapterName: currentChapter.name,
+        auto, displayName, effectKey, displayText: rawLine, background, linePointer, displaycharacters, stop, bgm, cg, clickDisable, gameVariables, currentChapterName: currentChapter.name,
         isNextChoose: undefined,
         chooseKey: '',
         inputKey: input.id
@@ -153,7 +162,7 @@ const modifyToBeSaveData = (state: IState, id: number | string): SaveData => {
     return dataTobeSaved
 }
 INDEXDB.openDB(saveData)
-
+INDEXDB.openDB(galleryData)
 const actions = {
     skipThisLine: () => message.info('skipThisLine'),
     save: async (state: IState, id: number | string) => {
@@ -174,11 +183,24 @@ const actions = {
     loadAll: async () => {
         const openSuccess = await INDEXDB.openDB(saveData)
         if (openSuccess && saveData.db) {
-            return await INDEXDB.loadAll(saveData.db, saveData.objectStore.name)
+            return await INDEXDB.loadAll(saveData.db, saveData.objectStore.name) || []
         }
     },
-    unlockCg: async (cgKey:string) => {
+    unlockCg: async (cgKey: string) => {
         console.log(cgKey)
+        const openSuccess = await INDEXDB.openDB(galleryData)
+        if (openSuccess && galleryData.db) {
+            const saveSuccess = await INDEXDB.putData(galleryData.db, galleryData.objectStore.name, { id: cgKey })
+            console.log(saveSuccess)
+        } else {
+            console.log('databaseNotFound')
+        }
+    },
+    getCgUnlockData: async () => {
+        const openSuccess = await INDEXDB.openDB(galleryData)
+        if (openSuccess && galleryData.db) {
+            return await INDEXDB.loadAll(galleryData.db, galleryData.objectStore.name) || []
+        }
     }
 }
 export default actions

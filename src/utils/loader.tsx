@@ -209,7 +209,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
                 const src = (cgs[folderKey] as any)[srcKey]
                 return {
                     command: LINE_TYPE.COMMAND_SHOW_CG,
-                    param: `${folderKey}/${src}`
+                    param: { cgName: key, src: src }
                 }
             } else {//单张cg
                 if (cgs[key]) {
@@ -217,7 +217,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
                     preLoadCgs[key] = cgKey
                     return {
                         command: LINE_TYPE.COMMAND_SHOW_CG,
-                        param: cgKey
+                        param: { cgName: key, src: cgKey }
                     }
                 } else { throw new Error(`CG ${key} isn't registered`) }
             }
