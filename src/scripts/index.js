@@ -119,20 +119,11 @@ const BGMs = {
 
 const cgs = {
     HE1: 'avg_11_1.png',
-    HE2: 'avg_11_1.png',
-    HE3: 'avg_11_1.png',
-    HE4: 'avg_11_1.png',
-    HE5: 'avg_11_1.png',
-    HE6: 'avg_11_1.png',
-    HE7: 'avg_11_1.png',
-    HE8: 'avg_11_1.png',
-    HE9: 'avg_11_1.png',
-    HE10: 'avg_11_1.png',
-    HE11: 'avg_11_1.png',
-    set1:{
-        a:'set1/87bd37a0cd11728b072f2c41c7fcc3cec2fd2c95.jpg',
-        b:'set1/20191206160813.jpg',
-        c:'set1/v2-8d9d5769ef01c1e07987834fe9cc1857_r.jpg'
+    HE2: 'avg_01.png',
+    set1: {
+        a: 'set1/avg_40_1.png',
+        b: 'set1/avg_40_3.png',
+        c: 'set1/avg_40_2.png'
     }
 }
 
