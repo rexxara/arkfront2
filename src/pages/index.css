@@ -8,6 +8,7 @@
 .ant-carousel .slick-slide h3 {
   color: #fff;
 }
+
 .App {
   width: 72vw;
   height: 48vw;
@@ -16,11 +17,31 @@
   position: relative;
 }
 
-.scence{
+.scence {
   width: 72vw;
   height: 48vw;
   overflow: hidden;
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.galleryCard {
+  width: 275px;
+  height: 154.6px;
+  background-color :#222222;
+  margin: 20px;
+  color: white;
+  background-size: cover !important;
+  -moz-background-size: 100% 100% !important;
+}
+.pagation{
+  display: block;
+  width: 60px;
+  height: 40px;
+  margin: 10px;
+}
+.asda{
+  width: 320px;
+height: 180px;
 }
