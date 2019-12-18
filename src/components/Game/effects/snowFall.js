@@ -48,17 +48,16 @@ function showSnowFall(canvasId) {
             results = [];
             for (j = 0, len = ref.length; j < len; j++) {
                 flake = ref[j];
-                results.push(flake.draw(this.delta));
+                results.push(flake.draw(this.delta))
             }
             return results;
         }
 
         makeFlakes() {
-            var i;
             return this.flakes = function () {
                 var j, ref, results;
                 results = [];
-                for (i = j = 1, ref = this.intensity; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
+                for (j = 1, ref = this.intensity; 1 <= ref ? j <= ref : j >= ref; 1 <= ref ? ++j : --j) {
                     results.push(new SnowFlake(this.color, this));
                 }
                 return results

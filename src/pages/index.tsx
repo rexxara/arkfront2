@@ -19,6 +19,9 @@ const WarpedIniPage = warpedAnimation(IniPage)
 const WarpedCopyrightPage = warpedAnimation(copyrightPage)
 const WarpedLoginPage = warpedAnimation(loginPage)
 const WarpedGallery = warpedAnimation(Gallery)
+// document.oncontextmenu = function () {
+//   return false;
+// }
 const App: React.FC = () => {
   return (
     <div >

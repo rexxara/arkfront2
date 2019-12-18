@@ -120,6 +120,7 @@ const BGMs = {
 const cgs = {
     HE1: 'avg_11_1.png',
     HE2: 'avg_01.png',
+    HE3: 'avg_01.png',
     set1: {
         a: 'set1/avg_40_1.png',
         b: 'set1/avg_40_3.png',
