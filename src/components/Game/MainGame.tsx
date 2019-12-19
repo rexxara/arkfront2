@@ -198,12 +198,13 @@ class MainGame extends React.Component<IProps, IState> {
     startChapter(chapterKey?: string) {
         const { data: { chapters } } = this.props
         this.clearTimers()
+        this.commandLineProcess({ "command": "removeEffect"})
         const { gameVariables } = this.state
         this.setState({ ...iniState, gameVariables })
         let chapter = undefined
         if (!chapterKey) {
             chapter = chapters.find(v => v.isBegin)
-            console.warn('chapter is undefined ,Auto start same from first chapter')
+            console.warn('chapter is undefined ,Auto start game from first chapter')
         } else {
             chapter = chapters.find(v => v.name === chapterKey)
         }
