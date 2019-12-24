@@ -1,13 +1,13 @@
-import { b64_to_utf8 } from '../utils/utils'
-import script from '../scripts/index'
+import RawScript from '../scripts/index'
 const initalState = {
     script: '',
     edited: false,
-    test:'test',
-    ////
-    isAuto:false,
+    test: 'test',
+    isAuto: false,
+    //
+    RawScript: RawScript,
+    isReview: false
 }
-console.log(initalState)
 export default {
     namespace: 'global',
     state: initalState,
@@ -18,17 +18,33 @@ export default {
             }, 200)
             return { ...state, script: payload.script, edited: payload.edited }
         },
-        'nextChapter'(state: globalState, { payload }: any) {
-            console.log('nextChapter')
-            return { ...state,}
+        'start'(state: globalState, { payload }: any) {
+            setTimeout(() => {
+                const { origin } = window.location
+                window.location.href = origin + '#/mainGame'
+            }, 0)
+            return initalState
         },
-        'toggleAuto'(state: globalState, { payload }: any) {
-            console.log('toggleAuto')
-            return { ...state,isAuto:!state.isAuto}
+        'reviewScence'(state: globalState, { payload }: any) {
+            const script = payload.script.map((v, i: number) => {
+                if (i === 0) {
+                    return { ...v, isBegin: true }
+                }
+                if (i === payload.script.length - 1) {
+                    return { ...v, next: null }
+                }
+                return v
+            })
+            setTimeout(() => {
+                const { origin } = window.location
+                window.location.href = origin + '#/mainGame'
+            }, 0)
+            const newConbine = { ...RawScript, chapters: script }
+            return { ...state, RawScript: newConbine, isReview: true }
         },
     },
 };
 interface globalState {
     script: string
-    isAuto:boolean
+    isAuto: boolean
 }

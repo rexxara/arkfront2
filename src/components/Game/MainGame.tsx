@@ -17,7 +17,8 @@ import effects from './effects'
 const effectCanvasId = 'effects'
 interface IProps {
     data: GameModel3,
-    RawScript: RawScript
+    RawScript: RawScript,
+    isReview: boolean
 }
 export interface IState {
     saveDataConOpen: boolean,
@@ -160,6 +161,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.closeSaveCon = this.closeSaveCon.bind(this)
         this.openSaveCon = this.openSaveCon.bind(this)
         this.onInputSubmit = this.onInputSubmit.bind(this)
+        this.reviewBack = this.reviewBack.bind(this)
     }
     quickSave() {
         action.save(this.state, 0)
@@ -198,7 +200,8 @@ class MainGame extends React.Component<IProps, IState> {
     startChapter(chapterKey?: string) {
         const { data: { chapters } } = this.props
         this.clearTimers()
-        this.commandLineProcess({ "command": "removeEffect"})
+        this.setState({ clickDisable: true })
+        this.commandLineProcess({ "command": "removeEffect" })
         const { gameVariables } = this.state
         this.setState({ ...iniState, gameVariables })
         let chapter = undefined
@@ -212,8 +215,11 @@ class MainGame extends React.Component<IProps, IState> {
             const currentLine = chapter.line[0]
             this.start(currentLine)
             this.setState({
-                currentChapter: chapter
+                currentChapter: chapter,
+                clickDisable: false
             })
+        } else {
+            return this.reviewBack()
         }
     }
     skipThisLine() {
@@ -274,8 +280,23 @@ class MainGame extends React.Component<IProps, IState> {
         this.clearTimers()
         this.startChapter()
     }
+    reviewBack() {
+        this.setState({clickDisable:true})
+        if (this.props.isReview) {
+            setTimeout(() => {
+                const { origin } = window.location
+                window.location.href = origin + '#/ScenceReview'
+            }, 2000)
+            return 0
+        } else {
+            throw new Error('chapter Next Node Not Found')
+        }
+    }
     nextChapter() {
         const { currentChapter: { next }, gameVariables } = this.state
+        if (!next) {
+            return this.reviewBack()
+        }
         switch (typeof next) {
             case 'string':
                 return this.startChapter(next)

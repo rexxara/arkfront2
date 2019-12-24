@@ -82,9 +82,13 @@ export interface RawScript {
     BGMs: BGMs,
     cgs: CGS,
     chooses: Chooses,
-    inputs: Inputs
+    inputs: Inputs,
+    scences:Array<ScencesPage>
 }
 
+export interface ScencesPage{
+    [arg:string]:ChapterModel3
+}
 export interface GameModel3 {
     chapters: LoadedChapterModel3[]
 }

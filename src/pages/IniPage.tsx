@@ -5,21 +5,19 @@ import { Link } from 'react-router-dom'
 import { RouteComponentProps } from 'react-router'
 
 interface Istate {
-  timer: any
+  hash: string
 }
-class IniPage extends React.Component<RouteComponentProps,Istate>{
+class IniPage extends React.Component<RouteComponentProps, Istate>{
   state = {
-    timer: null
+    hash: ''
   }
   componentDidMount() {
-    const timer = setTimeout(() => {
-      this.props.history.replace("/copyrightPage")
+    this.setState({ hash: window.location.hash })
+    setTimeout(() => {
+      if (window.location.hash == this.state.hash) {
+        this.props.history.replace("/copyrightPage")
+      }
     }, 2000)
-    this.setState({timer})
-  }
-  componentWillUnmount() {
-    const {timer}=this.state
-    clearTimeout(timer as any)
   }
   render() {
     return (

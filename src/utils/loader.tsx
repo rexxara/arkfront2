@@ -2,7 +2,8 @@ import {
     DisplayLine, CommandLine,
     RawScript, LINE_TYPE, NO_IMG,
     CGS, BGMs, Backgrounds, Characters, Chooses, Inputs,
-    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, LoadedChapterModel3
+    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, LoadedChapterModel3,
+    ScencesPage
 } from './types'
 import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from './utils'
 const ALLOW_MAX_SPACE_LINE = 4
@@ -43,7 +44,30 @@ function inputPreprocess(inputs: Inputs): Inputs {
     return inputs
 
 }
+const RawScriptValidator = (RawScript: RawScript) => {
+    const validators: Array<(RawScript: RawScript) => boolean> = [scencesValidator]
+    const res = validators.find(fn => fn(RawScript) === false)
+    if (res) return false
+    return true
+}
+const scencesValidator = (RawScript: RawScript) => {
+    const { scences } = RawScript
+    let names: any = {}
+    let flag = true
+    scences.map(v => {
+        Object.keys(v).map(vv => {
+            if (!names[vv]) {
+                names[vv] = true
+            } else {
+                flag = false
+                throw new Error('scene名称有重复！')
+            }
+        })
+    })
+    return flag
+}
 const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean): GameModel3 => {
+
     const { variables, backgrounds, BGMs, cgs, chapters } = rawScript
     const inputs = inputPreprocess(rawScript.inputs)
     const charaters = charatersPreProcess(rawScript.charaters)
@@ -63,6 +87,7 @@ const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):
     }
 }
 const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
+    if (!RawScriptValidator(rawScript)) return false
     return gameLoader(rawScript, true, true)
 }
 
@@ -207,6 +232,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
                 const folderKey = key.substring(0, dotIndex)
                 const srcKey = key.substring(dotIndex + 1)
                 const src = (cgs[folderKey] as any)[srcKey]
+                preLoadCgs[`${folderKey}.${srcKey}`] = src
                 return {
                     command: LINE_TYPE.COMMAND_SHOW_CG,
                     param: { cgName: key, src: src }
