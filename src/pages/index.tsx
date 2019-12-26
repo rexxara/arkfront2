@@ -15,6 +15,7 @@ import MainGame from './MainGame'
 import HomePage from './HomePage'
 import Gallery from './Gallery'
 import ScenceReview from './ScenceReview'
+import LoadPage from './loadPage'
 const history = createHashHistory()
 const WarpedIniPage = warpedAnimation(IniPage)
 const WarpedCopyrightPage = warpedAnimation(copyrightPage)
@@ -22,6 +23,7 @@ const WarpedLoginPage = warpedAnimation(loginPage)
 const WarpedGallery = warpedAnimation(Gallery)
 const WarpedScenceReview = warpedAnimation(ScenceReview)
 const WarpedMainGame = warpedAnimation(MainGame)
+const WarpedLoadPage = warpedAnimation(LoadPage)
 // document.oncontextmenu = function () {
 //   return false;
 // }
@@ -41,6 +43,7 @@ const App: React.FC = () => {
           <Route path="/loginPage" children={props => <WarpedLoginPage {...props} />} />
           <Route path="/gallery" children={props => <WarpedGallery {...props} />} />
           <Route path="/ScenceReview" children={props => <WarpedScenceReview {...props} />} />
+          <Route path="/loadPage" children={props => <WarpedLoadPage {...props} />} />
         </div>
       </Router>
     </div>

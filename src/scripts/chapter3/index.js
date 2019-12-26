@@ -16,7 +16,7 @@ const ch3 = [
     { name: 'chapter3_section2_1', script: chapter3_section2_1, next: 'chapter3_section3' },
     { name: 'chapter3_section2_2', script: chapter3_section2_2, next: 'chapter3_section3' },
     { name: 'chapter3_section3', script: chapter3_section3, next: ({ 女主好感度 }) => 女主好感度 > 1 ? 'chapter3_section4_1' : 'chapter3_section4_2' },
-    { name: 'chapter3_section4_1', script: chapter3_section4_1 },
-    { name: 'chapter3_section4_2', script: chapter3_section4_2 }
+    { name: 'chapter3_section4_1', script: chapter3_section4_1 ,next:'game over'},
+    { name: 'chapter3_section4_2', script: chapter3_section4_2 ,next:'game over'}
 ]
 export default ch3

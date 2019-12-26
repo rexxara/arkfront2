@@ -3,11 +3,13 @@ import MainGame from '../components/Game'
 import loader from '../utils/loader'
 import styles from './index.css'
 import { RawScript } from '../utils/types'
+import { SaveData } from '../components/Game/actions'
 import { connect } from 'dva'
 interface IProps {
   global: {
     RawScript: RawScript,
-    isReview:boolean
+    isReview: boolean,
+    LoadDataFromLoadPage: SaveData
   }
 }
 
@@ -20,6 +22,7 @@ const playGround = (props: IProps) => {
       data={data}
       isReview={props.global.isReview}
       RawScript={rs as any}
+      LoadDataFromLoadPage={props.global.LoadDataFromLoadPage}
     />}
   </div>
 }

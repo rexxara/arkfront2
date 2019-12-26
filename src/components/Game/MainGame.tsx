@@ -18,7 +18,8 @@ const effectCanvasId = 'effects'
 interface IProps {
     data: GameModel3,
     RawScript: RawScript,
-    isReview: boolean
+    isReview: boolean,
+    LoadDataFromLoadPage: SaveData
 }
 export interface IState {
     saveDataConOpen: boolean,
@@ -129,7 +130,6 @@ const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
             currentChapter: loadedChapter,
             skipResourseCount: skipResourseCount
         }
-        console.log(mergedData)
         return mergedData
     } else {
         console.warn('save_data_Broken')
@@ -178,6 +178,7 @@ class MainGame extends React.Component<IProps, IState> {
     }
     async load(ev?: React.MouseEvent, savedata?: SaveData) {
         this.skipThisLine()
+        this.commandLineProcess({ command: LINE_TYPE.COMMAND_REMOVE_EFFECT })
         let newData = savedata || await action.load(0)
         if (newData) {
             const data = saveDataAdapter(newData, this.props, this.state)
@@ -193,9 +194,14 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     componentDidMount() {
-        console.log(this.props)
-        const { RawScript: { variables } } = this.props
-        this.setState({ gameVariables: variables }, this.startChapter)
+        const { LoadDataFromLoadPage } = this.props
+        if (LoadDataFromLoadPage) {
+            this.load(undefined, LoadDataFromLoadPage)
+        } else {
+            const { RawScript: { variables } } = this.props
+            this.setState({ gameVariables: variables }, this.startChapter)
+        }
+
     }
     startChapter(chapterKey?: string) {
         const { data: { chapters } } = this.props
@@ -225,10 +231,12 @@ class MainGame extends React.Component<IProps, IState> {
     skipThisLine() {
         const { currentChapter, linePointer } = this.state
         const line = currentChapter.line[linePointer]
-        this.clearTimers()
-        if ('value' in line) {
-            const { gameVariables } = this.state
-            this.setState({ displayText: variableLoader(line.value, gameVariables) as string })
+        if (line) {//加载存档的时候调用这个函数是没有line的
+            this.clearTimers()
+            if ('value' in line) {
+                const { gameVariables } = this.state
+                this.setState({ displayText: variableLoader(line.value, gameVariables) as string })
+            }
         }
     }
     displayLineProcess(line: DisplayLine) {
@@ -281,7 +289,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.startChapter()
     }
     reviewBack() {
-        this.setState({clickDisable:true})
+        this.setState({ clickDisable: true })
         if (this.props.isReview) {
             setTimeout(() => {
                 const { origin } = window.location
@@ -299,13 +307,16 @@ class MainGame extends React.Component<IProps, IState> {
         }
         switch (typeof next) {
             case 'string':
+                if (next === 'game over') {
+                    return console.log('gameOver')
+                }
                 return this.startChapter(next)
             case "object":
                 return this.commandLineProcess({ "command": "showChoose", "param": next })
             case 'function':
                 return this.startChapter(next(gameVariables))
             default:
-                console.log('gameOver')
+                //理论上不存在
         }
     }
     start(currentLine: (CommandLine | DisplayLine)) {
@@ -376,7 +387,6 @@ class MainGame extends React.Component<IProps, IState> {
                 newParam = { effectKey: command.param, effectref: effects[command.param as string](effectCanvasId) }
                 break
             case LINE_TYPE.COMMAND_REMOVE_EFFECT:
-                console.log('COMMAND_REMOVE_EFFECT')
                 if (effectref) {
                     effectref.stop()
                 } else {

@@ -72,7 +72,6 @@ export interface Charater {
 export interface Characters {
     [arg: string]: Charater
 }
-
 /////////before load////
 export interface RawScript {
     charaters: Characters,
@@ -87,7 +86,11 @@ export interface RawScript {
 }
 
 export interface ScencesPage{
-    [arg:string]:ChapterModel3
+    [arg:string]:ScenceModal
+}
+export interface ScenceModal{
+    script:ChapterModel3,
+    cover:string
 }
 export interface GameModel3 {
     chapters: LoadedChapterModel3[]

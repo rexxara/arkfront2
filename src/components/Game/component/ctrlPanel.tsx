@@ -23,5 +23,6 @@ export default function CtrlPanel({ clickHandle, linePointer, nextChapter, displ
         <button onClick={quickLoad}>quickLoad</button>
         <button onClick={openSaveCon}>openSaveCon</button>
         <button onClick={closeSaveCon}>closeSaveCon</button>
+        <button onClick={()=>window.history.back()}>back</button>
     </div>
 }
