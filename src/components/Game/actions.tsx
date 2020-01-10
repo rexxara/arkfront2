@@ -18,6 +18,14 @@ let saveData: DBModel = {
         key: 'id'//主键
     }
 }
+let scenceData: DBModel = {
+    name: 'scenceData',
+    version: 1,
+    objectStore: {
+        name: 'scenceData',
+        key: 'id'//主键
+    }
+}
 let galleryData: DBModel = {
     name: 'galleryData',
     version: 1,
@@ -136,7 +144,7 @@ export interface SaveData {
     id?: number,
     stop: boolean
     inputKey?: string,
-    effectKey:string
+    effectKey: string
 }
 const modifyToBeSaveData = (state: IState, id: number | string): SaveData => {
     const { auto, displayName, background, linePointer, displaycharacters, rawLine, stop, bgm, cg, clickDisable, choose, gameVariables, currentChapter, input, effectKey } = state
@@ -163,6 +171,7 @@ const modifyToBeSaveData = (state: IState, id: number | string): SaveData => {
 }
 INDEXDB.openDB(saveData)
 INDEXDB.openDB(galleryData)
+INDEXDB.openDB(scenceData)
 const actions = {
     skipThisLine: () => message.info('skipThisLine'),
     save: async (state: IState, id: number | string) => {
@@ -201,6 +210,24 @@ const actions = {
         if (openSuccess && galleryData.db) {
             return await INDEXDB.loadAll(galleryData.db, galleryData.objectStore.name) || []
         }
-    }
+    },
+    unlockScence: async (name: string) => {
+        console.log('unlockThis', name)
+        const openSuccess = await INDEXDB.openDB(scenceData)
+        if (openSuccess && scenceData.db) {
+            const saveSuccess = await INDEXDB.putData(scenceData.db, scenceData.objectStore.name, { id: name })
+            console.log(saveSuccess)
+        } else {
+            console.log('databaseNotFound')
+        }
+    },
+    getScenceUnlockData: async (): Promise<Array<{ id: string }>> => {
+        const openSuccess = await INDEXDB.openDB(scenceData)
+        if (openSuccess && scenceData.db) {
+            return await INDEXDB.loadAll(scenceData.db, scenceData.objectStore.name) || []
+        } else {
+            return []
+        }
+    },
 }
 export default actions

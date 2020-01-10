@@ -39,9 +39,6 @@ export default {
                 if (i === 0) {
                     return { ...v, isBegin: true }
                 }
-                if (i === payload.script.length - 1) {
-                    return { ...v, next: null }
-                }
                 return v
             })
             setTimeout(() => {

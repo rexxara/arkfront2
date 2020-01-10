@@ -73,13 +73,14 @@ const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):
     const charaters = charatersPreProcess(rawScript.charaters)
     const chooses = choosePreProcess(rawScript.chooses)
     const res = chapters.map(chapter => {
-        const { name, next, isBegin } = chapter
+        const { name, next, isBegin,isEnd } = chapter
         return {
             ...ChapterLoader(needDecode ?
                 b64_to_utf8(chapter.script.slice("data:;base64,".length)) : chapter.script, variables, IsCRLF, charaters, backgrounds, BGMs, cgs, chooses, inputs),
             name: name,
             next: next,
             isBegin: isBegin,
+            isEnd:isEnd
         }
     })
     return {

@@ -43,11 +43,11 @@ export interface DisplayLine {
 
 export interface CommandLine {
     command: string,
-    param?: string | displayCharacter | selectedBGM | Option[] | Input|CGParama
+    param?: string | displayCharacter | selectedBGM | Option[] | Input | CGParama
 }
-export interface CGParama{
-    cgName:string,
-    src:string
+export interface CGParama {
+    cgName: string,
+    src: string
 }
 export interface DisplayCharacters {
     [arg: string]: displayCharacter
@@ -82,15 +82,15 @@ export interface RawScript {
     cgs: CGS,
     chooses: Chooses,
     inputs: Inputs,
-    scences:Array<ScencesPage>
+    scences: Array<ScencesPage>
 }
 
-export interface ScencesPage{
-    [arg:string]:ScenceModal
+export interface ScencesPage {
+    [arg: string]: ScenceModal
 }
-export interface ScenceModal{
-    script:ChapterModel3,
-    cover:string
+export interface ScenceModal {
+    script: ChapterModel3[],
+    cover: string
 }
 export interface GameModel3 {
     chapters: LoadedChapterModel3[]
@@ -103,12 +103,14 @@ export interface LoadedChapterModel3 {
     name: string,
     next?: string | Function | JumpOption[],
     isBegin?: boolean
+    isEnd?: boolean
 }
 export interface ChapterModel3 {
     name: string,
     script: string,
     next?: string | Function | undefined | JumpOption[],
     isBegin?: boolean
+    isEnd?: boolean
 }
 export interface JumpOption {
     text: string,

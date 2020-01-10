@@ -178,14 +178,14 @@ class MainGame extends React.Component<IProps, IState> {
     }
     async load(ev?: React.MouseEvent, savedata?: SaveData) {
         this.skipThisLine()
-        this.commandLineProcess({ command: LINE_TYPE.COMMAND_REMOVE_EFFECT })
+        this.commandLineProcess({ command: LINE_TYPE.COMMAND_REMOVE_EFFECT },true)
         let newData = savedata || await action.load(0)
         if (newData) {
             const data = saveDataAdapter(newData, this.props, this.state)
             if (data) {
                 data.effectKey
                 if (data.effectKey.length) {
-                    this.commandLineProcess({ command: LINE_TYPE.COMMAND_SHOW_EFFECT, param: data.effectKey })
+                    this.commandLineProcess({ command: LINE_TYPE.COMMAND_SHOW_EFFECT, param: data.effectKey },true)
                 }
                 this.setState(data)
             }
@@ -194,6 +194,7 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     componentDidMount() {
+        console.log(this.props)
         const { LoadDataFromLoadPage } = this.props
         if (LoadDataFromLoadPage) {
             this.load(undefined, LoadDataFromLoadPage)
@@ -207,7 +208,7 @@ class MainGame extends React.Component<IProps, IState> {
         const { data: { chapters } } = this.props
         this.clearTimers()
         this.setState({ clickDisable: true })
-        this.commandLineProcess({ "command": "removeEffect" })
+        this.commandLineProcess({ "command": "removeEffect" },true)
         const { gameVariables } = this.state
         this.setState({ ...iniState, gameVariables })
         let chapter = undefined
@@ -218,6 +219,7 @@ class MainGame extends React.Component<IProps, IState> {
             chapter = chapters.find(v => v.name === chapterKey)
         }
         if (chapter) {
+            action.unlockScence(chapter.name)
             const currentLine = chapter.line[0]
             this.start(currentLine)
             this.setState({
@@ -301,22 +303,22 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     nextChapter() {
-        const { currentChapter: { next }, gameVariables } = this.state
+        const { currentChapter: { next, isEnd }, gameVariables } = this.state
+        if (isEnd) {
+            return console.warn("gameOver")
+        }
         if (!next) {
             return this.reviewBack()
         }
         switch (typeof next) {
             case 'string':
-                if (next === 'game over') {
-                    return console.log('gameOver')
-                }
                 return this.startChapter(next)
             case "object":
                 return this.commandLineProcess({ "command": "showChoose", "param": next })
             case 'function':
                 return this.startChapter(next(gameVariables))
             default:
-                //理论上不存在
+            //理论上不存在
         }
     }
     start(currentLine: (CommandLine | DisplayLine)) {
@@ -326,7 +328,7 @@ class MainGame extends React.Component<IProps, IState> {
             this.displayLineProcess(currentLine as DisplayLine)
         }
     }
-    commandLineProcess(command: CommandLine) {
+    commandLineProcess(command: CommandLine, dontSkip?: boolean) {//commandLine dontSkip是因为每一章开始的时候清特效，然后会跳一行导致每章第一行显示不出来
         const { background, displaycharacters, cg, effectref } = this.state
         const ARKBGM = document.getElementById('ARKBGM') as HTMLAudioElement
         let newParam = {}
@@ -401,7 +403,7 @@ class MainGame extends React.Component<IProps, IState> {
         if (needLoadImg) {
             this.setState({ ...newParam, clickDisable: true })
         } else if (!needStop) {
-            this.setState(newParam, () => { this.clickHandle() })
+            this.setState(newParam, () => { if (!dontSkip) { this.clickHandle() } })
         } else if (needStop) {
             this.setState(newParam)
         }
@@ -542,6 +544,7 @@ class MainGame extends React.Component<IProps, IState> {
     render() {
         const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose, gameVariables, saveDataConOpen, currentChapter, rawLine, input } = this.state
         const displaycharactersArray = Object.keys(displaycharacters).map(v => { return { name: v, ...displaycharacters[v] } })
+
         return <React.Fragment>
             <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
                 linePointer={linePointer}

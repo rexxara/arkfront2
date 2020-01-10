@@ -91,8 +91,8 @@ const cgs = {
 }
 const scences = [
     {
-        塔露拉的正义演讲: { script: [chapter1[1], chapter1[2], chapter1[3]], cover: cgs.HE1 },
-    },
+        塔露拉的正义演讲: { script: [chapter1[1], chapter1[2]], cover: cgs.HE1 },
+    },//一页一个对象
     {
         白色相簿2: { script: chapter3, cover: cgs.set1.a }
     }
