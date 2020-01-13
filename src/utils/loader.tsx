@@ -2,10 +2,10 @@ import {
     DisplayLine, CommandLine,
     RawScript, LINE_TYPE, NO_IMG,
     CGS, BGMs, Backgrounds, Characters, Chooses, Inputs,
-    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, LoadedChapterModel3,
-    ScencesPage
+    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, LoadedChapterModel3, SoundEffects
 } from './types'
 import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from './utils'
+import chapterValidator from './chapterModalValidator'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
 const CRLF = [13, 10]
@@ -45,7 +45,7 @@ function inputPreprocess(inputs: Inputs): Inputs {
 
 }
 const RawScriptValidator = (RawScript: RawScript) => {
-    const validators: Array<(RawScript: RawScript) => boolean> = [scencesValidator]
+    const validators: Array<(RawScript: RawScript) => boolean> = [scencesValidator, chapterValidator]
     const res = validators.find(fn => fn(RawScript) === false)
     if (res) return false
     return true
@@ -68,19 +68,19 @@ const scencesValidator = (RawScript: RawScript) => {
 }
 const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean): GameModel3 => {
 
-    const { variables, backgrounds, BGMs, cgs, chapters } = rawScript
+    const { variables, backgrounds, BGMs, cgs, chapters, soundEffects } = rawScript
     const inputs = inputPreprocess(rawScript.inputs)
     const charaters = charatersPreProcess(rawScript.charaters)
     const chooses = choosePreProcess(rawScript.chooses)
     const res = chapters.map(chapter => {
-        const { name, next, isBegin,isEnd } = chapter
+        const { name, next, isBegin, isEnd } = chapter
         return {
             ...ChapterLoader(needDecode ?
-                b64_to_utf8(chapter.script.slice("data:;base64,".length)) : chapter.script, variables, IsCRLF, charaters, backgrounds, BGMs, cgs, chooses, inputs),
+                b64_to_utf8(chapter.script.slice("data:;base64,".length)) : chapter.script, variables, IsCRLF, charaters, backgrounds, BGMs, cgs, chooses, inputs, soundEffects),
             name: name,
             next: next,
             isBegin: isBegin,
-            isEnd:isEnd
+            isEnd: isEnd
         }
     })
     return {
@@ -93,7 +93,7 @@ const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
 }
 
 
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS, chooses: Chooses, inputs: Inputs): LoadedChapterModel3 {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS, chooses: Chooses, inputs: Inputs, soundEffects: SoundEffects): LoadedChapterModel3 {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
@@ -133,7 +133,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
                         break;
                     case LINE_TYPE.command:
                         if (extra) {
-                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters, chooses, inputs)
+                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters, chooses, inputs, soundEffects)
                         } else {
                             throw new Error(lineStr)
                         }
@@ -165,7 +165,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
     preLoadCgs: PreLoadCgs,
     preLoadCharaters: PreLoadCharaters,
     chooses: Chooses,
-    inputs: Inputs
+    inputs: Inputs, soundEffects: SoundEffects
 ): CommandLine {
     const [command, key] = splitFromFirstKey(matchedRawLine[1], ":")
     switch (command) {
@@ -271,6 +271,12 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
         case LINE_TYPE.COMMAND_REMOVE_EFFECT:
             return {
                 command: LINE_TYPE.COMMAND_REMOVE_EFFECT
+            }
+
+        case LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT:
+            return {
+                command: LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT,
+                param: soundEffects[key]
             }
         default:
             //warn：unKnowCommand

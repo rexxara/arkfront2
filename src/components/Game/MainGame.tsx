@@ -14,6 +14,7 @@ import CtrlPanel from './component/ctrlPanel'
 import { Icon } from 'antd'
 import GAMEInput from './component/input'
 import effects from './effects'
+import SoundEffectPlayer from './component/soundEffectPlayer'
 const effectCanvasId = 'effects'
 interface IProps {
     data: GameModel3,
@@ -35,6 +36,7 @@ export interface IState {
     rawLine: string
     stop: boolean
     bgm: selectedBGM
+    soundEffect: string
     cg: string
     clickDisable: boolean
     choose: Option[],
@@ -74,6 +76,7 @@ const iniState = {
     skipResourseCount: 0,
     choose: [],
     effectKey: '',
+    soundEffect: '',
     input: {
         key: undefined,
         afterFix: () => "",
@@ -162,6 +165,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.openSaveCon = this.openSaveCon.bind(this)
         this.onInputSubmit = this.onInputSubmit.bind(this)
         this.reviewBack = this.reviewBack.bind(this)
+        this.soundCallback = this.soundCallback.bind(this)
     }
     quickSave() {
         action.save(this.state, 0)
@@ -178,14 +182,14 @@ class MainGame extends React.Component<IProps, IState> {
     }
     async load(ev?: React.MouseEvent, savedata?: SaveData) {
         this.skipThisLine()
-        this.commandLineProcess({ command: LINE_TYPE.COMMAND_REMOVE_EFFECT },true)
+        this.commandLineProcess({ command: LINE_TYPE.COMMAND_REMOVE_EFFECT }, true)
         let newData = savedata || await action.load(0)
         if (newData) {
             const data = saveDataAdapter(newData, this.props, this.state)
             if (data) {
                 data.effectKey
                 if (data.effectKey.length) {
-                    this.commandLineProcess({ command: LINE_TYPE.COMMAND_SHOW_EFFECT, param: data.effectKey },true)
+                    this.commandLineProcess({ command: LINE_TYPE.COMMAND_SHOW_EFFECT, param: data.effectKey }, true)
                 }
                 this.setState(data)
             }
@@ -208,7 +212,7 @@ class MainGame extends React.Component<IProps, IState> {
         const { data: { chapters } } = this.props
         this.clearTimers()
         this.setState({ clickDisable: true })
-        this.commandLineProcess({ "command": "removeEffect" },true)
+        this.commandLineProcess({ "command": "removeEffect" }, true)
         const { gameVariables } = this.state
         this.setState({ ...iniState, gameVariables })
         let chapter = undefined
@@ -396,6 +400,9 @@ class MainGame extends React.Component<IProps, IState> {
                 }
                 newParam = { effectKey: '' }
                 break
+            case LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT:
+                newParam = { soundEffect: command.param }
+                break
             default:
                 //'invalidCommand')
                 break
@@ -502,9 +509,9 @@ class MainGame extends React.Component<IProps, IState> {
     }
     execCommand(commandString: string) {
         const isCommand = commandString.match(actionReg)
-        const { backgrounds, charaters, BGMs, cgs, chooses, inputs } = this.props.RawScript
+        const { backgrounds, charaters, BGMs, cgs, chooses, inputs, soundEffects } = this.props.RawScript
         if (isCommand) {
-            const commandJSON = commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {}, {}, {}, chooses, inputs)
+            const commandJSON = commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {}, {}, {}, chooses, inputs, soundEffects)
             this.commandLineProcess(commandJSON)
         } else {
             console.warn(commandString + 'unrecognized')
@@ -541,10 +548,12 @@ class MainGame extends React.Component<IProps, IState> {
             console.warn('noChapter')
         }
     }
+    soundCallback() {
+        this.setState({ soundEffect: '' })
+    }
     render() {
-        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose, gameVariables, saveDataConOpen, currentChapter, rawLine, input } = this.state
+        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose, gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect } = this.state
         const displaycharactersArray = Object.keys(displaycharacters).map(v => { return { name: v, ...displaycharacters[v] } })
-
         return <React.Fragment>
             <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
                 linePointer={linePointer}
@@ -558,6 +567,7 @@ class MainGame extends React.Component<IProps, IState> {
                 toogleAuto={this.toogleAuto}
             />
             <ARKBGMplayer src={bgm} />
+            <SoundEffectPlayer src={soundEffect} callback={this.soundCallback} />
             {input.key && <GAMEInput clickCallback={this.onInputSubmit} />}
             {saveDataConOpen && <SaveDataCon saveData={this.save} loadData={this.load} />}
             <div className={styles.container}

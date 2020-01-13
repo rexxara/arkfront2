@@ -4,15 +4,15 @@ function showSnowFall(canvasId) {
     SnowFall = class SnowFall {
         constructor(intensity, angle, speed, x, y, color, canvasId) {
             let cav = document.createElement('canvas')
-            const con=document.getElementById(canvasId)
-                        const style = getComputedStyle(con)
+            this.con=document.getElementById(canvasId)
+                        const style = getComputedStyle(this.con)
             const widthStr = style.getPropertyValue('width')
             const heightStr = style.getPropertyValue('height')
             cav.width = parseFloat(widthStr.slice(0, widthStr.length - 2))
             cav.height = parseFloat(heightStr.slice(0, heightStr.length - 2))
             this.width=cav.width
             this.height=cav.height
-            con.appendChild(cav)
+            this.con.appendChild(cav)
             this.canvas=cav
             this.start = this.start.bind(this)
             this.context = cav.getContext("2d")
@@ -38,7 +38,10 @@ function showSnowFall(canvasId) {
             if (this.flakes.length > 2) {
                 setTimeout(() => {
                     this.stop()
-                }, 200)
+                }, 20)
+            }else{
+                this.con.innerHTML=null
+                this.flakes=[]
             }
         }
         draw() {

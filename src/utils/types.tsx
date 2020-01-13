@@ -20,6 +20,7 @@ export const LINE_TYPE = {
     COMMAND_SHOW_INPUT: 'showInput',
     COMMAND_SHOW_EFFECT: 'showEffect',
     COMMAND_REMOVE_EFFECT: 'removeEffect',
+    COMMAND_SHOW_SOUND_EFFECT: 'showSoundEffect'
 }
 
 
@@ -83,6 +84,7 @@ export interface RawScript {
     chooses: Chooses,
     inputs: Inputs,
     scences: Array<ScencesPage>
+    soundEffects:SoundEffects
 }
 
 export interface ScencesPage {
@@ -124,6 +126,9 @@ export interface CGS {
     }
 }
 export interface BGMs {
+    [arg: string]: string
+}
+export interface SoundEffects {
     [arg: string]: string
 }
 export interface Backgrounds {

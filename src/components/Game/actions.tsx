@@ -47,14 +47,14 @@ const INDEXDB = {
             };
             request.onsuccess = function (e) {
                 dbModel.db = request.result
-                console.log('成功建立并打开数据库:' + dbModel.name + ' version' + dbModel.version)
+                //console.log('成功建立并打开数据库:' + dbModel.name + ' version' + dbModel.version)
                 res(true)
             }
             request.onupgradeneeded = function (e) {
                 const db = request.result
                 if (!db.objectStoreNames.contains(dbModel.objectStore.name)) {
                     db.createObjectStore(dbModel.objectStore.name, { keyPath: 'id', autoIncrement: true })
-                    console.log('成功建立对象存储空间：' + dbModel.objectStore.name)
+                    //console.log('成功建立对象存储空间：' + dbModel.objectStore.name)
                 }
                 res(true)
             }
@@ -196,11 +196,9 @@ const actions = {
         }
     },
     unlockCg: async (cgKey: string) => {
-        console.log(cgKey)
         const openSuccess = await INDEXDB.openDB(galleryData)
         if (openSuccess && galleryData.db) {
             const saveSuccess = await INDEXDB.putData(galleryData.db, galleryData.objectStore.name, { id: cgKey })
-            console.log(saveSuccess)
         } else {
             console.log('databaseNotFound')
         }
@@ -212,11 +210,9 @@ const actions = {
         }
     },
     unlockScence: async (name: string) => {
-        console.log('unlockThis', name)
         const openSuccess = await INDEXDB.openDB(scenceData)
         if (openSuccess && scenceData.db) {
             const saveSuccess = await INDEXDB.putData(scenceData.db, scenceData.objectStore.name, { id: name })
-            console.log(saveSuccess)
         } else {
             console.log('databaseNotFound')
         }

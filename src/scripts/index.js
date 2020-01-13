@@ -89,6 +89,9 @@ const cgs = {
         c: 'set1/avg_40_2.png'
     }
 }
+const soundEffects = {
+    eff1: 'eff01.mp3'
+}
 const scences = [
     {
         塔露拉的正义演讲: { script: [chapter1[1], chapter1[2]], cover: cgs.HE1 },
@@ -106,5 +109,6 @@ export default {
     chooses,
     chapters,
     inputs,
-    scences
+    scences,
+    soundEffects
 }
