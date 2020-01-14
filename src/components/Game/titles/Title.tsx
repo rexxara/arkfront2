@@ -6,7 +6,7 @@ interface IProps {
     chapterName: string
     callback: Function
 }
-const duration = 2000
+const duration = 500
 const title = (props: IProps) => {
     const { chapterName, callback } = props
     const [inOrOut, setInOrOut] = useState(true)
@@ -15,8 +15,9 @@ const title = (props: IProps) => {
         setInOrOut(false)
     }
     useEffect(() => {
-        // setTimeout(() => {
-        // }, duration)
+        setTimeout(() => {
+            callbackHandle()
+        }, duration)
     }, [])
     return <CSSTransition
         in={inOrOut}
@@ -29,7 +30,7 @@ const title = (props: IProps) => {
         unmountOnExit={true}
     >
         <div className={styles.title}>
-            <audio onEnded={callbackHandle} src={require("./title.mp3")} autoPlay></audio>
+            <audio src={require("./title.mp3")} autoPlay></audio>
             <div className={styles.titleImg} style={{ background: `url(${imgMap[chapterName]}) no-repeat center 0` }}></div>
         </div>
     </CSSTransition>
