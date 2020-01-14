@@ -76,7 +76,7 @@ export interface Characters {
 /////////before load////
 export interface RawScript {
     charaters: Characters,
-    chapters: ChapterModel3[],
+    chapters: Chaptermodel4,
     variables: Object,
     backgrounds: Backgrounds,
     BGMs: BGMs,
@@ -84,9 +84,11 @@ export interface RawScript {
     chooses: Chooses,
     inputs: Inputs,
     scences: Array<ScencesPage>
-    soundEffects:SoundEffects
+    soundEffects: SoundEffects
 }
-
+export default interface Chaptermodel4 {
+    [arg: string]: ChapterModel3[]
+}
 export interface ScencesPage {
     [arg: string]: ScenceModal
 }
@@ -106,6 +108,7 @@ export interface LoadedChapterModel3 {
     next?: string | Function | JumpOption[],
     isBegin?: boolean
     isEnd?: boolean
+    arkMark:string
 }
 export interface ChapterModel3 {
     name: string,
@@ -113,6 +116,7 @@ export interface ChapterModel3 {
     next?: string | Function | undefined | JumpOption[],
     isBegin?: boolean
     isEnd?: boolean
+    arkMark:string
 }
 export interface JumpOption {
     text: string,

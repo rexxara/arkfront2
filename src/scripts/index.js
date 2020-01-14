@@ -20,11 +20,11 @@ const charaters = {
     }
 }
 
-const chapters = [
-    ...chapter1,
-    { name: 'chapter2', script: chapter2, next: 'chapter3_section1' },
-    ...chapter3
-]
+const chapters = {
+    chapter1: chapter1,
+    chapter2: [{ name: 'chapter2', script: chapter2, next: 'chapter3_section1' }],
+    chapter3: chapter3
+}
 const inputs = {
     第一章输入姓名: {
         key: 'userName',

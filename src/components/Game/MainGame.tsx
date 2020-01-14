@@ -1,7 +1,8 @@
 import React from 'react'
-import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3, Input, CGParama } from '../../utils/types'
+import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, Option, CGParama } from '../../utils/types'
 import { variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
+import { IState, IProps, iniState, clickHandleConfig } from './gameTypes'
 import _omit from 'lodash/omit'
 import styles from './style.css'
 import ARKBGMplayer from './component/BGMplayer'
@@ -16,81 +17,7 @@ import GAMEInput from './component/input'
 import effects from './effects'
 import SoundEffectPlayer from './component/soundEffectPlayer'
 const effectCanvasId = 'effects'
-interface IProps {
-    data: GameModel3,
-    RawScript: RawScript,
-    isReview: boolean,
-    LoadDataFromLoadPage: SaveData
-}
-export interface IState {
-    saveDataConOpen: boolean,
-    auto: boolean
-    displayText: string
-    displayName: string
-    cacheDisplayLineText: string
-    cacheDisplayLineName: string
-    background: string
-    timers: any
-    linePointer: number
-    displaycharacters: DisplayCharacters
-    rawLine: string
-    stop: boolean
-    bgm: selectedBGM
-    soundEffect: string
-    cg: string
-    clickDisable: boolean
-    choose: Option[],
-    gameVariables: any,
-    currentChapter: LoadedChapterModel3
-    skipResourseCount: number//这玩意我得解释一下。加载新的图片资源（立绘，cg，背景）都
-    //是异步加载然后callback点击调用clickhandle的因为脚本里showCg啊这些是不算displayLine的 必须自动帮玩家跳过，。然后玩家手动点击
-    //但是加载存档的时候也会加载图片，这时候自动调用clickHandle就会跳到下一行，react的setstate也会集中更新所以虽然加载好几个图片触发clickhandle却只是跳到下一行，
-    //然后在没有任何资源的行保存就不会跳 所以就试着在加载的时候保存这个counter，在onload的时候读取，判断是否为0，为零就clickHandle，不为零就--
-    //然后这个counter计算的时候，还得减去现在已经显示的资源数
-    input: Input
-    effectref?: any,
-    effectKey: string
-}
-interface clickHandleConfig {
-    reset?: boolean
-    plusOne?: boolean
-}
-
 const TEXT_DISPLAY_SPEEED = 50
-const iniState = {
-    saveDataConOpen: false,
-    auto: false,
-    displayText: '',
-    displayName: '',
-    cacheDisplayLineText: '',
-    cacheDisplayLineName: '',
-    background: '',
-    timers: undefined,
-    linePointer: 0,
-    displaycharacters: {},
-    rawLine: '',
-    stop: false,
-    bgm: { name: '', src: '' },
-    cg: '',
-    clickDisable: false,
-    skipResourseCount: 0,
-    choose: [],
-    effectKey: '',
-    soundEffect: '',
-    input: {
-        key: undefined,
-        afterFix: () => "",
-        id: ""
-    },
-    currentChapter: {
-        line: [],
-        name: '',
-        next: '',
-        preLoadCgs: {},
-        preLoadBackgrounds: {},
-        preLoadCharaters: {}
-    }
-}
 const gameVariables = {}
 const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
     //currentChapter(string)=>array //rawLine=displaytext//chooseKey=>choose//isNext=>choose
@@ -210,11 +137,9 @@ class MainGame extends React.Component<IProps, IState> {
     }
     startChapter(chapterKey?: string) {
         const { data: { chapters } } = this.props
+        const { currentChapter: { arkMark } } = this.state
         this.clearTimers()
         this.setState({ clickDisable: true })
-        this.commandLineProcess({ "command": "removeEffect" }, true)
-        const { gameVariables } = this.state
-        this.setState({ ...iniState, gameVariables })
         let chapter = undefined
         if (!chapterKey) {
             chapter = chapters.find(v => v.isBegin)
@@ -223,13 +148,23 @@ class MainGame extends React.Component<IProps, IState> {
             chapter = chapters.find(v => v.name === chapterKey)
         }
         if (chapter) {
+            const { gameVariables } = this.state
+            if (arkMark === chapter.arkMark) {
+                const { cg,displaycharacters,bgm,auto,background, effectKey } = this.state
+                this.setState({
+                    ...iniState, gameVariables, cg,displaycharacters,bgm,auto,
+                    background, effectKey, linePointer: 0,
+                    currentChapter: chapter,clickDisable: false
+                })//console.log('小节切换')
+            } else {//console.log('章节切换')
+                this.setState({
+                    ...iniState, gameVariables,
+                    currentChapter: chapter,clickDisable: false})
+                this.commandLineProcess({ "command": "removeEffect" }, true)
+            }
             action.unlockScence(chapter.name)
             const currentLine = chapter.line[0]
             this.start(currentLine)
-            this.setState({
-                currentChapter: chapter,
-                clickDisable: false
-            })
         } else {
             return this.reviewBack()
         }

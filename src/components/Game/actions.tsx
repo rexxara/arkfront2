@@ -1,5 +1,5 @@
 import message from '../AMessage/index'
-import { IState } from './MainGame'
+import { IState } from './gameTypes'
 import { DisplayCharacters, selectedBGM } from '../../utils/types'
 interface DBModel {
     name: string,

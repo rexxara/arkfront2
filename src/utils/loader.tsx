@@ -2,7 +2,8 @@ import {
     DisplayLine, CommandLine,
     RawScript, LINE_TYPE, NO_IMG,
     CGS, BGMs, Backgrounds, Characters, Chooses, Inputs,
-    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, LoadedChapterModel3, SoundEffects
+    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, 
+    LoadedChapterModel3, SoundEffects, ChapterModel3
 } from './types'
 import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from './utils'
 import chapterValidator from './chapterModalValidator'
@@ -72,15 +73,23 @@ const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):
     const inputs = inputPreprocess(rawScript.inputs)
     const charaters = charatersPreProcess(rawScript.charaters)
     const chooses = choosePreProcess(rawScript.chooses)
-    const res = chapters.map(chapter => {
-        const { name, next, isBegin, isEnd } = chapter
+    let CombineChapters: Array<ChapterModel3> = []
+    Object.keys(chapters).map(v => {
+        const chapter = chapters[v]
+        chapter.map(vv => {
+            CombineChapters.push({ ...vv, arkMark: v })
+        })
+    })
+    const res = CombineChapters.map(chapter => {
+        const { name, next, isBegin, isEnd, arkMark } = chapter
         return {
             ...ChapterLoader(needDecode ?
                 b64_to_utf8(chapter.script.slice("data:;base64,".length)) : chapter.script, variables, IsCRLF, charaters, backgrounds, BGMs, cgs, chooses, inputs, soundEffects),
             name: name,
             next: next,
             isBegin: isBegin,
-            isEnd: isEnd
+            isEnd: isEnd,
+            arkMark: arkMark
         }
     })
     return {
