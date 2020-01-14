@@ -16,9 +16,10 @@ import { Icon } from 'antd'
 import GAMEInput from './component/input'
 import effects from './effects'
 import SoundEffectPlayer from './component/soundEffectPlayer'
+import Title from './titles/Title'
+import TitleCache from './titles/TitleCache'
 const effectCanvasId = 'effects'
 const TEXT_DISPLAY_SPEEED = 50
-const gameVariables = {}
 const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
     //currentChapter(string)=>array //rawLine=displaytext//chooseKey=>choose//isNext=>choose
     const { data: { chapters }, RawScript: { inputs, chooses } } = props
@@ -68,7 +69,7 @@ const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props)
-        this.state = { ...iniState, gameVariables }
+        this.state = { ...iniState, gameVariables:props.RawScript.variables }
         this.clickHandle = this.clickHandle.bind(this)
         this.textAnimation = this.textAnimation.bind(this)
         this.imgOnload = this.imgOnload.bind(this)
@@ -93,6 +94,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.onInputSubmit = this.onInputSubmit.bind(this)
         this.reviewBack = this.reviewBack.bind(this)
         this.soundCallback = this.soundCallback.bind(this)
+        this.TitleCallback = this.TitleCallback.bind(this)
     }
     quickSave() {
         action.save(this.state, 0)
@@ -150,21 +152,26 @@ class MainGame extends React.Component<IProps, IState> {
         if (chapter) {
             const { gameVariables } = this.state
             if (arkMark === chapter.arkMark) {
-                const { cg,displaycharacters,bgm,auto,background, effectKey } = this.state
+                const { cg, displaycharacters, bgm, auto, background, effectKey } = this.state
                 this.setState({
-                    ...iniState, gameVariables, cg,displaycharacters,bgm,auto,
+                    ...iniState, gameVariables, cg, displaycharacters, bgm, auto,
                     background, effectKey, linePointer: 0,
-                    currentChapter: chapter,clickDisable: false
-                })//console.log('小节切换')
-            } else {//console.log('章节切换')
-                this.setState({
-                    ...iniState, gameVariables,
-                    currentChapter: chapter,clickDisable: false})
-                this.commandLineProcess({ "command": "removeEffect" }, true)
+                    currentChapter: chapter, clickDisable: false
+                })
+                console.log('小节切换')
+                action.unlockScence(chapter.name)
+                const currentLine = chapter.line[0]
+                this.start(currentLine)
+            } else {
+                console.log('章节切换')
+                clearTimeout(this.state.titleLagTimer)
+                const tName = { chapterName: chapter.arkMark, sectionName: chapter.name }
+                this.setState({ TitleChapterName: { chapterName: '', sectionName: '' }, titleLagTimer: undefined }, () => {
+                    this.commandLineProcess({ "command": "removeEffect" }, true)
+                    this.setState({ TitleChapterName: tName })
+                })
             }
-            action.unlockScence(chapter.name)
-            const currentLine = chapter.line[0]
-            this.start(currentLine)
+
         } else {
             return this.reviewBack()
         }
@@ -486,8 +493,31 @@ class MainGame extends React.Component<IProps, IState> {
     soundCallback() {
         this.setState({ soundEffect: '' })
     }
+    TitleCallback() {
+        const { TitleChapterName ,gameVariables} = this.state
+        const { data: { chapters } } = this.props
+        const chapter = chapters.find(v => v.name === TitleChapterName.sectionName)
+        if (chapter) {
+            this.setState({
+                ...iniState, gameVariables,
+                currentChapter: chapter, clickDisable: false,
+                TitleChapterName: TitleChapterName//保留这个name维持title显示
+            })
+            const titleLagTimer = setTimeout(() => {
+                this.setState({ TitleChapterName: { sectionName: "", chapterName: "" } })
+            }, 2000)
+            this.setState({ titleLagTimer })
+            action.unlockScence(chapter.name)
+            const currentLine = chapter.line[0]
+            this.start(currentLine)
+        } else {
+            throw new Error('chapterNotFound')
+
+        }
+    }
     render() {
-        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose, gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect } = this.state
+        const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose,
+            gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName } = this.state
         const displaycharactersArray = Object.keys(displaycharacters).map(v => { return { name: v, ...displaycharacters[v] } })
         return <React.Fragment>
             <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
@@ -501,6 +531,7 @@ class MainGame extends React.Component<IProps, IState> {
                 nextChapter={this.nextChapter}
                 toogleAuto={this.toogleAuto}
             />
+            {TitleChapterName.chapterName && <Title chapterName={TitleChapterName.chapterName} callback={this.TitleCallback} />}
             <ARKBGMplayer src={bgm} />
             <SoundEffectPlayer src={soundEffect} callback={this.soundCallback} />
             {input.key && <GAMEInput clickCallback={this.onInputSubmit} />}
@@ -533,6 +564,7 @@ class MainGame extends React.Component<IProps, IState> {
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}
             {cg && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/CGs/${cg}`)} alt="" />}
             <ImgCache chapter={currentChapter} />
+            <TitleCache/>
         </React.Fragment>
     }
 }

@@ -9,6 +9,7 @@ export const iniState = {
     cacheDisplayLineName: '',
     background: '',
     timers: undefined,
+    titleLagTimer:undefined,
     linePointer: 0,
     displaycharacters: {},
     rawLine: '',
@@ -20,6 +21,10 @@ export const iniState = {
     choose: [],
     effectKey: '',
     soundEffect: '',
+    TitleChapterName:{
+        chapterName:'',
+        sectionName:''
+    },
     input: {
         key: undefined,
         afterFix: () => "",
@@ -51,6 +56,7 @@ export interface IState {
     cacheDisplayLineName: string
     background: string
     timers: any
+    titleLagTimer:any
     linePointer: number
     displaycharacters: DisplayCharacters
     rawLine: string
@@ -70,6 +76,10 @@ export interface IState {
     input: Input
     effectref?: any,
     effectKey: string
+    TitleChapterName:{
+        chapterName:string
+        sectionName:string
+    }
 }
 export interface clickHandleConfig {
     reset?: boolean

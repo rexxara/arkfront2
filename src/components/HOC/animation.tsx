@@ -4,7 +4,6 @@ import { CSSTransition } from 'react-transition-group'
 export default function wrapAnimation(WrappedComponent: any): any {
   return class extends React.Component {
     render() {
-      console.log("passing by")
       const { match } = this.props as any
       return (
         <CSSTransition
