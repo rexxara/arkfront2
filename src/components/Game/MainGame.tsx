@@ -12,7 +12,7 @@ import action, { SaveData } from './actions'
 import SaveDataCon from './component/saveDataCon'
 import ImgCache from './component/ImgCache'
 import CtrlPanel from './component/ctrlPanel'
-import { Icon } from 'antd'
+import { Icon, message } from 'antd'
 import GAMEInput from './component/input'
 import effects from './effects'
 import SoundEffectPlayer from './component/soundEffectPlayer'
@@ -69,7 +69,7 @@ const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props)
-        this.state = { ...iniState, gameVariables:props.RawScript.variables }
+        this.state = { ...iniState, gameVariables: props.RawScript.variables }
         this.clickHandle = this.clickHandle.bind(this)
         this.textAnimation = this.textAnimation.bind(this)
         this.imgOnload = this.imgOnload.bind(this)
@@ -145,7 +145,7 @@ class MainGame extends React.Component<IProps, IState> {
         let chapter = undefined
         if (!chapterKey) {
             chapter = chapters.find(v => v.isBegin)
-            console.warn('chapter is undefined ,Auto start game from first chapter')
+            console.info('chapter is undefined ,Auto start game from first chapter')
         } else {
             chapter = chapters.find(v => v.name === chapterKey)
         }
@@ -251,6 +251,7 @@ class MainGame extends React.Component<IProps, IState> {
     nextChapter() {
         const { currentChapter: { next, isEnd }, gameVariables } = this.state
         if (isEnd) {
+            message.success('gameOver')
             return console.warn("gameOver")
         }
         if (!next) {
@@ -338,7 +339,7 @@ class MainGame extends React.Component<IProps, IState> {
                 if (effectref) {
                     effectref.stop()
                 } else {
-                    console.warn('effectRefNotfound')
+                    console.log('effectRefNotfound')
                 }
                 newParam = { effectKey: '' }
                 break
@@ -494,25 +495,25 @@ class MainGame extends React.Component<IProps, IState> {
         this.setState({ soundEffect: '' })
     }
     TitleCallback() {
-        const { TitleChapterName ,gameVariables} = this.state
+        const { TitleChapterName, gameVariables } = this.state
         const { data: { chapters } } = this.props
         const chapter = chapters.find(v => v.name === TitleChapterName.sectionName)
         if (chapter) {
             this.setState({
                 ...iniState, gameVariables,
                 currentChapter: chapter, clickDisable: false,
-                TitleChapterName: TitleChapterName//保留这个name维持title显示
+                TitleChapterName: { ...TitleChapterName, out: true }//保留这个name维持title显示
             })
             const titleLagTimer = setTimeout(() => {
                 this.setState({ TitleChapterName: { sectionName: "", chapterName: "" } })
+                action.unlockScence(chapter.name)
+                const currentLine = chapter.line[0]
+                this.start(currentLine)
             }, 2000)
             this.setState({ titleLagTimer })
-            action.unlockScence(chapter.name)
-            const currentLine = chapter.line[0]
-            this.start(currentLine)
         } else {
-            throw new Error('chapterNotFound')
-
+            //throw new Error('chapterNotFound')//游戏结束时和其他蜜汁情况会触发到这块的逻辑
+            console.log('游戏结束时和其他蜜汁情况会触发到这块的逻辑,把缓存从小节改成章节吧')
         }
     }
     render() {
@@ -531,7 +532,7 @@ class MainGame extends React.Component<IProps, IState> {
                 nextChapter={this.nextChapter}
                 toogleAuto={this.toogleAuto}
             />
-            {TitleChapterName.chapterName && <Title chapterName={TitleChapterName.chapterName} callback={this.TitleCallback} />}
+            {TitleChapterName.chapterName && <Title chapterName={TitleChapterName.chapterName} out={TitleChapterName.out} ></Title>}
             <ARKBGMplayer src={bgm} />
             <SoundEffectPlayer src={soundEffect} callback={this.soundCallback} />
             {input.key && <GAMEInput clickCallback={this.onInputSubmit} />}
@@ -563,8 +564,8 @@ class MainGame extends React.Component<IProps, IState> {
             </div>
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}
             {cg && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/CGs/${cg}`)} alt="" />}
-            <ImgCache chapter={currentChapter} />
-            <TitleCache/>
+            {(currentChapter.name || TitleChapterName.sectionName) && <ImgCache callback={this.TitleCallback} chapter={this.props.data.chapters.find(v => v.name === (currentChapter.name || TitleChapterName.sectionName))} />}
+            <TitleCache />
         </React.Fragment>
     }
 }

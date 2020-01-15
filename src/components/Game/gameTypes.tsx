@@ -79,6 +79,7 @@ export interface IState {
     TitleChapterName:{
         chapterName:string
         sectionName:string
+        out?:boolean
     }
 }
 export interface clickHandleConfig {
