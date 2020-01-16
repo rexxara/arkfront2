@@ -98,17 +98,32 @@ export interface ScenceModal {
 }
 export interface GameModel3 {
     chapters: LoadedChapterModel3[]
+    caches: ChapterCaches
+}
+export interface ChapterCaches {
+    [arg: string]: ChapterCache
+}
+export interface ChapterCache {
+    preLoadCgs: {
+        [arg: string]: string
+    }
+    preLoadBackgrounds: {
+        [arg: string]: string
+    }
+    preLoadCharaters: {
+        [arg: string]: string[]
+    }
 }
 export interface LoadedChapterModel3 {
     line: (CommandLine | DisplayLine)[]
-    preLoadCharaters: PreLoadCharaters
-    preLoadBackgrounds: PreLoadBackgrounds
-    preLoadCgs: PreLoadCgs,
+    preLoadCharaters?: PreLoadCharaters
+    preLoadBackgrounds?: PreLoadBackgrounds
+    preLoadCgs?: PreLoadCgs,
     name: string,
     next?: string | Function | JumpOption[],
     isBegin?: boolean
     isEnd?: boolean
-    arkMark:string
+    arkMark: string
 }
 export interface ChapterModel3 {
     name: string,
@@ -116,7 +131,7 @@ export interface ChapterModel3 {
     next?: string | Function | undefined | JumpOption[],
     isBegin?: boolean
     isEnd?: boolean
-    arkMark:string
+    arkMark: string
 }
 export interface JumpOption {
     text: string,

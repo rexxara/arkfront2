@@ -2,8 +2,8 @@ import {
     DisplayLine, CommandLine,
     RawScript, LINE_TYPE, NO_IMG,
     CGS, BGMs, Backgrounds, Characters, Chooses, Inputs,
-    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3, 
-    LoadedChapterModel3, SoundEffects, ChapterModel3
+    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3,
+    LoadedChapterModel3, SoundEffects, ChapterModel3, ChapterCaches
 } from './types'
 import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from './utils'
 import chapterValidator from './chapterModalValidator'
@@ -53,7 +53,10 @@ const RawScriptValidator = (RawScript: RawScript) => {
 }
 const scencesValidator = (RawScript: RawScript) => {
     const { scences } = RawScript
-    let names: any = {}
+    interface _Names{
+        [args:string]:boolean
+    }
+    let names: _Names = {}
     let flag = true
     scences.map(v => {
         Object.keys(v).map(vv => {
@@ -80,7 +83,7 @@ const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):
             CombineChapters.push({ ...vv, arkMark: v })
         })
     })
-    const res = CombineChapters.map(chapter => {
+    let res = CombineChapters.map(chapter => {
         const { name, next, isBegin, isEnd, arkMark } = chapter
         return {
             ...ChapterLoader(needDecode ?
@@ -92,8 +95,20 @@ const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):
             arkMark: arkMark
         }
     })
+
+    let caches: ChapterCaches = {}
+    res = res.map(v => {
+        const { preLoadCgs, preLoadBackgrounds, preLoadCharaters, ...rest } = v
+        caches[v.arkMark] = caches[v.arkMark] || {}
+        caches[v.arkMark].preLoadBackgrounds = { ...caches[v.arkMark].preLoadBackgrounds, ...preLoadBackgrounds }
+        caches[v.arkMark].preLoadCgs = { ...caches[v.arkMark].preLoadCgs, ...preLoadCgs }
+        caches[v.arkMark].preLoadCharaters = { ...caches[v.arkMark].preLoadCharaters, ...preLoadCharaters }
+        return rest
+    })
+    console.log(res, caches)
     return {
-        chapters: res as LoadedChapterModel3[]
+        chapters: res as LoadedChapterModel3[],
+        caches
     }
 }
 const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
@@ -102,7 +117,9 @@ const main = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean) => {
 }
 
 
-function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs, cgs: CGS, chooses: Chooses, inputs: Inputs, soundEffects: SoundEffects): LoadedChapterModel3 {
+function ChapterLoader(script: string, variables: Object, IsCRLF: boolean,
+    Charaters: Characters, backgrounds: Backgrounds, BGMs: BGMs,
+    cgs: CGS, chooses: Chooses, inputs: Inputs, soundEffects: SoundEffects): LoadedChapterModel3 {
     let chapter: (DisplayLine | CommandLine)[] = []
     let lineText: string[] = []
     let chapterPointer = 0
@@ -163,7 +180,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean, Chara
             linePointer = 0
         }
     }
-    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs, name: '' }
+    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs, name: '占位符', arkMark: '占位符' }
 }
 export function commandProcess(matchedRawLine: RegExpMatchArray,
     backgrounds: Backgrounds,
@@ -239,9 +256,12 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
         case LINE_TYPE.COMMAND_SHOW_CG:
             const dotIndex = key.indexOf('.')
             if (dotIndex > -1) {//cg组
+                interface _CgSet {
+                    [args: string]: string
+                }
                 const folderKey = key.substring(0, dotIndex)
                 const srcKey = key.substring(dotIndex + 1)
-                const src = (cgs[folderKey] as any)[srcKey]
+                const src = (cgs[folderKey] as _CgSet)[srcKey]
                 preLoadCgs[`${folderKey}.${srcKey}`] = src
                 return {
                     command: LINE_TYPE.COMMAND_SHOW_CG,

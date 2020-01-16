@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import styles from '../style.css'
-import { LoadedChapterModel3 } from '../../../utils/types'
+import { ChapterCache } from '../../../utils/types'
 import { message } from 'antd'
 interface IProps {
-    chapter?: LoadedChapterModel3
     callback: Function
+    caches: ChapterCache
 }
-export default function saveDataCon({ chapter, callback }: IProps) {
+export default function saveDataCon({ callback, caches }: IProps) {
     const [bgs, setBgs]: [Array<string>, Function] = useState([])
     const [cgs, setCgs]: [Array<string>, Function] = useState([])
     const [chs, setChs]: [Array<string>, Function] = useState([])
@@ -30,8 +30,8 @@ export default function saveDataCon({ chapter, callback }: IProps) {
         }
     }, [total, loadedCount])
     function getImgCache() {
-        if (!chapter) return console.warn("ImgCache not rcv cache")
-        const { preLoadBackgrounds, preLoadCgs, preLoadCharaters } = chapter
+        if (!caches) return console.warn("ImgCache not rcv cache")
+        const { preLoadBackgrounds, preLoadCgs, preLoadCharaters } = caches
         let preloadBGArray: string[] = []
         let preloadCGArray: string[] = []
         let preloadChArray: string[] = []
@@ -53,20 +53,23 @@ export default function saveDataCon({ chapter, callback }: IProps) {
                 })
             }
         }
+        setLoadedCount(0)
+        setBgs(preloadBGArray)
+        setCgs(preloadCGArray)
+        setChs(preloadChArray)
+        setMountDate(Date.now())
         if (preloadBGArray.length + preloadCGArray.length + preloadChArray.length === 0) {
-            console.log(chapter,'没有资源')
+            console.log(caches, '没有资源')
             setTimeout(() => {
+                message.success(`没有资源 标题显示4s`)
                 callback()
             }, 4000)
-        } else {
-            setBgs(preloadBGArray)
-            setCgs(preloadCGArray)
-            setChs(preloadChArray)
         }
     }
     useEffect(() => {
         getImgCache()
-    }, [chapter])
+        console.log(caches)
+    }, [caches])
     const updateCount = () => {
         setLoadedCount(pre => pre + 1)
     }

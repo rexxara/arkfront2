@@ -519,6 +519,7 @@ class MainGame extends React.Component<IProps, IState> {
     render() {
         const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose,
             gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName } = this.state
+        const { data: { caches } } = this.props
         const displaycharactersArray = Object.keys(displaycharacters).map(v => { return { name: v, ...displaycharacters[v] } })
         return <React.Fragment>
             <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
@@ -564,7 +565,7 @@ class MainGame extends React.Component<IProps, IState> {
             </div>
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}
             {cg && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/CGs/${cg}`)} alt="" />}
-            {(currentChapter.name || TitleChapterName.sectionName) && <ImgCache callback={this.TitleCallback} chapter={this.props.data.chapters.find(v => v.name === (currentChapter.name || TitleChapterName.sectionName))} />}
+            {(currentChapter.arkMark || TitleChapterName.chapterName) && <ImgCache caches={caches[( TitleChapterName.chapterName||currentChapter.arkMark)]} callback={this.TitleCallback} />}
             <TitleCache />
         </React.Fragment>
     }
