@@ -18,6 +18,7 @@ import effects from './effects'
 import SoundEffectPlayer from './component/soundEffectPlayer'
 import Title from './titles/Title'
 import TitleCache from './titles/TitleCache'
+import { vw, vh } from '@/utils/getSize'
 const effectCanvasId = 'effects'
 const TEXT_DISPLAY_SPEEED = 50
 const saveDataAdapter = (newData: SaveData, props: IProps, state: IState) => {
@@ -333,6 +334,7 @@ class MainGame extends React.Component<IProps, IState> {
                 newParam = { input: command.param, clickDisable: true }
                 break
             case LINE_TYPE.COMMAND_SHOW_EFFECT:
+                console.log(command)
                 newParam = { effectKey: command.param, effectref: effects[command.param as string](effectCanvasId) }
                 break
             case LINE_TYPE.COMMAND_REMOVE_EFFECT:
@@ -521,10 +523,11 @@ class MainGame extends React.Component<IProps, IState> {
             gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName } = this.state
         const { data: { caches } } = this.props
         const displaycharactersArray = Object.keys(displaycharacters).map(v => { return { name: v, ...displaycharacters[v] } })
-        return <React.Fragment>
+        return <div style={{width:vw(100),height:vh(100),overflow:'hidden'}}>
             <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
                 linePointer={linePointer}
                 auto={auto}
+                saveDataConOpen={saveDataConOpen}
                 closeSaveCon={this.closeSaveCon}
                 openSaveCon={this.openSaveCon}
                 quickSave={this.quickSave}
@@ -540,11 +543,12 @@ class MainGame extends React.Component<IProps, IState> {
             {saveDataConOpen && <SaveDataCon saveData={this.save} loadData={this.load} />}
             <div className={styles.container}
                 style={{
+                    height:vh(100),
                     background: background ?
                         `url(${require(`../../scripts/backgrounds/${background}`)})` : undefined
                 }}
                 onClick={this.clickHandle}>
-                <div className={choose.length && styles.chooseCon}>{choose.map((v, k) => <ARKOption gameVariables={gameVariables} key={k} onClick={this.onSelect} v={v} choose={choose} />)}</div>
+                <div style={{position:"absolute",height:vh(67)}} className={choose.length && styles.chooseCon}>{choose.map((v, k) => <ARKOption gameVariables={gameVariables} key={k} onClick={this.onSelect} v={v} choose={choose} />)}</div>
                 <div className={styles.displayCharactersCon}>
                     {displaycharactersArray.map(v => v.emotion ? <img
                         onLoad={this.imgOnload}
@@ -559,15 +563,25 @@ class MainGame extends React.Component<IProps, IState> {
                     }}></div>
                 <div className={styles.effects} id={effectCanvasId}></div>
                 <div className={styles.dialog}>
-                    <div className={styles.owner}>{displayName}</div>
-                    <div className={styles.textarea} >{displayText}{rawLine === displayText && <Icon type="step-forward" />}</div>
+                    <div className={styles.owner} style={{
+                        height:vh(8),
+                        lineHeight:vh(8),
+                        paddingLeft:vw(5),
+                        fontSize:vh(6)
+                    }}>{displayName}</div>
+                    <div className={styles.textarea}
+                    style={{padding:vw(2),
+                        minHeight:vh(25),
+                        lineHeight:vh(6),
+                        fontSize:vh(4),
+                    }}>{displayText}{rawLine === displayText && rawLine.length>0 &&<Icon type="step-forward" />}</div>
                 </div>
             </div>
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}
             {cg && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/CGs/${cg}`)} alt="" />}
             {(currentChapter.arkMark || TitleChapterName.chapterName) && <ImgCache caches={caches[( TitleChapterName.chapterName||currentChapter.arkMark)]} callback={this.TitleCallback} />}
             <TitleCache />
-        </React.Fragment>
+        </div>
     }
 }
 export default MainGame

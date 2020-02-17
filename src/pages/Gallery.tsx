@@ -3,6 +3,8 @@ import rawScripts from '../scripts/index'
 import actions from '../components/Game/actions'
 import styles from './index.css'
 import { CGS } from '../utils/types'
+import Abutton from '../components/Abutton'
+import { vw } from '../utils/getSize'
 interface IProps {
 
 }
@@ -110,12 +112,20 @@ export default function gallery(props: IProps) {
                 if (hitedunlockKey) {
                     cgUrl = v.value as string
                 }
-                return <div onClick={() => clickHandle(v, cgUrl)} key={v.key} style={{ background: cgUrl ? `url(${require(`../scripts/CGs/${cgUrl}`)})` : undefined }} className={styles.galleryCard}>{v.key}</div>
+                return <div
+                    onClick={() => clickHandle(v, cgUrl)} key={v.key}
+                    style={{
+                        background: cgUrl ? `url(${require(`../scripts/CGs/${cgUrl}`)})` : undefined,
+                        width: vw(27.5),
+                        height: vw(15.5),
+                        margin: vw(2)
+                    }}
+                    className={styles.galleryCard}>{v.key}</div>
             })}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-            {containers.map((v, i) => <button key={i} onClick={() => { setCurrent(i) }} className={styles.pagation}>{i + 1}</button>)}
-            <button onClick={() => { window.history.back() }} className={styles.pagation}>返回</button>
+            {containers.map((v, i) => <Abutton key={i} onClick={() => { setCurrent(i) }}>{i + 1}</Abutton>)}
+            <Abutton onClick={() => { window.history.back() }} >返回</Abutton>
         </div>
         <div>
             {imgCaches.map(v => <div key={v} style={{ background: `url(${require(`../scripts/CGs/${v}`)})` }}></div>)}

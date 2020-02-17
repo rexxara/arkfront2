@@ -45,7 +45,8 @@ export default {
                 const { origin } = window.location
                 window.location.href = origin + '#/mainGame'
             }, 0)
-            const newConbine = { ...RawScript, chapters: script }
+            const newConbine = { ...RawScript, chapters: {chapter1:script} }
+            console.log(newConbine)
             return { ...state, RawScript: newConbine, isReview: true }
         },
     },

@@ -105,7 +105,6 @@ const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):
         caches[v.arkMark].preLoadCharaters = { ...caches[v.arkMark].preLoadCharaters, ...preLoadCharaters }
         return rest
     })
-    console.log(res, caches)
     return {
         chapters: res as LoadedChapterModel3[],
         caches

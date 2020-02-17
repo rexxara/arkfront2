@@ -16,6 +16,9 @@ import HomePage from './HomePage'
 import Gallery from './Gallery'
 import ScenceReview from './ScenceReview'
 import LoadPage from './loadPage'
+import detectOrient from '../utils/detectOrient'
+import {vh,vw} from '../utils/getSize'
+detectOrient()
 const history = createHashHistory()
 const WarpedIniPage = warpedAnimation(IniPage)
 const WarpedCopyrightPage = warpedAnimation(copyrightPage)
@@ -31,7 +34,13 @@ const App: React.FC = () => {
   return (
     <div >
       <Router history={history}>
-        <div className={styles.App}>
+        <div style={{height:vh(100),width:vw(100),
+          backgroundImage:`url(${require('./mainCover.jpg')})`,
+          backgroundRepeat:'no-repeat',
+          backgroundColor:'black',
+          backgroundSize:'Contain',
+          backgroundPosition:'center center'
+          }} className={styles.App}>
           <Route exact path="/" children={props => <WarpedIniPage  {...props} />} />
           <Route path="/copyrightPage" children={props => <WarpedCopyrightPage {...props} />} />
           <Route path="/alertPage" component={alertPage} />

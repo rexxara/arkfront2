@@ -1,17 +1,18 @@
+
+[showBg:龙门]
+
 000000000000000
-
-
 
 
 下雪
 
 [showCg:HE2]
 
-AAAAAAAAAAAAAAAAAA
+你的名字？？
 
-//[showInput:第一章输入姓名]
+[showInput:第一章输入姓名]
 
-//你的名字是${userName}
+你的名字是${userName}
 
 [showCg:set1.a]
 

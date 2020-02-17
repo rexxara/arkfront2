@@ -5,6 +5,8 @@ import { connect } from 'dva'
 import { AnyAction } from 'redux'
 import { ScencesPage } from '../utils/types'
 import actions from '../components/Game/actions'
+import Abutton from '../components/Abutton'
+import { vw, vh } from '../utils/getSize'
 interface Iprops {
     dispatch: (a: AnyAction) => AnyAction
     history: {
@@ -62,20 +64,26 @@ const ScenceReview = (props: Iprops) => {
         setUnlockKeys(res.map(v => v.id))
     }
     console.log(currentPageMap)
-    return <div style={{ position: 'absolute', top: 0, left: 0, width: '100%' }}>
-        <div className={styles.cardCon}>
+    return <div style={{ position: 'absolute', top: 0, left: 0, width: vw(100) }}>
+        <div className={styles.cardCon} style={{ height: vw(40) }}>
             {currentPageMap.map((v) => {
                 return v.unlocked ? <div
                     onClick={() => clickHandle(v)}
                     key={v.name}
-                    style={{ background: `url(${require(`../scripts/CGs/${v.cover}`)})` }}
+                    style={{
+                        background: `url(${require(`../scripts/CGs/${v.cover}`)})`,
+                        width: vw(27.5),
+                        height: vw(15.5)
+                    }}
                     className={styles.galleryCard}>{v.name}</div> : <div
                         key={v.name} className={styles.galleryCard}></div>
             })}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-            {scences.map((v, i) => <button key={i} onClick={() => { setPageHandle(i) }} className={styles.pagation}>{i + 1}</button>)}
-            <button onClick={() => { props.history.goBack() }} className={styles.pagation}>返回</button>
+            {scences.map((v, i) => <Abutton key={i}
+                onClick={() => { setPageHandle(i) }}>{i + 1}</Abutton>)}
+            <Abutton
+                onClick={() => { props.history.goBack() }}>返回</Abutton>
         </div>
         <div style={{ opacity: 0 }}>
             {caches.map(v => <img style={{ position: "absolute", top: 0, left: 0, width: '8vw' }} key={v} src={require(`../scripts/CGs/${v}`)} />)}

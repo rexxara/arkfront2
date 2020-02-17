@@ -3,6 +3,7 @@ import Scence from '../components/scence'
 import Abutton from '../components/Abutton/index'
 import { connect } from 'dva'
 import { AnyAction } from 'redux'
+import { vh } from '../utils/getSize'
 interface Iprops {
   dispatch: (a: AnyAction) => AnyAction
 }
@@ -13,6 +14,7 @@ const LoginPage = (props: Iprops) => {
     })
   }
   return <Scence>
+    <div style={{ width: '100%', height: vh(50) }}></div>
     {/* <Abutton to="/playGround" text="游乐场" /> */}
     <Abutton onClick={startGame} text="开始游戏" />
     <Abutton to='/loadPage' text="加载" />

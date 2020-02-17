@@ -4,17 +4,17 @@ import pxToViewPort from 'postcss-px-to-viewport';
 // ref: https://umijs.org/config/
 const config: IConfig = {
 
-  extraPostCSSPlugins: [
-    pxToViewPort({
-      viewportWidth: 1334,
-      viewportHeight: 750,
-      unitPrecision: 5,
-      viewportUnit: 'vw',
-      selectorBlackList: [],
-      minPixelValue: 1,
-      mediaQuery: false,
-    }),
-  ],
+  // extraPostCSSPlugins: [
+  //   pxToViewPort({
+  //     viewportWidth: 1334,
+  //     viewportHeight: 750,
+  //     unitPrecision: 5,
+  //     viewportUnit: 'vw',
+  //     selectorBlackList: [],
+  //     minPixelValue: 1,
+  //     mediaQuery: false,
+  //   }),
+  // ],
   treeShaking: true,
   plugins: [
     ['umi-plugin-react', {
