@@ -5,9 +5,7 @@ import styles from './index.css'
 import { CGS } from '../utils/types'
 import Abutton from '../components/Abutton'
 import { vw } from '../utils/getSize'
-interface IProps {
-
-}
+interface IProps {}
 interface Containers {
     key: string,
     value: string

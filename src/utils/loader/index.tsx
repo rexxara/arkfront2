@@ -4,8 +4,8 @@ import {
     CGS, BGMs, Backgrounds, Characters, Chooses, Inputs,
     PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3,
     LoadedChapterModel3, SoundEffects, ChapterModel3, ChapterCaches
-} from './types'
-import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from './utils'
+} from '../types'
+import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from '../utils'
 import chapterValidator from './chapterModalValidator'
 const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4

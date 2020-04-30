@@ -1,6 +1,6 @@
-import { RawScript } from './types'
+import { RawScript } from '../types'
 export default function (rawScript: RawScript) {
     const {chapters}=rawScript
-
+    
     return true
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import MainGame from '../components/Game'
-import loader from '../utils/loader'
+import loader from '../utils/loader/index'
 import styles from './index.css'
 import { RawScript } from '../utils/types'
 import { SaveData } from '../components/Game/actions'

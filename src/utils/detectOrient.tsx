@@ -1,6 +1,5 @@
 // 利用 CSS3 旋转 对根容器逆时针旋转 90 度
 var detectOrient = function () {
-    console.log('asdasd')
     var width = document.documentElement.clientWidth,
         height = document.documentElement.clientHeight,
         $wrapper = document.body,

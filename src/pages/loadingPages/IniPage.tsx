@@ -1,9 +1,9 @@
 import React from 'react';
-import Scence from '../components/scence'
-import ini from '../assets/ini.jpg'
+import Scence from '../../components/scence'
+import ini from '../../assets/ini.jpg'
 import { Link } from 'react-router-dom'
 import { RouteComponentProps } from 'react-router'
-
+import {imgStyle} from './computedStyle'
 interface Istate {
   hash: string
 }
@@ -23,7 +23,7 @@ class IniPage extends React.Component<RouteComponentProps, Istate>{
     return (
       <Scence>
         <Link to="/copyrightPage">
-          <img src={ini} style={{ width: "100%" }} alt="" />
+          <img src={ini} style={imgStyle} alt="" />
         </Link>
       </Scence>
     )

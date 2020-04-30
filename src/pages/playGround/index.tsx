@@ -2,11 +2,14 @@ import React from 'react';
 import GameData from '../../scripts'
 import message from '../../components/AMessage'
 import MainGame from '../../components/Game'
-import loader from '../../utils/loader'
+import loader from '../../utils/loader/index'
 import { RawScript } from '../../utils/types'
 import styles from '../index.css'
 import Form from './form'
 import { connect } from 'dva'
+
+//暂时废弃
+
 interface IProps {
   script: string
   edited?:boolean
