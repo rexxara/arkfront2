@@ -539,7 +539,7 @@ class MainGame extends React.Component<IProps, IState> {
             {TitleChapterName.chapterName && <Title chapterName={TitleChapterName.chapterName} out={TitleChapterName.out} ></Title>}
             <ARKBGMplayer src={bgm} />
             <SoundEffectPlayer src={soundEffect} callback={this.soundCallback} />
-            {input.key && <GAMEInput clickCallback={this.onInputSubmit} />}
+            {input.key && <GAMEInput placeholder={displayText} clickCallback={this.onInputSubmit} />}
             {saveDataConOpen && <SaveDataCon saveData={this.save} loadData={this.load} />}
             <div className={styles.container}
                 style={{

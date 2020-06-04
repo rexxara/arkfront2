@@ -6,6 +6,7 @@ interface IProps {
     callback: Function
     caches: ChapterCache
 }
+const TITLE_DISPLAY_TIME=1000
 export default function saveDataCon({ callback, caches }: IProps) {
     const [bgs, setBgs]: [Array<string>, Function] = useState([])
     const [cgs, setCgs]: [Array<string>, Function] = useState([])
@@ -17,14 +18,14 @@ export default function saveDataCon({ callback, caches }: IProps) {
         if (total && loadedCount) {
             if (total === loadedCount) {
                 const loadedDruation = Date.now() - mountDate
-                if (loadedDruation > 4000) {
+                if (loadedDruation > TITLE_DISPLAY_TIME) {
                     callback()
                     message.success(`加载章节资源耗时${(loadedDruation / 1000).toFixed(2)}`)
                 } else {
                     setTimeout(() => {
                         callback()
-                        message.success(`加载章节资源耗时${(loadedDruation / 1000).toFixed(2)}，等待时间${((4000 - loadedDruation) / 1000).toFixed(2)}`)
-                    }, 4000 - loadedDruation)
+                        message.success(`加载章节资源耗时${(loadedDruation / 1000).toFixed(2)}，等待时间${((TITLE_DISPLAY_TIME - loadedDruation) / 1000).toFixed(2)}`)
+                    }, TITLE_DISPLAY_TIME - loadedDruation)
                 }
             }
         }
@@ -63,7 +64,7 @@ export default function saveDataCon({ callback, caches }: IProps) {
             setTimeout(() => {
                 message.success(`没有资源 标题显示4s`)
                 callback()
-            }, 4000)
+            }, TITLE_DISPLAY_TIME)
         }
     }
     useEffect(() => {

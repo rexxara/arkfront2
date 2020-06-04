@@ -4,9 +4,10 @@ import { Input } from 'antd'
 import Abutton from '../../Abutton'
 import { vw, vh } from '../../../utils/getSize'
 interface IProps {
-    clickCallback: Function
+    clickCallback: Function,
+    placeholder: string
 }
-export default function Inputs({ clickCallback }: IProps) {
+export default function Inputs({ clickCallback, placeholder }: IProps) {
     const [value, setValue] = useState('')
     const [focusState, setForcusState] = useState('')
     const btnClickHandle = () => {
@@ -23,7 +24,7 @@ export default function Inputs({ clickCallback }: IProps) {
             window.onresize = preResize
         }
     }
-    const onBlur = (ev: React.FocusEvent<HTMLInputElement>) => {
+    const onBlur = (ev: React.MouseEvent<HTMLElement>) => {
         const preResize = window.onresize
         window.onresize = () => {
             document.body.style.cssText = focusState
@@ -33,20 +34,27 @@ export default function Inputs({ clickCallback }: IProps) {
         clickCallback(value)
     }
     console.log(document.body.style)
+    const syncInput = <Input size='large'
+        //onBlur={onBlur}
+        onChange={inputChange}
+        autoComplete="off"
+        onFocus={onFocus}
+        value={value}
+        type="text"
+        name='inputValue' />
     return <div className={styles.InputCon}>
-        {focusState.length>0 && <div className={styles.InputCover}>{value}
-            <div>
-                <Abutton text='提交' onClick={btnClickHandle} />
-            </div>
+        {focusState.length > 0 && <div className={styles.InputCover}>
+            {placeholder}
+            <div style={{ width: '80vw', marginLeft: '10vw' }}><Input size='large'
+                //onBlur={onBlur}
+                onChange={inputChange}
+                autoComplete="off"
+                //onFocus={onFocus}
+                value={value}
+                type="text"
+                name='inputValue' /></div>
+            <Abutton text="确认" onClick={onBlur} />
         </div>}
-        <Input size='large'
-            onBlur={onBlur}
-            onChange={inputChange}
-            autoComplete="off"
-            autoFocus
-            onFocus={onFocus}
-            value={value}
-            type="text"
-            name='inputValue' />
+        {syncInput}
     </div>
 }
