@@ -23,5 +23,5 @@ var detectOrient = function () {
     }
     $wrapper.style.cssText = style;
 }
-window.onresize = detectOrient;
+// window.onresize = detectOrient;
 export default detectOrient
