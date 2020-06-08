@@ -8,7 +8,7 @@ export const LINE_TYPE = {
     comment: "comment",
     command: 'command',
     COMMAND_SHOW_BACKGROUND: 'showBg',
-    COMMAND_LEAVE_CHARATER: 'leave',
+    COMMAND_LEAVE_CHARATER: 'leaveCh',
     COMMAND_ENTER_CHARATER: 'showCh',
     COMMAND_PLAY_BGM: 'playBgm',
     COMMAND_PAUSE_BGM: 'pauseBgm',

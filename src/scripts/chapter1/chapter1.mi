@@ -7,7 +7,7 @@
 
 [showInput:第一章输入姓名]
 
-你的名字是${userName}
+你的名字是${userName} 
 
 [showCg:set1.a]
 
@@ -17,17 +17,61 @@
 
 [removeCg]
 
+//
+
+// asdasd TODO
+
+Available token types:
+    [comment] [string] [keyword] [number] [regexp] [operator] [namespace]
+    [type] [struct] [class] [interface] [enum] [typeParameter] [function]
+    [member] [macro] [variable] [parameter] [property] [label]
+
+Available token modifiers:
+    [showBg:declaration] [type:documentation] [type:member] [type:static]
+    [type:abstract] [type:deprecated] [type:modification] [type:async]
+
+Some examples:
+    [e.static.token]     [type.static.abstract]
+    [e.static.token]     [type.static]
+    [e.struct.green]
+    [struct]
+
+    [function.private]
+
+An error case:
+    [notInLegend]
+
+    [comxxxxxment]
+
+    [rexxara]
+
 [showCh:塔露拉(死妈脸)]
 
+showBg
+(
+    leaveCh
+)
+x
+(
+    (
+        showCh
+        xyz
+    )
+)
+(
+showBg
 
 临光    （笑） )))))  ：333333333333333333333333333
 
 临光（none）:不显示立绘4444444444444444444444
 
-
+c4rxxu63q57lyk4nbubtlpsnpv45ewgxd4kla4bmxcsffh4rmyma
 
 塔露拉（死妈脸）：6666666666666666666666666
-
+{
+    "name": "keyword.control.mi",
+    "match": "\\b(showBg|leave|showCh|playBgm|pauseBgm|resumeBgm|removeBg|showCg|removeCg|showChoose|showInput|showEffect|removeEffect)\\b"
+}
 
 7777777777777777777
 
@@ -42,3 +86,11 @@
 
 
 后面的故事N7777777
+
+for (const element of array) {
+    
+}
+
+for (const element of array) {
+    
+}

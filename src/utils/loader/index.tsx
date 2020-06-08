@@ -11,7 +11,16 @@ const ALLOW_MAX_SPACE_LINE = 4
 const SplitLimit = 66 * 4
 const CRLF = [13, 10]
 const LF = [10]
+// const reg=/\r\n|\r|\n/
+// const text=`a
+// b
+// c
+// d
+// e
+// f
+// g`
 
+// console.log(text.split(reg))
 
 function choosePreProcess(chooses: Chooses): Chooses {
     let res: Chooses = {}
