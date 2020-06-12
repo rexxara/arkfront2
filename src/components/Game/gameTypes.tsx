@@ -1,5 +1,10 @@
 import { DisplayCharacters, selectedBGM, LoadedChapterModel3, Option, RawScript, GameModel3, Input } from '../../utils/types'
-import {SaveData}from './actions'
+import { SaveData } from './actions'
+import { AudioBlob } from './component/ImgCache'
+export type AudioCaches = {
+    bgms: AudioBlob[],
+    ses: AudioBlob[]
+}
 export const iniState = {
     saveDataConOpen: false,
     auto: false,
@@ -9,7 +14,7 @@ export const iniState = {
     cacheDisplayLineName: '',
     background: '',
     timers: undefined,
-    titleLagTimer:undefined,
+    titleLagTimer: undefined,
     linePointer: 0,
     displaycharacters: {},
     rawLine: '',
@@ -21,9 +26,9 @@ export const iniState = {
     choose: [],
     effectKey: '',
     soundEffect: '',
-    TitleChapterName:{
-        chapterName:'',
-        sectionName:''
+    TitleChapterName: {
+        chapterName: '',
+        sectionName: ''
     },
     input: {
         key: undefined,
@@ -37,7 +42,11 @@ export const iniState = {
         preLoadCgs: {},
         preLoadBackgrounds: {},
         preLoadCharaters: {},
-        arkMark:''
+        arkMark: ''
+    },
+    audioCaches: {
+        bgms: [],
+        ses: []
     }
 }
 
@@ -56,7 +65,7 @@ export interface IState {
     cacheDisplayLineName: string
     background: string
     timers: any
-    titleLagTimer:any
+    titleLagTimer: any
     linePointer: number
     displaycharacters: DisplayCharacters
     rawLine: string
@@ -76,11 +85,12 @@ export interface IState {
     input: Input
     effectref?: any,
     effectKey: string
-    TitleChapterName:{
-        chapterName:string
-        sectionName:string
-        out?:boolean
-    }
+    TitleChapterName: {
+        chapterName: string
+        sectionName: string
+        out?: boolean
+    },
+    audioCaches: AudioCaches
 }
 export interface clickHandleConfig {
     reset?: boolean

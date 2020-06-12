@@ -2,8 +2,8 @@ import {
     DisplayLine, CommandLine,
     RawScript, LINE_TYPE, NO_IMG,
     CGS, BGMs, Backgrounds, Characters, Chooses, Inputs,
-    PreLoadCharaters, PreLoadCgs, PreLoadBackgrounds, GameModel3,
-    LoadedChapterModel3, SoundEffects, ChapterModel3, ChapterCaches
+    PreLoadCharaters, PreLoadCgs, PreLoadBgms, PreLoadBackgrounds, GameModel3,
+    LoadedChapterModel3, SoundEffects, ChapterModel3, ChapterCaches, PreloadSoundEffects
 } from '../types'
 import { strlen, emotionProcessor, filterSpace, b64_to_utf8, isArrayEqual, splitFromFirstKey } from '../utils'
 import chapterValidator from './chapterModalValidator'
@@ -62,8 +62,8 @@ const RawScriptValidator = (RawScript: RawScript) => {
 }
 const scencesValidator = (RawScript: RawScript) => {
     const { scences } = RawScript
-    interface _Names{
-        [args:string]:boolean
+    interface _Names {
+        [args: string]: boolean
     }
     let names: _Names = {}
     let flag = true
@@ -107,13 +107,16 @@ const gameLoader = (rawScript: RawScript, needDecode: boolean, IsCRLF: boolean):
 
     let caches: ChapterCaches = {}
     res = res.map(v => {
-        const { preLoadCgs, preLoadBackgrounds, preLoadCharaters, ...rest } = v
+        const { preLoadCgs, preLoadBackgrounds, preLoadCharaters, preLoadBgms, preloadSoundEffects, ...rest } = v
         caches[v.arkMark] = caches[v.arkMark] || {}
         caches[v.arkMark].preLoadBackgrounds = { ...caches[v.arkMark].preLoadBackgrounds, ...preLoadBackgrounds }
         caches[v.arkMark].preLoadCgs = { ...caches[v.arkMark].preLoadCgs, ...preLoadCgs }
         caches[v.arkMark].preLoadCharaters = { ...caches[v.arkMark].preLoadCharaters, ...preLoadCharaters }
+        caches[v.arkMark].preLoadBgms = { ...caches[v.arkMark].preLoadBgms, ...preLoadBgms }
+        caches[v.arkMark].preloadSoundEffects = { ...caches[v.arkMark].preloadSoundEffects, ...preloadSoundEffects }
         return rest
     })
+    console.log(caches)
     return {
         chapters: res as LoadedChapterModel3[],
         caches
@@ -136,6 +139,8 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean,
     let preLoadBackgrounds = {}
     let preLoadCgs = {}
     let preLoadCharaters = {}
+    let preLoadBgms = {}
+    let preloadSoundEffects = {}
     const currentSingleSpaceLine = IsCRLF ? CRLF : LF
     const currentSpaceLine = [...currentSingleSpaceLine, ...currentSingleSpaceLine]
     let lineCache = new Array(currentSpaceLine.length).fill(233)//随便填点什么
@@ -167,7 +172,8 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean,
                         break;
                     case LINE_TYPE.command:
                         if (extra) {
-                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters, chooses, inputs, soundEffects)
+                            chapter[chapterPointer++] = commandProcess(extra, backgrounds, Charaters, BGMs, cgs, preLoadBackgrounds, preLoadCgs, preLoadCharaters,
+                                preLoadBgms, preloadSoundEffects, chooses, inputs, soundEffects)
                         } else {
                             throw new Error(lineStr)
                         }
@@ -188,7 +194,7 @@ function ChapterLoader(script: string, variables: Object, IsCRLF: boolean,
             linePointer = 0
         }
     }
-    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadCgs, name: '占位符', arkMark: '占位符' }
+    return { line: chapter, preLoadBackgrounds, preLoadCharaters, preLoadBgms, preloadSoundEffects, preLoadCgs, name: '占位符', arkMark: '占位符' }
 }
 export function commandProcess(matchedRawLine: RegExpMatchArray,
     backgrounds: Backgrounds,
@@ -198,6 +204,8 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
     preLoadBackgrounds: PreLoadBackgrounds,
     preLoadCgs: PreLoadCgs,
     preLoadCharaters: PreLoadCharaters,
+    preLoadBgms: PreLoadBgms,
+    preloadSoundEffects: PreloadSoundEffects,
     chooses: Chooses,
     inputs: Inputs, soundEffects: SoundEffects
 ): CommandLine {
@@ -249,6 +257,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
             }
         case LINE_TYPE.COMMAND_PLAY_BGM:
             if (BGMs[key]) {
+                preLoadBgms[key] = BGMs[key]
                 return {
                     command: LINE_TYPE.COMMAND_PLAY_BGM,
                     param: {
@@ -311,6 +320,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
             }
 
         case LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT:
+            preloadSoundEffects[key]=soundEffects[key]
             return {
                 command: LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT,
                 param: soundEffects[key]

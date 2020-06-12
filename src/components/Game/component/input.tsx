@@ -33,7 +33,6 @@ export default function Inputs({ clickCallback, placeholder }: IProps) {
         setForcusState('')
         clickCallback(value)
     }
-    console.log(document.body.style)
     const syncInput = <Input size='large'
         //onBlur={onBlur}
         onChange={inputChange}

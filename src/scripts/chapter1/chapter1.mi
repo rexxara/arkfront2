@@ -1,7 +1,6 @@
 
-[showBg:龙门]
-
 [showCg:HE2]
+
 
 请输入你的姓名：
 
@@ -9,57 +8,30 @@
 
 你的名字是${userName} 
 
+[showSoundEffect:eff1]
+
+//[playBgm:無花果]
+
+
+塔露拉（死妈脸）：6666666666666666666666666
+
+[leaveCh:塔露拉]
+
+
+
+临光走到一边22222222222222222222
+
 [showCg:set1.a]
 
 11111111111111111
 
-临光走到一边22222222222222222222
 
 [removeCg]
 
-//
-
-// asdasd TODO
-
-Available token types:
-    [comment] [string] [keyword] [number] [regexp] [operator] [namespace]
-    [type] [struct] [class] [interface] [enum] [typeParameter] [function]
-    [member] [macro] [variable] [parameter] [property] [label]
-
-Available token modifiers:
-    [showBg:declaration] [type:documentation] [type:member] [type:static]
-    [type:abstract] [type:deprecated] [type:modification] [type:async]
-
-Some examples:
-    [e.static.token]     [type.static.abstract]
-    [e.static.token]     [type.static]
-    [e.struct.green]
-    [struct]
-
-    [function.private]
-
-An error case:
-    [notInLegend]
-
-    [comxxxxxment]
-
-    [rexxara]
 
 [showCh:塔露拉(死妈脸)]
 
-showBg
-(
-    leaveCh
-)
-x
-(
-    (
-        showCh
-        xyz
-    )
-)
-(
-showBg
+
 
 临光    （笑） )))))  ：333333333333333333333333333
 
@@ -67,15 +39,8 @@ showBg
 
 c4rxxu63q57lyk4nbubtlpsnpv45ewgxd4kla4bmxcsffh4rmyma
 
-塔露拉（死妈脸）：6666666666666666666666666
-{
-    "name": "keyword.control.mi",
-    "match": "\\b(showBg|leave|showCh|playBgm|pauseBgm|resumeBgm|removeBg|showCg|removeCg|showChoose|showInput|showEffect|removeEffect)\\b"
-}
-
 7777777777777777777
 
-[showBg:龙门]
 
 塔露拉：99999999999999999999999999999
 
@@ -87,10 +52,4 @@ c4rxxu63q57lyk4nbubtlpsnpv45ewgxd4kla4bmxcsffh4rmyma
 
 后面的故事N7777777
 
-for (const element of array) {
-    
-}
-
-for (const element of array) {
-    
-}
+[removeCg]

@@ -4,6 +4,7 @@ import Abutton from '../components/Abutton/index'
 import { connect } from 'dva'
 import { AnyAction } from 'redux'
 import { vh } from '../utils/getSize'
+import TitleCache from '../components/Game/titles/TitleCache'
 interface Iprops {
   dispatch: (a: AnyAction) => AnyAction
 }
@@ -20,6 +21,7 @@ const LoginPage = (props: Iprops) => {
     <Abutton to='/loadPage' text="加载" />
     <Abutton to="/gallery" text="画廊" />
     <Abutton to="/ScenceReview" text="场景回想" />
+    <TitleCache />
   </Scence>
 }
 

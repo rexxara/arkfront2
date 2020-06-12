@@ -13,7 +13,7 @@
 基于移动端的ui
 
 > pages
-Logos（鹰角网络，光敏性癫痫）
+Logos
 
 config
     某角色mute

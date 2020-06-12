@@ -31,7 +31,12 @@ export interface PreLoadCharaters {
 export interface PreLoadCgs {
     [arg: string]: string
 }
-
+export interface PreLoadBgms {
+    [arg: string]: string
+}
+export interface PreloadSoundEffects{
+    [arg:string]:string
+}
 export interface PreLoadBackgrounds {
     [arg: string]: string
 }
@@ -104,21 +109,19 @@ export interface ChapterCaches {
     [arg: string]: ChapterCache
 }
 export interface ChapterCache {
-    preLoadCgs: {
-        [arg: string]: string
-    }
-    preLoadBackgrounds: {
-        [arg: string]: string
-    }
-    preLoadCharaters: {
-        [arg: string]: string[]
-    }
+    preLoadCgs: PreLoadCgs,
+    preLoadBackgrounds: PreLoadBackgrounds,
+    preLoadCharaters: PreLoadCharaters
+    preLoadBgms: PreLoadBgms,
+    preloadSoundEffects:PreloadSoundEffects
 }
 export interface LoadedChapterModel3 {
     line: (CommandLine | DisplayLine)[]
     preLoadCharaters?: PreLoadCharaters
     preLoadBackgrounds?: PreLoadBackgrounds
     preLoadCgs?: PreLoadCgs,
+    preLoadBgms?: PreLoadBgms,
+    preloadSoundEffects?:PreloadSoundEffects,
     name: string,
     next?: string | Function | JumpOption[],
     isBegin?: boolean
