@@ -2,7 +2,7 @@ import React from 'react'
 import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, Option, CGParama } from '../../utils/types'
 import { variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
-import { IState, IProps, iniState, clickHandleConfig,AudioCaches } from './gameTypes'
+import { IState, IProps, iniState, clickHandleConfig, AudioCaches } from './gameTypes'
 import _omit from 'lodash/omit'
 import styles from './style.css'
 import ARKBGMplayer from './component/BGMplayer'
@@ -18,7 +18,9 @@ import effects from './effects'
 import SoundEffectPlayer from './component/soundEffectPlayer'
 import Title from './titles/Title'
 import { vw, vh } from '@/utils/getSize'
-import {saveDataAdapter} from './utils'
+import { saveDataAdapter } from './utils'
+import CgContainer from './component/CgContainer'
+import BackgroundCon from './component/BackgroundContainer'
 const effectCanvasId = 'effects'
 const TEXT_DISPLAY_SPEEED = 50
 
@@ -411,7 +413,7 @@ class MainGame extends React.Component<IProps, IState> {
         const isCommand = commandString.match(actionReg)
         const { backgrounds, charaters, BGMs, cgs, chooses, inputs, soundEffects } = this.props.RawScript
         if (isCommand) {
-            const commandJSON = commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {},{}, {}, {},{}, chooses, inputs, soundEffects)
+            const commandJSON = commandProcess(isCommand, backgrounds, charaters, BGMs, cgs, {}, {}, {}, {}, {}, chooses, inputs, soundEffects)
             this.commandLineProcess(commandJSON)
         } else {
             console.warn(commandString + 'unrecognized')
@@ -452,14 +454,14 @@ class MainGame extends React.Component<IProps, IState> {
     soundCallback() {
         this.setState({ soundEffect: '' })
     }
-    TitleCallback({ses,bgms}:AudioCaches) {
+    TitleCallback({ ses, bgms }: AudioCaches) {
         const { TitleChapterName, gameVariables } = this.state
         const { data: { chapters } } = this.props
         const chapter = chapters.find(v => v.name === TitleChapterName.sectionName)
         if (chapter) {
             this.setState({
                 ...iniState, gameVariables,
-                audioCaches:{ses,bgms},
+                audioCaches: { ses, bgms },
                 currentChapter: chapter, clickDisable: false,
                 TitleChapterName: { ...TitleChapterName, out: true }//保留这个name维持title显示
             })
@@ -477,7 +479,7 @@ class MainGame extends React.Component<IProps, IState> {
     }
     render() {
         const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose,
-            gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName ,audioCaches} = this.state
+            gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName, audioCaches } = this.state
         const { data: { caches } } = this.props
         const displaycharactersArray = Object.keys(displaycharacters).map(v => displaycharacters[v])
         return <div style={{ width: vw(100), height: vh(100), overflow: 'hidden' }}>
@@ -498,8 +500,7 @@ class MainGame extends React.Component<IProps, IState> {
             <SoundEffectPlayer cache={audioCaches.ses} src={soundEffect} callback={this.soundCallback} />
             {input.key && <GAMEInput placeholder={displayText} clickCallback={this.onInputSubmit} />}
             {saveDataConOpen && <SaveDataCon saveData={this.save} loadData={this.load} />}
-            <div className={styles.container}
-                style={{ height: vh(100), background: background ? `url(${require(`../../scripts/backgrounds/${background}`)})` : undefined }}
+            <div className={styles.container} style={{ width: vw(100), height: vh(100) }}
                 onClick={this.clickHandle}>
                 <div style={{ position: "absolute", height: vh(67) }} className={choose.length && styles.chooseCon}>
                     {choose.map((v, k) => <ARKOption gameVariables={gameVariables} key={k} onClick={this.onSelect} v={v} choose={choose} />)}
@@ -511,11 +512,7 @@ class MainGame extends React.Component<IProps, IState> {
                         key={v.name}
                         src={require(`../../scripts/charatersImages/${v.name}/${v.emotion}`)} /> : <p key={v.name} />)}
                 </div>
-                <div className={styles.cgCon}
-                    style={{
-                        background: cg ?
-                            `url(${require(`../../scripts/CGs/${cg}`)})` : undefined
-                    }}></div>
+                <CgContainer cg={cg} />
                 <div className={styles.effects} id={effectCanvasId}></div>
                 <div className={styles.dialog}>
                     <div className={styles.owner} style={{ height: vh(8), lineHeight: vh(8), paddingLeft: vw(5), fontSize: vh(6) }}>{displayName}</div>
@@ -525,11 +522,12 @@ class MainGame extends React.Component<IProps, IState> {
                         }}>
                         {displayText}{rawLine === displayText && rawLine.length > 0 && <Icon type="step-forward" />}</div>
                 </div>
+                <BackgroundCon background={background} />
             </div>
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}
             {cg && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/CGs/${cg}`)} alt="" />}
             {(currentChapter.arkMark || TitleChapterName.chapterName) &&
-             <ImgCache caches={caches[(TitleChapterName.chapterName || currentChapter.arkMark)]} callback={this.TitleCallback} />}
+                <ImgCache caches={caches[(TitleChapterName.chapterName || currentChapter.arkMark)]} callback={this.TitleCallback} />}
         </div>
     }
 }

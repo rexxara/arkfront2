@@ -2,9 +2,6 @@
   text-align: left;
   cursor: pointer;
   user-select: none;
-  background-repeat: no-repeat;
-  background-size: 100% 100% !important;
-  -moz-background-size: 100% 100% !important;
   z-index: 10;
   position: relative;
 }
@@ -189,4 +186,21 @@
   top: 0;
   left: 0;
   z-index: 13;
+}
+.hiddingCgCon{
+  animation:hide 2.1s ;
+  animation-iteration-count:1;
+}
+
+@keyframes hide{
+from {opacity:1;}
+to {opacity: 0;}
+}
+.background{
+  background-repeat: no-repeat;
+  background-size: 100% 100% !important;
+  -moz-background-size: 100% 100% !important;
+  position: absolute;
+  top: 0;
+  left: 0;
 }

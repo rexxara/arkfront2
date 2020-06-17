@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import styles from '../style.css'
 import { ChapterCache } from '../../../utils/types'
+import { AudioCaches } from '../gameTypes'
 import { message } from 'antd'
 interface IProps {
-    callback: Function
+    callback: (arg: AudioCaches) => any
     caches: ChapterCache
 }
 export interface AudioBlob {
@@ -113,13 +114,12 @@ export default function saveDataCon({ callback, caches }: IProps) {
             console.log(caches, '没有资源')
             setTimeout(() => {
                 message.success(`没有资源 标题显示4s`)
-                callback()
+                callback({ bgms: [], ses: [] })
             }, TITLE_DISPLAY_TIME)
         }
     }
     useEffect(() => {
         getImgCache()
-        console.log(caches)
     }, [caches])
     const updateCount = () => {
         setLoadedCount(pre => pre + 1)

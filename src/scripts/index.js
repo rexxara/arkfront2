@@ -85,8 +85,15 @@ const cgs = {
     HE3: 'avg_01.png',
     set1: {
         a: 'set1/avg_40_1.png',
-        b: 'set1/avg_40_3.png',
-        c: 'set1/avg_40_2.png'
+        b: 'set1/avg_40_2.png',
+        c: 'set1/avg_40_3.png'
+    },
+    test: {
+        1: 'test/1.png',
+        2: 'test/2.png',
+        3: 'test/3.png',
+        4: 'test/4.png',
+        5: 'test/5.png',
     }
 }
 const soundEffects = {
