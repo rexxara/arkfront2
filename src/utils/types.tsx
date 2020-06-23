@@ -1,6 +1,7 @@
 
 export const NO_IMG = "不显示立绘"
 export const LINE_TYPE = {
+    narrator: 'narrator',
     raw: 'raw',
     spaceLine: 'spaceLine',
     chat: 'chat',
@@ -20,7 +21,8 @@ export const LINE_TYPE = {
     COMMAND_SHOW_INPUT: 'showInput',
     COMMAND_SHOW_EFFECT: 'showEffect',
     COMMAND_REMOVE_EFFECT: 'removeEffect',
-    COMMAND_SHOW_SOUND_EFFECT: 'showSoundEffect'
+    COMMAND_SHOW_SOUND_EFFECT: 'showSoundEffect',
+    COMMAND_DELAY: 'delay',
 }
 
 
@@ -34,8 +36,8 @@ export interface PreLoadCgs {
 export interface PreLoadBgms {
     [arg: string]: string
 }
-export interface PreloadSoundEffects{
-    [arg:string]:string
+export interface PreloadSoundEffects {
+    [arg: string]: string
 }
 export interface PreLoadBackgrounds {
     [arg: string]: string
@@ -49,8 +51,10 @@ export interface DisplayLine {
 
 export interface CommandLine {
     command: string,
-    param?: string | displayCharacter | selectedBGM | Option[] | Input | CGParama
+    param?: string | displayCharacter | selectedBGM | Option[] | Input | CGParama | DelayParama
 }
+export type DelayParama = number
+
 export interface CGParama {
     cgName: string,
     src: string
@@ -113,7 +117,7 @@ export interface ChapterCache {
     preLoadBackgrounds: PreLoadBackgrounds,
     preLoadCharaters: PreLoadCharaters
     preLoadBgms: PreLoadBgms,
-    preloadSoundEffects:PreloadSoundEffects
+    preloadSoundEffects: PreloadSoundEffects
 }
 export interface LoadedChapterModel3 {
     line: (CommandLine | DisplayLine)[]
@@ -121,7 +125,7 @@ export interface LoadedChapterModel3 {
     preLoadBackgrounds?: PreLoadBackgrounds
     preLoadCgs?: PreLoadCgs,
     preLoadBgms?: PreLoadBgms,
-    preloadSoundEffects?:PreloadSoundEffects,
+    preloadSoundEffects?: PreloadSoundEffects,
     name: string,
     next?: string | Function | JumpOption[],
     isBegin?: boolean

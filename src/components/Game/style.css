@@ -2,7 +2,7 @@
   text-align: left;
   cursor: pointer;
   user-select: none;
-  z-index: 10;
+  z-index: 11;
   position: relative;
 }
 
@@ -27,7 +27,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 8;
+  z-index: 9;
 }
 
 .dialog {
@@ -37,21 +37,33 @@
   left: 0;
   background: #aaaaaa;
   width: 100%;
-  z-index: 9;
+  z-index: 10;
 }
 
 .owner {
   background: #eeeeee;
   width: 100%;
-  z-index: 9;
+  z-index: 10;
 }
 
 .textarea {
   text-indent: 2em;
   width: 100%;
-  z-index: 9;
+  z-index: 10;
 }
-
+.narrator{
+  font-weight: bold;
+  position: absolute;
+  color: white;
+  top: 0;
+  left: 0;
+  text-indent: 2em;
+  width: 100%;
+  z-index: 10;
+  overflow-x: scroll;
+  background-color: rgba(30, 30, 30, 0.7);
+  padding: 2rem;
+}
 .ctrlPanle {
   display: flex;
   justify-content: center;
@@ -75,6 +87,7 @@
 }
 
 .displayCharacter {
+  z-index: 8;
   width: 45%;
   filter: brightness(80%);
 }
@@ -91,7 +104,7 @@
   left: 0;
   background-size: cover !important;
   -moz-background-size: 100% 100% !important;
-  z-index: 8;
+  z-index: 9;
 }
 
 .hide {
@@ -120,7 +133,7 @@
   width: 100%;
   user-select: none;
   background-color: rgba(30, 30, 30, 0.5);
-  z-index: 11;
+  z-index: 12;
   flex-direction: row;
   flex-wrap: wrap;
 }
@@ -157,7 +170,7 @@
   left: 0;
   background: rgba(30, 30, 30, 0.5);
   color: white;
-  z-index: 11;
+  z-index: 12;
 }
 
 .saveDataItem {
@@ -168,7 +181,7 @@
 }
 
 .InputCon {
-  z-index: 12;
+  z-index: 13;
   width: 200px;
   height: 150px;
   position: absolute;
@@ -185,7 +198,7 @@
   width: 100vw;
   top: 0;
   left: 0;
-  z-index: 13;
+  z-index: 14;
 }
 .hiddingCgCon{
   animation:hide 2.1s ;

@@ -21,7 +21,10 @@ const LF = [10]
 // g`
 
 // console.log(text.split(reg))
-
+const UNKNOW_COMMAND = {
+    command: LINE_TYPE.command,
+    param: 'unKnowCommand'
+}
 function choosePreProcess(chooses: Chooses): Chooses {
     let res: Chooses = {}
     for (const key in chooses) {
@@ -320,18 +323,24 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
             }
 
         case LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT:
-            preloadSoundEffects[key]=soundEffects[key]
+            preloadSoundEffects[key] = soundEffects[key]
             return {
                 command: LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT,
                 param: soundEffects[key]
             }
+        case LINE_TYPE.COMMAND_DELAY:
+            const param = parseInt(key)
+            if (Number.isNaN(param)) {
+                return UNKNOW_COMMAND
+            }
+            return {
+                command: LINE_TYPE.COMMAND_DELAY,
+                param: param
+            }
         default:
             //warn：unKnowCommand
             console.log(command)
-            return {
-                command: LINE_TYPE.command,
-                param: 'unKnowCommand'
-            }
+            return UNKNOW_COMMAND
     }
 }
 export const actionReg = /(?<!\/\/)\[(.*)\]/
@@ -362,6 +371,13 @@ function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine
     const reg = /[/:|：]/g
     const rawLine = lineText.join("")
     // const lineWithVariable = variableLoader(rawLine, variables)
+    const narrator=rawLine.indexOf(">")===0
+    if(narrator){
+        return {
+            type: LINE_TYPE.narrator,
+            value: rawLine.slice(1)
+        }
+    }
     const lineWithVariable = rawLine
     const haveComma = lineWithVariable.match(reg)
     if (haveComma) {//有冒号

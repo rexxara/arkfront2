@@ -1,27 +1,44 @@
 
-const vw = (num: number): string => {
-    let res = num
-    const { clientHeight, clientWidth } = document.documentElement
-    if (clientHeight > clientWidth) {
-        //手机
-        res = clientHeight / 100 * num
-    } else {
-        //pc
-        res = clientWidth / 100 * num
-    }
-    return res + 'px'
+interface CacheMap {
+    [arg: string]: string
 }
 
+let vwCacheMap: CacheMap = {}
+const vw = (num: number): string => {
+    const { clientHeight, clientWidth } = document.documentElement
+    if (vwCacheMap[num]) {
+        return vwCacheMap[num]
+    }
+    console.log('ComputeVw')
+    if (clientHeight > clientWidth) {
+        //手机
+        const res = clientHeight / 100 * num + 'px'
+        vwCacheMap[num] = res
+        return res
+    } else {
+        //pc
+        const res = clientWidth / 100 * num + 'px'
+        vwCacheMap[num] = res
+        return res
+    }
+}
+let vhCacheMap: CacheMap = {}
 const vh = (num: number): string => {
-    let res = num
+    if (vhCacheMap[num]) {
+        return vhCacheMap[num]
+    }
+    console.log('ComputeVh')
     const { clientHeight, clientWidth } = document.documentElement
     if (clientHeight > clientWidth) {
         //手机
-        res = clientWidth / 100 * num
+        const res = clientWidth / 100 * num + 'px'
+        vhCacheMap[num] = res
+        return res
     } else {
         //pc
-        res = clientHeight / 100 * num
+        const res = clientHeight / 100 * num + 'px'
+        vhCacheMap[num] = res
+        return res
     }
-    return res + 'px'
 }
 export { vw, vh }

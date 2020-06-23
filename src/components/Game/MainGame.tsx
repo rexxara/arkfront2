@@ -3,6 +3,7 @@ import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayC
 import { variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
 import { IState, IProps, iniState, clickHandleConfig, AudioCaches } from './gameTypes'
+import NarratorCon from './component/narratorCon'
 import _omit from 'lodash/omit'
 import styles from './style.css'
 import ARKBGMplayer from './component/BGMplayer'
@@ -145,8 +146,9 @@ class MainGame extends React.Component<IProps, IState> {
             }
         }
     }
-    displayLineProcess(line: DisplayLine) {
-        const { displayName, displaycharacters, gameVariables } = this.state
+    async displayLineProcess(line: DisplayLine) {
+        const isNarratorMode = false || line.type === LINE_TYPE.narrator
+        const { displayName, displaycharacters, gameVariables, narratorMode } = this.state
         const { name, emotion } = line
         let { value } = line
         value = variableLoader(value, gameVariables)
@@ -169,6 +171,11 @@ class MainGame extends React.Component<IProps, IState> {
                 nextDisplay = { ...displaycharacters, [name]: { name, emotion: nextEmo } as displayCharacter }
             }
             this.setState({ displaycharacters: nextDisplay })
+        }
+        if (isNarratorMode) {
+            this.setState({ narratorMode: [...(narratorMode || []), value], displayText: "" })
+        } else {
+            this.setState({ narratorMode: undefined })
         }
         if (needLoadNewEmotion) {
             this.setState({ cacheDisplayLineText: value, cacheDisplayLineName: name || '', clickDisable: true })
@@ -305,6 +312,16 @@ class MainGame extends React.Component<IProps, IState> {
             case LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT:
                 newParam = { soundEffect: command.param }
                 break
+            case LINE_TYPE.COMMAND_DELAY:
+                needStop = true
+                newParam = { clickDisable: true }
+                if (typeof command.param === 'number') {
+                    setTimeout(() => {
+                        this.setState({ clickDisable: false }, () => {
+                            this.clickHandle()
+                        })
+                    }, command.param)
+                }
             default:
                 //'invalidCommand')
                 break
@@ -377,7 +394,9 @@ class MainGame extends React.Component<IProps, IState> {
                 this.setState({ timers: null, displayText: rawLine })
                 let { auto } = this.state
                 if (auto) {
-                    this.clickHandle()
+                    setTimeout(() => {
+                        this.clickHandle()
+                    }, 500);
                 }
             }
         }, TEXT_DISPLAY_SPEEED)
@@ -477,10 +496,21 @@ class MainGame extends React.Component<IProps, IState> {
             console.log('游戏结束时和其他蜜汁情况会触发到这块的逻辑,把缓存从小节改成章节吧')
         }
     }
+    narratorTimer: any = false
     render() {
         const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose,
-            gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName, audioCaches } = this.state
+            gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName, audioCaches, narratorMode } = this.state
         const { data: { caches } } = this.props
+        if (narratorMode) {//自动scroll到底
+            const narrator = document.getElementById('narrator')
+            if (narrator) {
+                if (this.narratorTimer) {
+                    clearTimeout(this.narratorTimer)
+                    narrator.scrollTop = narrator.scrollHeight
+                }
+                this.narratorTimer = setTimeout(() => { narrator.scrollTop = narrator.scrollHeight }, 200)
+            }
+        }
         const displaycharactersArray = Object.keys(displaycharacters).map(v => displaycharacters[v])
         return <div style={{ width: vw(100), height: vh(100), overflow: 'hidden' }}>
             <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
@@ -502,6 +532,7 @@ class MainGame extends React.Component<IProps, IState> {
             {saveDataConOpen && <SaveDataCon saveData={this.save} loadData={this.load} />}
             <div className={styles.container} style={{ width: vw(100), height: vh(100) }}
                 onClick={this.clickHandle}>
+                <NarratorCon narratorMode={narratorMode} displayText={displayText} />
                 <div style={{ position: "absolute", height: vh(67) }} className={choose.length && styles.chooseCon}>
                     {choose.map((v, k) => <ARKOption gameVariables={gameVariables} key={k} onClick={this.onSelect} v={v} choose={choose} />)}
                 </div>
@@ -514,14 +545,14 @@ class MainGame extends React.Component<IProps, IState> {
                 </div>
                 <CgContainer cg={cg} />
                 <div className={styles.effects} id={effectCanvasId}></div>
-                <div className={styles.dialog}>
+                {!narratorMode && <div className={styles.dialog}>
                     <div className={styles.owner} style={{ height: vh(8), lineHeight: vh(8), paddingLeft: vw(5), fontSize: vh(6) }}>{displayName}</div>
                     <div className={styles.textarea}
                         style={{
                             padding: vw(2), minHeight: vh(25), lineHeight: vh(6), fontSize: vh(4),
                         }}>
                         {displayText}{rawLine === displayText && rawLine.length > 0 && <Icon type="step-forward" />}</div>
-                </div>
+                </div>}
                 <BackgroundCon background={background} />
             </div>
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}

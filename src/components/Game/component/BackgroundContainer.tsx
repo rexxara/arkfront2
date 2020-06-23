@@ -24,7 +24,6 @@ const main = (props: IProps) => {
         }
     }, [background])
     if (!background.length) return <div></div>
-    console.log(cgList)
     return <>{
         cgList.map((v, i) => <div className={(cgList.length > 1 && i !== 0) ? classnames(styles.background, styles.hiddingCgCon) : styles.background} key={v}
             style={{zIndex: 1, width: vw(100),

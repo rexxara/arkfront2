@@ -23,6 +23,7 @@ export const iniState = {
     cg: '',
     clickDisable: false,
     skipResourseCount: 0,
+    narratorMode: undefined,
     choose: [],
     effectKey: '',
     soundEffect: '',
@@ -73,6 +74,7 @@ export interface IState {
     bgm: selectedBGM
     soundEffect: string
     cg: string
+    narratorMode?: string[]
     clickDisable: boolean
     choose: Option[],
     gameVariables: any,
