@@ -9,10 +9,10 @@ export default function wrapAnimation(WrappedComponent: any): any {
         <CSSTransition
           in={match !== null}
           classNames={{
-            enter: 'animated',
-            enterActive: 'fadeIn',
-            exit: 'animated',
-            exitActive: 'fadeOut'
+            enter: 'animate__animated',
+            enterActive: 'animate__fadeIn',
+            exit: 'animate__animated',
+            exitActive: 'animate__fadeOut'
           }}
           timeout={1000}
           mountOnEnter={true}

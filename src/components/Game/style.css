@@ -1,3 +1,6 @@
+body{
+  user-select: none;
+}
 .container {
   text-align: left;
   cursor: pointer;
@@ -216,4 +219,28 @@ to {opacity: 0;}
   position: absolute;
   top: 0;
   left: 0;
+}
+.log{
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 14;
+}
+.logCon{
+  z-index: 14;
+  font-weight: bold;
+  position: fixed;
+  color: white;
+  top: 0;
+  left: 0;
+  text-indent: 2em;
+  width: 100%;
+  z-index: 10;
+  overflow-x: scroll;
+  text-align: left; 
+  background-color: rgba(30, 30, 30, 1);
+  padding: 2rem;
+}
+.logItem{
+  border-bottom:1px solid rgb(50, 50, 50);
 }

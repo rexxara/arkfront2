@@ -1,6 +1,6 @@
-import message from '../AMessage/index'
 import { IState } from './gameTypes'
 import { DisplayCharacters, selectedBGM } from '../../utils/types'
+import { message } from 'antd'
 interface DBModel {
     name: string,
     version: number,
@@ -179,6 +179,9 @@ const actions = {
         if (openSuccess && saveData.db) {
             const saveSuccess = await INDEXDB.putData(saveData.db, saveData.objectStore.name, modifyToBeSaveData(state, id))
             console.log(saveSuccess)
+            if (saveSuccess) {
+                message.success("保存成功")
+            }
         } else {
             console.log('databaseNotFound')
         }

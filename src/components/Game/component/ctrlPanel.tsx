@@ -3,6 +3,8 @@ import styles from '../style.css'
 import Abutton from '../../Abutton'
 import { Icon } from 'antd'
 import { vw } from '@/utils/getSize'
+import { LoadedChapterModel3 } from '../../../utils/types'
+import Log from './Log'
 interface IProps {
     clickHandle: (ev: React.MouseEvent<HTMLButtonElement, MouseEvent>, any: any) => any,
     linePointer: number,
@@ -13,10 +15,11 @@ interface IProps {
     quickLoad: () => any,
     openSaveCon: () => any,
     closeSaveCon: () => any,
+    currentChapter: LoadedChapterModel3,
     auto: boolean,
     saveDataConOpen: boolean
 }
-export default function CtrlPanel({ clickHandle, saveDataConOpen, linePointer, nextChapter, displaycharactersArray, toogleAuto, quickSave, quickLoad, closeSaveCon, openSaveCon, bgm, auto }: IProps) {
+export default function CtrlPanel({ clickHandle, saveDataConOpen, currentChapter, linePointer, nextChapter, displaycharactersArray, toogleAuto, quickSave, quickLoad, closeSaveCon, openSaveCon, bgm, auto }: IProps) {
     const [open, setOpen] = useState<boolean>(false)
     const openHandle = () => {
         setOpen((state: boolean) => !state)
@@ -27,13 +30,14 @@ export default function CtrlPanel({ clickHandle, saveDataConOpen, linePointer, n
         {/* <p>在场人物<span></span></p>
         <p>{displaycharactersArray.map(v => v.name)}</p> */}
         {open && <React.Fragment>
-            <Abutton type='small' onClick={toogleAuto}>{auto ? '暂停自动播放' : '开始自动播放'}</Abutton>
-            <Abutton type='small' onClick={quickSave}>快速保存</Abutton>
-            <Abutton type='small' onClick={quickLoad}>快速读取</Abutton>
+            <Abutton type='small' onClick={toogleAuto}>{auto ? <Icon type="pause-circle" /> : <Icon type="play-circle" />}</Abutton>
+            <Log currentChapter={currentChapter} linePointer={linePointer} />
+            <Abutton type='small' onClick={quickSave}><span><Icon type="cloud-download" /></span></Abutton>
+            <Abutton type='small' onClick={quickLoad}><Icon type="cloud-upload" /></Abutton>
             <Abutton type='small'
                 onClick={saveDataConOpen ? closeSaveCon : openSaveCon}>
-                {saveDataConOpen ? '关闭' : '保存/读取'}</Abutton>
-            <Abutton type='small' onClick={() => window.history.back()}>回标题</Abutton>
+                {saveDataConOpen ? <Icon type="close-square" /> : <Icon type="save" />}</Abutton>
+            <Abutton type='small' onClick={() => window.history.back()}><Icon type="rollback" /></Abutton>
         </React.Fragment>}
         <Abutton type='small' onClick={openHandle}><Icon type={open ? "double-right" : 'double-left'} /></Abutton>
     </div>

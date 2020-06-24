@@ -524,6 +524,7 @@ class MainGame extends React.Component<IProps, IState> {
                 displaycharactersArray={displaycharactersArray}
                 nextChapter={this.nextChapter}
                 toogleAuto={this.toogleAuto}
+                currentChapter={currentChapter}
             />
             {TitleChapterName.chapterName && <Title chapterName={TitleChapterName.chapterName} out={TitleChapterName.out} ></Title>}
             <ARKBGMplayer cache={audioCaches.bgms} src={bgm} />

@@ -38,20 +38,25 @@ function choosePreProcess(chooses: Chooses): Chooses {
     return res
 }
 function charatersPreProcess(characters: Characters): Characters {
+    let res: Characters = {}
     for (const key in characters) {
         if (characters.hasOwnProperty(key)) {
-            const character = characters[key]
-            character.images.none = NO_IMG
+            res[key] = JSON.parse(JSON.stringify(characters[key]))
+            const sd = { ...characters[key].images, none: NO_IMG }
+            console.log(res[key])
+            res[key].images = sd
         }
     }
-    return characters
+    return res
 }
 function inputPreprocess(inputs: Inputs): Inputs {
     let res: Inputs = {}
     for (const key in inputs) {
         if (inputs.hasOwnProperty(key)) {
-            res[key] = inputs[key]
-            res[key].id = key
+            res[key] = {
+                ...inputs[key],
+                id: key
+            }
         }
     }
     return inputs
@@ -371,8 +376,8 @@ function lineTextProcess(lineText: string[], variables: Object, currentSpaceLine
     const reg = /[/:|：]/g
     const rawLine = lineText.join("")
     // const lineWithVariable = variableLoader(rawLine, variables)
-    const narrator=rawLine.indexOf(">")===0
-    if(narrator){
+    const narrator = rawLine.indexOf(">") === 0
+    if (narrator) {
         return {
             type: LINE_TYPE.narrator,
             value: rawLine.slice(1)
