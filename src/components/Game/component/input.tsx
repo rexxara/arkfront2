@@ -10,9 +10,6 @@ interface IProps {
 export default function Inputs({ clickCallback, placeholder }: IProps) {
     const [value, setValue] = useState('')
     const [focusState, setForcusState] = useState('')
-    const btnClickHandle = () => {
-        clickCallback(value)
-    }
     const inputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
         setValue(ev.target.value)
     }

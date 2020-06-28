@@ -54,6 +54,7 @@ class MainGame extends React.Component<IProps, IState> {
         this.reviewBack = this.reviewBack.bind(this)
         this.soundCallback = this.soundCallback.bind(this)
         this.TitleCallback = this.TitleCallback.bind(this)
+        this.lineEndHandle = this.lineEndHandle.bind(this)
     }
     quickSave() {
         action.save(this.state, 0)
@@ -75,15 +76,10 @@ class MainGame extends React.Component<IProps, IState> {
         if (newData) {
             const data = saveDataAdapter(newData, this.props, this.state)
             if (data) {
-                data.effectKey
-                if (data.effectKey.length) {
-                    this.commandLineProcess({ command: LINE_TYPE.COMMAND_SHOW_EFFECT, param: data.effectKey }, true)
-                }
+                if (data.effectKey.length) { this.commandLineProcess({ command: LINE_TYPE.COMMAND_SHOW_EFFECT, param: data.effectKey }, true) }
                 this.setState(data)
             }
-        } else {
-            console.log('noQuick load Data')
-        }
+        } else { console.warn('noQuick load Data') }
     }
     componentDidMount() {
         console.log(this.props)
@@ -94,7 +90,6 @@ class MainGame extends React.Component<IProps, IState> {
             const { RawScript: { variables } } = this.props
             this.setState({ gameVariables: variables }, this.startChapter)
         }
-
     }
     startChapter(chapterKey?: string) {
         const { data: { chapters } } = this.props
@@ -110,27 +105,23 @@ class MainGame extends React.Component<IProps, IState> {
         }
         if (chapter) {
             const { gameVariables } = this.state
-            if (arkMark === chapter.arkMark) {
+            if (arkMark === chapter.arkMark) {//小节切换
                 const { cg, displaycharacters, bgm, auto, background, effectKey } = this.state
                 this.setState({
                     ...iniState, gameVariables, cg, displaycharacters, bgm, auto,
                     background, effectKey, linePointer: 0,
                     currentChapter: chapter, clickDisable: false
                 })
-                console.log('小节切换')
                 action.unlockScence(chapter.name)
-                const currentLine = chapter.line[0]
-                this.start(currentLine)
+                this.start(chapter.line[0])
             } else {
-                console.log('章节切换')
-                clearTimeout(this.state.titleLagTimer)
+                clearTimeout(this.state.titleLagTimer)//章节切换
                 const tName = { chapterName: chapter.arkMark, sectionName: chapter.name }
                 this.setState({ TitleChapterName: { chapterName: '', sectionName: '' }, titleLagTimer: undefined }, () => {
                     this.commandLineProcess({ "command": "removeEffect" }, true)
                     this.setState({ TitleChapterName: tName })
                 })
             }
-
         } else {
             return this.reviewBack()
         }
@@ -142,8 +133,19 @@ class MainGame extends React.Component<IProps, IState> {
             this.clearTimers()
             if ('value' in line) {
                 const { gameVariables } = this.state
+                this.lineEndHandle(true)
                 this.setState({ displayText: variableLoader(line.value, gameVariables) as string })
             }
+        }
+    }
+    lineEndHandle(bySkip: boolean) {
+        console.log('lineEnd', bySkip)
+        const { narratorMode } = this.state
+        if (narratorMode) {//自动scroll到底
+            const narrator = document.getElementById('narrator')
+            if (narrator) {
+                setTimeout(() => { narrator.scrollTop = narrator.scrollHeight }, 200)
+            } else { throw new Error("narrator container not found") }
         }
     }
     async displayLineProcess(line: DisplayLine) {
@@ -167,9 +169,7 @@ class MainGame extends React.Component<IProps, IState> {
                     nextDisplay[element.name] = element.name !== name ? element : { name, emotion: nextEmo }
                 }
             }
-            if (needLoadNewCharater) {
-                nextDisplay = { ...displaycharacters, [name]: { name, emotion: nextEmo } as displayCharacter }
-            }
+            if (needLoadNewCharater) { nextDisplay = { ...displaycharacters, [name]: { name, emotion: nextEmo } as displayCharacter } }
             this.setState({ displaycharacters: nextDisplay })
         }
         if (isNarratorMode) {
@@ -209,9 +209,7 @@ class MainGame extends React.Component<IProps, IState> {
                 window.location.href = origin + '#/ScenceReview'
             }, 2000)
             return 0
-        } else {
-            throw new Error('chapter Next Node Not Found')
-        }
+        } else { throw new Error('chapter Next Node Not Found') }
     }
     nextChapter() {
         const { currentChapter: { next, isEnd }, gameVariables } = this.state
@@ -219,9 +217,7 @@ class MainGame extends React.Component<IProps, IState> {
             message.success('gameOver')
             return console.warn("gameOver")
         }
-        if (!next) {
-            return this.reviewBack()
-        }
+        if (!next) { return this.reviewBack() }
         switch (typeof next) {
             case 'string':
                 return this.startChapter(next)
@@ -317,13 +313,10 @@ class MainGame extends React.Component<IProps, IState> {
                 newParam = { clickDisable: true }
                 if (typeof command.param === 'number') {
                     setTimeout(() => {
-                        this.setState({ clickDisable: false }, () => {
-                            this.clickHandle()
-                        })
+                        this.setState({ clickDisable: false }, () => { this.clickHandle() })
                     }, command.param)
                 }
-            default:
-                //'invalidCommand')
+            default://'invalidCommand')
                 break
         }
         if (needLoadImg) {
@@ -339,33 +332,19 @@ class MainGame extends React.Component<IProps, IState> {
         if (!skipResourseCount) {
             this.setState({ clickDisable: false })
         } else {
-            this.setState((state) => {
-                return {
-                    ...state,
-                    skipResourseCount: state.skipResourseCount - 1
-                }
-            })
+            this.setState((state) => { return { ...state, skipResourseCount: state.skipResourseCount - 1 } })
         }
         const { cacheDisplayLineName, cacheDisplayLineText } = this.state
         if (cacheDisplayLineName && cacheDisplayLineText) {
             this.textAnimation(cacheDisplayLineText, cacheDisplayLineName, true)
-        } else {
-            this.clickHandle()
-        }
+        } else { this.clickHandle() }
     }
     cgAndBackgroundOnload() {
         const { skipResourseCount } = this.state
         if (!skipResourseCount) {
-            this.setState({ clickDisable: false }, () => {
-                this.clickHandle()
-            })
+            this.setState({ clickDisable: false }, () => { this.clickHandle() })
         } else {
-            this.setState((state) => {
-                return {
-                    ...state,
-                    skipResourseCount: state.skipResourseCount - 1
-                }
-            })
+            this.setState((state) => { return { ...state, skipResourseCount: state.skipResourseCount - 1 } })
         }
     }
     textAnimation(value: string, name?: string, skip?: boolean) {
@@ -393,6 +372,7 @@ class MainGame extends React.Component<IProps, IState> {
             } else {
                 this.setState({ timers: null, displayText: rawLine })
                 let { auto } = this.state
+                this.lineEndHandle(false)
                 if (auto) {
                     setTimeout(() => {
                         this.clickHandle()
@@ -501,48 +481,31 @@ class MainGame extends React.Component<IProps, IState> {
         const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose,
             gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName, audioCaches, narratorMode } = this.state
         const { data: { caches } } = this.props
-        if (narratorMode) {//自动scroll到底
-            const narrator = document.getElementById('narrator')
-            if (narrator) {
-                if (this.narratorTimer) {
-                    clearTimeout(this.narratorTimer)
-                    narrator.scrollTop = narrator.scrollHeight
-                }
-                this.narratorTimer = setTimeout(() => { narrator.scrollTop = narrator.scrollHeight }, 200)
-            }
-        }
         const displaycharactersArray = Object.keys(displaycharacters).map(v => displaycharacters[v])
         return <div style={{ width: vw(100), height: vh(100), overflow: 'hidden' }}>
             <CtrlPanel clickHandle={(ev) => this.clickHandle(ev, { reset: true })}
-                linePointer={linePointer}
-                auto={auto}
-                saveDataConOpen={saveDataConOpen}
-                closeSaveCon={this.closeSaveCon}
-                openSaveCon={this.openSaveCon}
-                quickSave={this.quickSave}
+                linePointer={linePointer} auto={auto}
+                rawLine={rawLine}
+                displayName={displayName}
+                saveDataConOpen={saveDataConOpen} closeSaveCon={this.closeSaveCon}
+                openSaveCon={this.openSaveCon} quickSave={this.quickSave}
                 quickLoad={this.load}
-                displaycharactersArray={displaycharactersArray}
-                nextChapter={this.nextChapter}
-                toogleAuto={this.toogleAuto}
-                currentChapter={currentChapter}
-            />
+                displaycharactersArray={displaycharactersArray} nextChapter={this.nextChapter}
+                toogleAuto={this.toogleAuto} />
             {TitleChapterName.chapterName && <Title chapterName={TitleChapterName.chapterName} out={TitleChapterName.out} ></Title>}
             <ARKBGMplayer cache={audioCaches.bgms} src={bgm} />
             <SoundEffectPlayer cache={audioCaches.ses} src={soundEffect} callback={this.soundCallback} />
             {input.key && <GAMEInput placeholder={displayText} clickCallback={this.onInputSubmit} />}
             {saveDataConOpen && <SaveDataCon saveData={this.save} loadData={this.load} />}
-            <div className={styles.container} style={{ width: vw(100), height: vh(100) }}
-                onClick={this.clickHandle}>
+            <div className={styles.container} style={{ width: vw(100), height: vh(100) }} onClick={this.clickHandle}>
                 <NarratorCon narratorMode={narratorMode} displayText={displayText} />
                 <div style={{ position: "absolute", height: vh(67) }} className={choose.length && styles.chooseCon}>
                     {choose.map((v, k) => <ARKOption gameVariables={gameVariables} key={k} onClick={this.onSelect} v={v} choose={choose} />)}
                 </div>
                 <div className={styles.displayCharactersCon}>
-                    {displaycharactersArray.map(v => v.emotion ? <img
-                        onLoad={this.imgOnload}
+                    {displaycharactersArray.map(v => v.emotion ? <img onLoad={this.imgOnload}
                         className={displayName === v.name ? classnames(styles.displayCharacter, styles.active) : styles.displayCharacter}
-                        key={v.name}
-                        src={require(`../../scripts/charatersImages/${v.name}/${v.emotion}`)} /> : <p key={v.name} />)}
+                        key={v.name} src={require(`../../scripts/charatersImages/${v.name}/${v.emotion}`)} /> : <p key={v.name} />)}
                 </div>
                 <CgContainer cg={cg} />
                 <div className={styles.effects} id={effectCanvasId}></div>

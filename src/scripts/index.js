@@ -68,7 +68,8 @@ const chooses = {
     ]
 }
 const variables = {
-    女主好感度: 1
+    女主好感度: 1,
+    adminName:'rexxara'
 }
 const backgrounds = {
     大街: 'bg_abyss_1.png',
