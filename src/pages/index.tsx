@@ -18,6 +18,8 @@ import ScenceReview from './ScenceReview'
 import LoadPage from './loadPage'
 import detectOrient from '../utils/detectOrient'
 import { vh, vw } from '../utils/getSize'
+
+import vConsole from 'vconsole'
 detectOrient()
 const history = createHashHistory()
 const WarpedIniPage = warpedAnimation(IniPage)
@@ -38,25 +40,29 @@ const indexStyle: React.CSSProperties = {
   backgroundSize: 'Contain',
   backgroundPosition: 'center center'
 }
+
+if (location.hash.indexOf("debug=true")!==-1) {
+  const Vcon = new vConsole()
+}
 const App: React.FC = () => {
-  return<div >
-  <title>kimi no hanashi</title>
-  <Router history={history}>
-    <div style={indexStyle} className={styles.App}>
-      <Route exact path="/" children={props => <WarpedIniPage  {...props} />} />
-      <Route path="/copyrightPage" children={props => <WarpedCopyrightPage {...props} />} />
-      <Route path="/alertPage" component={alertPage} />
-      <Route path="/titlePage" component={titlePage} />
-      <Route path="/updatePage" component={updatePage} />
-      <Route path="/playGround" component={playGround} />
-      <Route path="/homePage" component={HomePage} />
-      <Route path="/mainGame" children={props => <WarpedMainGame {...props} />} />
-      <Route path="/loginPage" children={props => <WarpedLoginPage {...props} />} />
-      <Route path="/gallery" children={props => <WarpedGallery {...props} />} />
-      <Route path="/ScenceReview" children={props => <WarpedScenceReview {...props} />} />
-      <Route path="/loadPage" children={props => <WarpedLoadPage {...props} />} />
-    </div>
-  </Router>
-</div>
+  return <div >
+    <title>kimi no hanashi</title>
+    <Router history={history}>
+      <div style={indexStyle} className={styles.App}>
+        <Route exact path="/" children={props => <WarpedIniPage  {...props} />} />
+        <Route path="/copyrightPage" children={props => <WarpedCopyrightPage {...props} />} />
+        <Route path="/alertPage" component={alertPage} />
+        <Route path="/titlePage" component={titlePage} />
+        <Route path="/updatePage" component={updatePage} />
+        <Route path="/playGround" component={playGround} />
+        <Route path="/homePage" component={HomePage} />
+        <Route path="/mainGame" children={props => <WarpedMainGame {...props} />} />
+        <Route path="/loginPage" children={props => <WarpedLoginPage {...props} />} />
+        <Route path="/gallery" children={props => <WarpedGallery {...props} />} />
+        <Route path="/ScenceReview" children={props => <WarpedScenceReview {...props} />} />
+        <Route path="/loadPage" children={props => <WarpedLoadPage {...props} />} />
+      </div>
+    </Router>
+  </div>
 }
 export default App;

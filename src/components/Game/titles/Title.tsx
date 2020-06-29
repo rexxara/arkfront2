@@ -4,13 +4,22 @@ import { Icon } from 'antd'
 import { CSSTransition } from 'react-transition-group'
 import { imgMap } from './index'
 import { vh, vw } from '../../../utils/getSize'
+import { TitleChapterName } from '../gameTypes'
+import { Progress } from 'antd'
+
 interface IProps {
-    chapterName: string
+    TitleChapterName: TitleChapterName
     children?: React.ReactNode
-    out?: boolean
 }
+const style: React.CSSProperties = { textAlign: "right", userSelect: 'none', width: vw(30), position: 'absolute', padding: '1vw', bottom: '1vw', right: '2vw', background: 'rgba(255,255,255,0.5)' }
 const title = (props: IProps) => {
-    const { chapterName, children, out } = props
+    const { chapterName, total, loaded, out } = props.TitleChapterName
+    const { children } = props
+    let percent: number = 0
+    if (total) {
+        const num = (loaded / total) as any
+        percent = num.toFixed(4) * 100
+    }
     return <CSSTransition
         in={!out}
         classNames={{
@@ -27,9 +36,13 @@ const title = (props: IProps) => {
             <audio src={require("./title.mp3")} autoPlay></audio>
             <div className={styles.titleImg} style={{ background: `url(${imgMap[chapterName]}) no-repeat center 0` }}>
                 {children}
-                <h2 style={{ userSelect: 'none', position: 'absolute', padding: '1vw', bottom: '1vw', right: '2vw', background: 'rgba(255,255,255,0.5)' }}>{out ?
-                    <span>加载完毕&nbsp;&nbsp;<Icon type="check-circle" /></span>
-                    : <span>少女祈祷中&nbsp;&nbsp;<Icon type="loading" /></span>}</h2>
+                <div style={style}>
+                    <h3>{out ?
+                        <span>加载完毕&nbsp;&nbsp;<Icon type="check-circle" /></span>
+                        : <span>少女祈祷中&nbsp;&nbsp;<Icon type="loading" /></span>}</h3>
+                    <Progress strokeColor={{ '0%': '#3e468e', '100%': '#af3d47', }} percent={percent} status="active" showInfo={false} />
+
+                </div>
             </div>
         </div>
     </CSSTransition>

@@ -3,7 +3,8 @@ import { SaveData } from './actions'
 import { AudioBlob } from './component/ImgCache'
 export type AudioCaches = {
     bgms: AudioBlob[],
-    ses: AudioBlob[]
+    ses: AudioBlob[],
+    cgs:string[]
 }
 export const iniState = {
     saveDataConOpen: false,
@@ -29,7 +30,9 @@ export const iniState = {
     soundEffect: '',
     TitleChapterName: {
         chapterName: '',
-        sectionName: ''
+        sectionName: '',
+        total: 0,
+        loaded: 0
     },
     input: {
         key: undefined,
@@ -47,7 +50,8 @@ export const iniState = {
     },
     audioCaches: {
         bgms: [],
-        ses: []
+        ses: [],
+        cgs:[]
     }
 }
 
@@ -87,12 +91,15 @@ export interface IState {
     input: Input
     effectref?: any,
     effectKey: string
-    TitleChapterName: {
-        chapterName: string
-        sectionName: string
-        out?: boolean
-    },
+    TitleChapterName:TitleChapterName
     audioCaches: AudioCaches
+}
+export interface TitleChapterName {
+    chapterName: string
+    sectionName: string
+    out?: boolean
+    total: number
+    loaded: number
 }
 export interface clickHandleConfig {
     reset?: boolean

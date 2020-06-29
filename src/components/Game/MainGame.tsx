@@ -55,6 +55,8 @@ class MainGame extends React.Component<IProps, IState> {
         this.soundCallback = this.soundCallback.bind(this)
         this.TitleCallback = this.TitleCallback.bind(this)
         this.lineEndHandle = this.lineEndHandle.bind(this)
+        this.onCacheLoadProgress = this.onCacheLoadProgress.bind(this)
+
     }
     quickSave() {
         action.save(this.state, 0)
@@ -116,8 +118,8 @@ class MainGame extends React.Component<IProps, IState> {
                 this.start(chapter.line[0])
             } else {
                 clearTimeout(this.state.titleLagTimer)//章节切换
-                const tName = { chapterName: chapter.arkMark, sectionName: chapter.name }
-                this.setState({ TitleChapterName: { chapterName: '', sectionName: '' }, titleLagTimer: undefined }, () => {
+                const tName = { chapterName: chapter.arkMark, sectionName: chapter.name, total: 0, loaded: 0 }
+                this.setState({ TitleChapterName: { chapterName: '', sectionName: '', total: 0, loaded: 0 }, titleLagTimer: undefined }, () => {
                     this.commandLineProcess({ "command": "removeEffect" }, true)
                     this.setState({ TitleChapterName: tName })
                 })
@@ -453,19 +455,19 @@ class MainGame extends React.Component<IProps, IState> {
     soundCallback() {
         this.setState({ soundEffect: '' })
     }
-    TitleCallback({ ses, bgms }: AudioCaches) {
+    TitleCallback({ ses, bgms, cgs }: AudioCaches) {
         const { TitleChapterName, gameVariables } = this.state
         const { data: { chapters } } = this.props
         const chapter = chapters.find(v => v.name === TitleChapterName.sectionName)
         if (chapter) {
             this.setState({
                 ...iniState, gameVariables,
-                audioCaches: { ses, bgms },
+                audioCaches: { ses, bgms, cgs },
                 currentChapter: chapter, clickDisable: false,
                 TitleChapterName: { ...TitleChapterName, out: true }//保留这个name维持title显示
             })
             const titleLagTimer = setTimeout(() => {
-                this.setState({ TitleChapterName: { sectionName: "", chapterName: "" } })
+                this.setState({ TitleChapterName: { sectionName: "", chapterName: "", total: 0, loaded: 0 } })
                 action.unlockScence(chapter.name)
                 const currentLine = chapter.line[0]
                 this.start(currentLine)
@@ -476,7 +478,9 @@ class MainGame extends React.Component<IProps, IState> {
             console.log('游戏结束时和其他蜜汁情况会触发到这块的逻辑,把缓存从小节改成章节吧')
         }
     }
-    narratorTimer: any = false
+    onCacheLoadProgress(total: number, loaded: number) {
+        this.setState({ TitleChapterName: { ...this.state.TitleChapterName, total: total, loaded: loaded } })
+    }
     render() {
         const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose,
             gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName, audioCaches, narratorMode } = this.state
@@ -492,7 +496,7 @@ class MainGame extends React.Component<IProps, IState> {
                 quickLoad={this.load}
                 displaycharactersArray={displaycharactersArray} nextChapter={this.nextChapter}
                 toogleAuto={this.toogleAuto} />
-            {TitleChapterName.chapterName && <Title chapterName={TitleChapterName.chapterName} out={TitleChapterName.out} ></Title>}
+            {TitleChapterName.chapterName && <Title TitleChapterName={TitleChapterName} ></Title>}
             <ARKBGMplayer cache={audioCaches.bgms} src={bgm} />
             <SoundEffectPlayer cache={audioCaches.ses} src={soundEffect} callback={this.soundCallback} />
             {input.key && <GAMEInput placeholder={displayText} clickCallback={this.onInputSubmit} />}
@@ -507,9 +511,9 @@ class MainGame extends React.Component<IProps, IState> {
                         className={displayName === v.name ? classnames(styles.displayCharacter, styles.active) : styles.displayCharacter}
                         key={v.name} src={require(`../../scripts/charatersImages/${v.name}/${v.emotion}`)} /> : <p key={v.name} />)}
                 </div>
-                <CgContainer cg={cg} />
+                <CgContainer cgList={audioCaches.cgs} cg={cg} />
                 <div className={styles.effects} id={effectCanvasId}></div>
-                {!narratorMode && <div className={styles.dialog}>
+                {(!narratorMode&&!TitleChapterName.chapterName) && <div className={styles.dialog}>
                     <div className={styles.owner} style={{ height: vh(8), lineHeight: vh(8), paddingLeft: vw(5), fontSize: vh(6) }}>{displayName}</div>
                     <div className={styles.textarea}
                         style={{
@@ -522,7 +526,7 @@ class MainGame extends React.Component<IProps, IState> {
             {background && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/backgrounds/${background}`)} alt="" />}
             {cg && <img className={styles.hide} onLoad={this.cgAndBackgroundOnload} src={require(`../../scripts/CGs/${cg}`)} alt="" />}
             {(currentChapter.arkMark || TitleChapterName.chapterName) &&
-                <ImgCache caches={caches[(TitleChapterName.chapterName || currentChapter.arkMark)]} callback={this.TitleCallback} />}
+                <ImgCache onProgress={this.onCacheLoadProgress} caches={caches[(TitleChapterName.chapterName || currentChapter.arkMark)]} callback={this.TitleCallback} />}
         </div>
     }
 }

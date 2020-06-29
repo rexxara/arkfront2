@@ -5,6 +5,7 @@ import { AudioCaches } from '../gameTypes'
 import { message } from 'antd'
 interface IProps {
     callback: (arg: AudioCaches) => any
+    onProgress: (loaded: number, total: number) => any
     caches: ChapterCache
 }
 export interface AudioBlob {
@@ -13,7 +14,7 @@ export interface AudioBlob {
     type: 'bgm' | 'se'
 }
 const TITLE_DISPLAY_TIME = 1000
-export default function saveDataCon({ callback, caches }: IProps) {
+export default function saveDataCon({ callback, caches, onProgress }: IProps) {
     const [bgs, setBgs]: [Array<string>, Function] = useState([])
     const [cgs, setCgs]: [Array<string>, Function] = useState([])
     const [chs, setChs]: [Array<string>, Function] = useState([])
@@ -25,14 +26,15 @@ export default function saveDataCon({ callback, caches }: IProps) {
     const [loadedCount, setLoadedCount] = useState(0)
     useEffect(() => {
         if (total && loadedCount) {
+            onProgress(total, loadedCount)
             if (total === loadedCount) {
                 const loadedDruation = Date.now() - mountDate
                 if (loadedDruation > TITLE_DISPLAY_TIME) {
-                    callback({ ses, bgms })
+                    callback({ ses, bgms,cgs })
                     message.success(`加载章节资源耗时${(loadedDruation / 1000).toFixed(2)}`)
                 } else {
                     setTimeout(() => {
-                        callback({ ses, bgms })
+                        callback({ ses, bgms,cgs })
                         message.success(`加载章节资源耗时${(loadedDruation / 1000).toFixed(2)}，等待时间${((TITLE_DISPLAY_TIME - loadedDruation) / 1000).toFixed(2)}`)
                     }, TITLE_DISPLAY_TIME - loadedDruation)
                 }
@@ -114,7 +116,7 @@ export default function saveDataCon({ callback, caches }: IProps) {
             console.log(caches, '没有资源')
             setTimeout(() => {
                 message.success(`没有资源 标题显示4s`)
-                callback({ bgms: [], ses: [] })
+                callback({ bgms: [], ses: [],cgs:[] })
             }, TITLE_DISPLAY_TIME)
         }
     }

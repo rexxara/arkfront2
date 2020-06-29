@@ -41,6 +41,7 @@ body{
   background: #aaaaaa;
   width: 100%;
   z-index: 10;
+  transform:  translateZ(0);
 }
 
 .owner {
@@ -108,6 +109,7 @@ body{
   background-size: cover !important;
   -moz-background-size: 100% 100% !important;
   z-index: 9;
+  transform:translateZ(9);
 }
 
 .hide {
@@ -202,15 +204,6 @@ body{
   top: 0;
   left: 0;
   z-index: 14;
-}
-.hiddingCgCon{
-  animation:hide 2.1s ;
-  animation-iteration-count:1;
-}
-
-@keyframes hide{
-from {opacity:1;}
-to {opacity: 0;}
 }
 .background{
   background-repeat: no-repeat;
