@@ -32,16 +32,20 @@ export function variableLoader(text: string, variables: any): any {
 //   }
 //   return tmp;
 // }
+const newEmoReg = /((\(|（).*?(\)|）))/
+const newNameReg = /.*?(\(|（|\:|：)/
 export const emotionProcessor = (str: string) => {
+  //const emoReg = /(?<=[\(|（])[^\(\)|）]*(?=[\)|）])/g
+  //const nameReg = /^(.*)(?:\s*)(?=[\(|（])/g
+  //const emotion = str.match(emoReg)
+  //const name = str.match(nameReg)
+  const newEmo = str.match(newEmoReg)
+  const newName = str.match(newNameReg)
 
-  const emoReg = /(?<=[\(|（])[^\(\)|）]*(?=[\)|）])/g
-  const nameReg = /^(.*)(?:\s*)(?=[\(|（])/g
-  const emotion = str.match(emoReg)
-  const name = str.match(nameReg)
-  if (emotion && name) {
+  if (newEmo && newName) {
     return {
-      name: name[0].trim(),
-      emotionKey: emotion[0].trim()
+      name: newName[0].slice(0, newName[0].length - 1),
+      emotionKey: newEmo[0].slice(1, newEmo[0].length - 1)
     }
   } else {
     return { name: str, emotionKey: 'default' }

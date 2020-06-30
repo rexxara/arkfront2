@@ -217,7 +217,7 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
     chooses: Chooses,
     inputs: Inputs, soundEffects: SoundEffects
 ): CommandLine {
-    const [command, key] = splitFromFirstKey(matchedRawLine[1], ":")
+    const [command, key] = splitFromFirstKey(matchedRawLine[1].slice(1,matchedRawLine[1].length-1), ":")
     switch (command) {
         case LINE_TYPE.COMMAND_SHOW_BACKGROUND:
             if (backgrounds[key]) {
@@ -348,10 +348,10 @@ export function commandProcess(matchedRawLine: RegExpMatchArray,
             return UNKNOW_COMMAND
     }
 }
-export const actionReg = /(?<!\/\/)\[(.*)\]/
+// export const oldActionReg = /(?<!\/\/)\[(.*)\]/
+export const actionReg=/(\[.*?\])/
 function lineTypeJudger(lineText: string[], currentSpaceLine: number[], currentSingleSpaceLine: number[]) {
     const rawLine = filterSpace(lineText.join(""))
-    //const rawLine = lineText.join("")
     const commentReg = /\/\//
     if (rawLine.match(commentReg)) {
         return { type: LINE_TYPE.comment }

@@ -22,7 +22,6 @@ const config: IConfig = {
       dva: {
         immer: true
       },
-      dynamicImport: { webpackChunkName: true },
       title: null,
       dll: true,
       locale: {
