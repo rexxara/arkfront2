@@ -1,10 +1,9 @@
 import React from 'react'
-import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, Option, CGParama } from '../../utils/types'
+import { LINE_TYPE, DisplayLine, CommandLine, NO_IMG, displayCharacter, DisplayCharacters, Option } from '../../utils/types'
 import { variableLoader } from '../../utils/utils'
 import classnames from 'classnames'
 import { IState, IProps, iniState, clickHandleConfig, AudioCaches } from './gameTypes'
 import NarratorCon from './component/narratorCon'
-import _omit from 'lodash/omit'
 import styles from './style.css'
 import ARKBGMplayer from './component/BGMplayer'
 import { commandProcess, actionReg } from '../../utils/loader/index'
@@ -15,13 +14,13 @@ import ImgCache from './component/ImgCache'
 import CtrlPanel from './component/ctrlPanel'
 import { Icon, message } from 'antd'
 import GAMEInput from './component/input'
-import effects from './effects'
 import SoundEffectPlayer from './component/soundEffectPlayer'
 import Title from './titles/Title'
 import { vw, vh } from '@/utils/getSize'
 import { saveDataAdapter } from './utils'
 import CgContainer from './component/CgContainer'
 import BackgroundCon from './component/BackgroundContainer'
+import { commandLineHandle } from './functions'
 const effectCanvasId = 'effects'
 const TEXT_DISPLAY_SPEEED = 50
 
@@ -117,9 +116,9 @@ class MainGame extends React.Component<IProps, IState> {
                 action.unlockScence(chapter.name)
                 this.start(chapter.line[0])
             } else {
-                clearTimeout(this.state.titleLagTimer)//章节切换
+                //章节切换
                 const tName = { chapterName: chapter.arkMark, sectionName: chapter.name, total: 0, loaded: 0 }
-                this.setState({ TitleChapterName: { chapterName: '', sectionName: '', total: 0, loaded: 0 }, titleLagTimer: undefined }, () => {
+                this.setState({ TitleChapterName: { chapterName: '', sectionName: '', total: 0, loaded: 0 } }, () => {
                     this.commandLineProcess({ "command": "removeEffect" }, true)
                     this.setState({ TitleChapterName: tName })
                 })
@@ -240,86 +239,12 @@ class MainGame extends React.Component<IProps, IState> {
     }
     commandLineProcess(command: CommandLine, dontSkip?: boolean) {//commandLine dontSkip是因为每一章开始的时候清特效，然后会跳一行导致每章第一行显示不出来
         const { background, displaycharacters, cg, effectref } = this.state
-        const ARKBGM = document.getElementById('ARKBGM') as HTMLAudioElement
-        let newParam = {}
-        let needLoadImg = false
-        let needStop = false
-        switch (command.command) {
-            case LINE_TYPE.COMMAND_SHOW_BACKGROUND:
-                needLoadImg = background !== command.param
-                if (needLoadImg) {
-                    newParam = { background: command.param }
-                }
-                break
-            case LINE_TYPE.COMMAND_LEAVE_CHARATER:
-                newParam = { displaycharacters: _omit(displaycharacters, [command.param as string]) }
-                break
-            case LINE_TYPE.COMMAND_ENTER_CHARATER:
-                const hitedCharater = displaycharacters[(command.param as displayCharacter).name]
-                if (hitedCharater) {
-                    needLoadImg = hitedCharater.emotion !== (command.param as displayCharacter).emotion//有人表情不一样
-                } else { needLoadImg = true }//没人
-                newParam = {
-                    displaycharacters: { ...displaycharacters, [(command.param as displayCharacter).name]: command.param },
-                    cacheDisplayLineName: '',
-                    cacheDisplayLineText: ''
-                }
-                break
-            case LINE_TYPE.COMMAND_PLAY_BGM:
-                newParam = { bgm: command.param }
-                break
-            case LINE_TYPE.COMMAND_REMOVE_BACKGROUND:
-                newParam = { background: '' }
-            case LINE_TYPE.COMMAND_PAUSE_BGM:
-                if (ARKBGM) { ARKBGM.pause() } else { throw new Error('bgmNotFound') }
-                break
-            case LINE_TYPE.COMMAND_RESUME_BGM:
-                if (ARKBGM) { ARKBGM.play() } else { throw new Error('bgmNotFound') }
-                break
-            case LINE_TYPE.COMMAND_SHOW_CG:
-                const params = command.param as CGParama
-                needLoadImg = cg !== params.src
-                if (needLoadImg) {
-                    action.unlockCg(params.cgName)
-                    newParam = { cg: params.src }
-                }
-                break
-            case LINE_TYPE.COMMAND_REMOVE_CG:
-                newParam = { cg: '', displaycharacters: [] }
-                break
-            case LINE_TYPE.COMMAND_SHOW_CHOOSE:
-                needStop = true
-                newParam = { choose: command.param, clickDisable: true }
-                break
-            case LINE_TYPE.COMMAND_SHOW_INPUT:
-                needStop = true
-                newParam = { input: command.param, clickDisable: true }
-                break
-            case LINE_TYPE.COMMAND_SHOW_EFFECT:
-                console.log(command)
-                newParam = { effectKey: command.param, effectref: effects[command.param as string](effectCanvasId) }
-                break
-            case LINE_TYPE.COMMAND_REMOVE_EFFECT:
-                if (effectref) {
-                    effectref.stop()
-                } else {
-                    console.log('effectRefNotfound')
-                }
-                newParam = { effectKey: '' }
-                break
-            case LINE_TYPE.COMMAND_SHOW_SOUND_EFFECT:
-                newParam = { soundEffect: command.param }
-                break
-            case LINE_TYPE.COMMAND_DELAY:
-                needStop = true
-                newParam = { clickDisable: true }
-                if (typeof command.param === 'number') {
-                    setTimeout(() => {
-                        this.setState({ clickDisable: false }, () => { this.clickHandle() })
-                    }, command.param)
-                }
-            default://'invalidCommand')
-                break
+        const result = commandLineHandle(command, { background, displaycharacters, cg, effectref, effectCanvasId })
+        const { needLoadImg, newParam, needStop, delayTime } = result
+        if (delayTime) {
+            setTimeout(() => {
+                this.setState({ clickDisable: false }, () => { this.clickHandle() })
+            }, delayTime)
         }
         if (needLoadImg) {
             this.setState({ ...newParam, clickDisable: true })
@@ -464,15 +389,10 @@ class MainGame extends React.Component<IProps, IState> {
                 ...iniState, gameVariables,
                 audioCaches: { ses, bgms, cgs },
                 currentChapter: chapter, clickDisable: false,
-                TitleChapterName: { ...TitleChapterName, out: true }//保留这个name维持title显示
             })
-            const titleLagTimer = setTimeout(() => {
-                this.setState({ TitleChapterName: { sectionName: "", chapterName: "", total: 0, loaded: 0 } })
-                action.unlockScence(chapter.name)
-                const currentLine = chapter.line[0]
-                this.start(currentLine)
-            }, 2000)
-            this.setState({ titleLagTimer })
+            action.unlockScence(chapter.name)
+            const currentLine = chapter.line[0]
+            this.start(currentLine)
         } else {
             //throw new Error('chapterNotFound')//游戏结束时和其他蜜汁情况会触发到这块的逻辑
             console.log('游戏结束时和其他蜜汁情况会触发到这块的逻辑,把缓存从小节改成章节吧')
@@ -496,7 +416,7 @@ class MainGame extends React.Component<IProps, IState> {
                 quickLoad={this.load}
                 displaycharactersArray={displaycharactersArray} nextChapter={this.nextChapter}
                 toogleAuto={this.toogleAuto} />
-            {TitleChapterName.chapterName && <Title TitleChapterName={TitleChapterName} ></Title>}
+            <Title TitleChapterName={TitleChapterName} ></Title>
             <ARKBGMplayer cache={audioCaches.bgms} src={bgm} />
             <SoundEffectPlayer cache={audioCaches.ses} src={soundEffect} callback={this.soundCallback} />
             {input.key && <GAMEInput placeholder={displayText} clickCallback={this.onInputSubmit} />}
@@ -513,7 +433,7 @@ class MainGame extends React.Component<IProps, IState> {
                 </div>
                 <CgContainer cgList={audioCaches.cgs} cg={cg} />
                 <div className={styles.effects} id={effectCanvasId}></div>
-                {(!narratorMode&&!TitleChapterName.chapterName) && <div className={styles.dialog}>
+                {(!narratorMode && !TitleChapterName.chapterName) && <div className={styles.dialog}>
                     <div className={styles.owner} style={{ height: vh(8), lineHeight: vh(8), paddingLeft: vw(5), fontSize: vh(6) }}>{displayName}</div>
                     <div className={styles.textarea}
                         style={{

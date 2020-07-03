@@ -4,8 +4,15 @@ import { AudioBlob } from './component/ImgCache'
 export type AudioCaches = {
     bgms: AudioBlob[],
     ses: AudioBlob[],
-    cgs:string[]
+    cgs: string[]
 }
+export const TitleChapterNameIniValue = {
+    chapterName: '',
+    sectionName: '',
+    total: 0,
+    loaded: 0
+}
+
 export const iniState = {
     saveDataConOpen: false,
     auto: false,
@@ -15,7 +22,6 @@ export const iniState = {
     cacheDisplayLineName: '',
     background: '',
     timers: undefined,
-    titleLagTimer: undefined,
     linePointer: 0,
     displaycharacters: {},
     rawLine: '',
@@ -28,12 +34,7 @@ export const iniState = {
     choose: [],
     effectKey: '',
     soundEffect: '',
-    TitleChapterName: {
-        chapterName: '',
-        sectionName: '',
-        total: 0,
-        loaded: 0
-    },
+    TitleChapterName: TitleChapterNameIniValue,
     input: {
         key: undefined,
         afterFix: () => "",
@@ -51,7 +52,7 @@ export const iniState = {
     audioCaches: {
         bgms: [],
         ses: [],
-        cgs:[]
+        cgs: []
     }
 }
 
@@ -70,7 +71,6 @@ export interface IState {
     cacheDisplayLineName: string
     background: string
     timers: any
-    titleLagTimer: any
     linePointer: number
     displaycharacters: DisplayCharacters
     rawLine: string
@@ -91,7 +91,7 @@ export interface IState {
     input: Input
     effectref?: any,
     effectKey: string
-    TitleChapterName:TitleChapterName
+    TitleChapterName: TitleChapterName
     audioCaches: AudioCaches
 }
 export interface TitleChapterName {

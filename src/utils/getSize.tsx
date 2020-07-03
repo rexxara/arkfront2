@@ -9,7 +9,6 @@ const vw = (num: number): string => {
     if (vwCacheMap[num]) {
         return vwCacheMap[num]
     }
-    console.log('ComputeVw')
     if (clientHeight > clientWidth) {
         //手机
         const res = clientHeight / 100 * num + 'px'
@@ -27,7 +26,6 @@ const vh = (num: number): string => {
     if (vhCacheMap[num]) {
         return vhCacheMap[num]
     }
-    console.log('ComputeVh')
     const { clientHeight, clientWidth } = document.documentElement
     if (clientHeight > clientWidth) {
         //手机
