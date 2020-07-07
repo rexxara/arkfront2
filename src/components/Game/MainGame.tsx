@@ -21,25 +21,22 @@ import { saveDataAdapter } from './utils'
 import CgContainer from './component/CgContainer'
 import BackgroundCon from './component/BackgroundContainer'
 import { commandLineHandle } from './functions'
+import TextArea from './component/TextArea'
 const effectCanvasId = 'effects'
-const TEXT_DISPLAY_SPEEED = 50
 
 class MainGame extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props)
         this.state = { ...iniState, gameVariables: props.RawScript.variables }
         this.clickHandle = this.clickHandle.bind(this)
-        this.textAnimation = this.textAnimation.bind(this)
         this.imgOnload = this.imgOnload.bind(this)
         this.commandLineProcess = this.commandLineProcess.bind(this)
         this.nextChapter = this.nextChapter.bind(this)
         this.reset = this.reset.bind(this)
         this.toogleAuto = this.toogleAuto.bind(this)
-        this.clearTimers = this.clearTimers.bind(this)
         this.displayLineProcess = this.displayLineProcess.bind(this)
         this.skipThisLine = this.skipThisLine.bind(this)
         this.start = this.start.bind(this)
-        this.textAnimationInner = this.textAnimationInner.bind(this)
         this.cgAndBackgroundOnload = this.cgAndBackgroundOnload.bind(this)
         this.startChapter = this.startChapter.bind(this)
         this.onSelect = this.onSelect.bind(this)
@@ -95,7 +92,7 @@ class MainGame extends React.Component<IProps, IState> {
     startChapter(chapterKey?: string) {
         const { data: { chapters } } = this.props
         const { currentChapter: { arkMark } } = this.state
-        this.clearTimers()
+        this.setState({stop: false })
         this.setState({ clickDisable: true })
         let chapter = undefined
         if (!chapterKey) {
@@ -131,16 +128,17 @@ class MainGame extends React.Component<IProps, IState> {
         const { currentChapter, linePointer } = this.state
         const line = currentChapter.line[linePointer]
         if (line) {//加载存档的时候调用这个函数是没有line的
-            this.clearTimers()
+            this.setState({stop: false })
             if ('value' in line) {
                 const { gameVariables } = this.state
-                this.lineEndHandle(true)
-                this.setState({ displayText: variableLoader(line.value, gameVariables) as string })
+                const res = variableLoader(line.value, gameVariables) as string
+                this.setState({ displayText: res, rawLine: res, textAreaStop: true })
+            } else {
+                this.setState({ textAreaStop: true })
             }
         }
     }
     lineEndHandle(bySkip: boolean) {
-        console.log('lineEnd', bySkip)
         const { narratorMode } = this.state
         if (narratorMode) {//自动scroll到底
             const narrator = document.getElementById('narrator')
@@ -148,6 +146,7 @@ class MainGame extends React.Component<IProps, IState> {
                 setTimeout(() => { narrator.scrollTop = narrator.scrollHeight }, 200)
             } else { throw new Error("narrator container not found") }
         }
+        this.setState({ textAreaStop: true })
     }
     async displayLineProcess(line: DisplayLine) {
         const isNarratorMode = false || line.type === LINE_TYPE.narrator
@@ -174,32 +173,26 @@ class MainGame extends React.Component<IProps, IState> {
             this.setState({ displaycharacters: nextDisplay })
         }
         if (isNarratorMode) {
-            this.setState({ narratorMode: [...(narratorMode || []), value], displayText: "" })
+            this.setState({ narratorMode: [...(narratorMode || []), value], displayText: "", textAreaStop: true })
         } else {
             this.setState({ narratorMode: undefined })
+            if (needLoadNewEmotion) {
+                this.setState({ cacheDisplayLineText: value, cacheDisplayLineName: name || '', clickDisable: true })
+            } else {
+                if (name !== displayName) { this.setState({ displayName: '', rawLine: value, displayText: value, textAreaStop: false }) }
+            }
         }
-        if (needLoadNewEmotion) {
-            this.setState({ cacheDisplayLineText: value, cacheDisplayLineName: name || '', clickDisable: true })
-        } else {
-            if (name !== displayName) { this.setState({ displayName: '' }) }
-            this.textAnimation(value, name, true)
-        }
-    }
-    clearTimers() {
-        const { timers } = this.state
-        clearTimeout(timers)
-        this.setState({ timers: undefined, stop: false })
     }
     toogleAuto() {
-        const { auto, timers } = this.state
+        const { auto } = this.state
         this.setState({ auto: !auto })
-        if (!auto && !timers) {//要自动播放但是现在没在滚动
+        if (!auto) {//要自动播放但是现在没在滚动
             this.clickHandle()
         }
     }
     reset() {
         this.setState(iniState)
-        this.clearTimers()
+        this.setState({stop: false })
         this.startChapter()
     }
     reviewBack() {
@@ -263,51 +256,16 @@ class MainGame extends React.Component<IProps, IState> {
         }
         const { cacheDisplayLineName, cacheDisplayLineText } = this.state
         if (cacheDisplayLineName && cacheDisplayLineText) {
-            this.textAnimation(cacheDisplayLineText, cacheDisplayLineName, true)
+            this.setState({ displayName: cacheDisplayLineName, rawLine: cacheDisplayLineText, displayText: cacheDisplayLineText, textAreaStop: false })
         } else { this.clickHandle() }
     }
     cgAndBackgroundOnload() {
         const { skipResourseCount } = this.state
         if (!skipResourseCount) {
-            this.setState({ clickDisable: false }, () => { this.clickHandle() })
+            this.setState({ clickDisable: false }, () => { this.clickHandle(undefined, { thro: 'config' } as any) })
         } else {
             this.setState((state) => { return { ...state, skipResourseCount: state.skipResourseCount - 1 } })
         }
-    }
-    textAnimation(value: string, name?: string, skip?: boolean) {
-        // if (skip) {
-        //     this.setState({ displayName: name || '', displayText: value })
-        //     return 0
-        // }
-        this.setState({
-            displayName: name || '',
-            rawLine: value
-        }, () => {
-            if (value.length > 0) {
-                this.textAnimationInner(1)
-            }
-        })
-    }
-    textAnimationInner(index: number) {
-        const flag = setTimeout(() => {
-            const { stop, displayText, rawLine } = this.state
-            const end = displayText === rawLine
-            this.setState({ displayText: rawLine.slice(0, index) })
-            if (!stop && !end) {
-                const flag = setTimeout(() => this.textAnimationInner(index + 1), TEXT_DISPLAY_SPEEED)
-                this.setState({ timers: flag })
-            } else {
-                this.setState({ timers: null, displayText: rawLine })
-                let { auto } = this.state
-                this.lineEndHandle(false)
-                if (auto) {
-                    setTimeout(() => {
-                        this.clickHandle()
-                    }, 500);
-                }
-            }
-        }, TEXT_DISPLAY_SPEEED)
-        this.setState({ timers: flag })
     }
     onSelect(selectedOption: Option) {
         const { gameVariables } = this.state
@@ -346,10 +304,9 @@ class MainGame extends React.Component<IProps, IState> {
         }
     }
     clickHandle(ev?: React.MouseEvent, config?: clickHandleConfig) {
-        const { skipResourseCount, timers, auto, linePointer, clickDisable, currentChapter } = this.state
+        const { skipResourseCount, auto, linePointer, clickDisable, currentChapter, textAreaStop } = this.state
         config = config || {}
-        if (skipResourseCount) {//这块和imgOnLoad的逻辑有重复，不过没bug就先不改了,没个j8,到处都是bug
-            //好像没bug..
+        if (skipResourseCount) {//这块和imgOnLoad的逻辑有重复，不过没bug就先不改了,没个j8,到处都是bug//好像没bug..
             return
         }
         if (ev && clickDisable) {
@@ -358,11 +315,10 @@ class MainGame extends React.Component<IProps, IState> {
         }
         if (ev) {//手动点击取消自动播放
             if (auto) this.setState({ auto: false })
-            if (timers) this.clearTimers()
         }
         if (currentChapter) {
             const currentLines = currentChapter.line
-            if (!timers) {//如果一行播放结束
+            if (textAreaStop) {//如果一行播放结束
                 if (linePointer >= currentLines.length - 1) {//一章或者一节结束
                     return this.nextChapter()
                 } else {
@@ -403,7 +359,7 @@ class MainGame extends React.Component<IProps, IState> {
     }
     render() {
         const { auto, background, displayName, displayText, linePointer, displaycharacters, bgm, cg, choose,
-            gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName, audioCaches, narratorMode } = this.state
+            gameVariables, saveDataConOpen, currentChapter, rawLine, input, soundEffect, TitleChapterName, audioCaches, narratorMode, textAreaStop } = this.state
         const { data: { caches } } = this.props
         const displaycharactersArray = Object.keys(displaycharacters).map(v => displaycharacters[v])
         return <div style={{ width: vw(100), height: vh(100), overflow: 'hidden' }}>
@@ -435,11 +391,7 @@ class MainGame extends React.Component<IProps, IState> {
                 <div className={styles.effects} id={effectCanvasId}></div>
                 {(!narratorMode && !TitleChapterName.chapterName) && <div className={styles.dialog}>
                     <div className={styles.owner} style={{ height: vh(8), lineHeight: vh(8), paddingLeft: vw(5), fontSize: vh(6) }}>{displayName}</div>
-                    <div className={styles.textarea}
-                        style={{
-                            padding: vw(2), minHeight: vh(25), lineHeight: vh(6), fontSize: vh(4),
-                        }}>
-                        {displayText}{rawLine === displayText && rawLine.length > 0 && <Icon type="step-forward" />}</div>
+                    <TextArea lineEndHandle={this.lineEndHandle} clickHandle={this.clickHandle} textAreaStop={textAreaStop} rawLine={rawLine} auto={auto} ></TextArea>
                 </div>}
                 <BackgroundCon background={background} />
             </div>

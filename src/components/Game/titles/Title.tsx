@@ -44,11 +44,11 @@ class title extends React.Component<IProps, IState>{
         return { localState: nextProps.TitleChapterName }
     }
     shouldComponentUpdate(nextProps: IProps, nextState: IState) {
-        if (this.state.closeAble) {
+        if (!this.state.closeAble&&nextState.closeAble) {
             if (this.timeRef) clearTimeout(this.timeRef)
             this.timeRef = setTimeout(() => {
-                this.setState({ enter: false })
-            }, 2000);
+                this.setState({ enter: false })//有问题 会运行多次
+            }, 1000);
         }
         return true
     }

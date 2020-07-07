@@ -21,7 +21,6 @@ export const iniState = {
     cacheDisplayLineText: '',
     cacheDisplayLineName: '',
     background: '',
-    timers: undefined,
     linePointer: 0,
     displaycharacters: {},
     rawLine: '',
@@ -35,6 +34,7 @@ export const iniState = {
     effectKey: '',
     soundEffect: '',
     TitleChapterName: TitleChapterNameIniValue,
+    textAreaStop:true,
     input: {
         key: undefined,
         afterFix: () => "",
@@ -70,13 +70,13 @@ export interface IState {
     cacheDisplayLineText: string
     cacheDisplayLineName: string
     background: string
-    timers: any
     linePointer: number
     displaycharacters: DisplayCharacters
     rawLine: string
     stop: boolean
     bgm: selectedBGM
     soundEffect: string
+    textAreaStop:boolean
     cg: string
     narratorMode?: string[]
     clickDisable: boolean

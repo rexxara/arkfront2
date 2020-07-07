@@ -46,7 +46,6 @@ class App extends React.Component<IProps>{
         >
             {narratorMode ? <div className={styles.narrator} id="narrator" style={{ marginLeft: vw(10), marginTop: vh(10), maxWidth: vw(80), height: vh(80) }}>{
                 narratorMode.map((v, i) => {
-                    if (i === narratorMode.length - 1) { return null }
                     return <p className={styles.narratorLine} key={i}>{v}</p>
                 })}
                 <p className={styles.narratorLine}>{displayText}</p>
