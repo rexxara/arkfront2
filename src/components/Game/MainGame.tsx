@@ -370,6 +370,7 @@ class MainGame extends React.Component<IProps, IState> {
                 saveDataConOpen={saveDataConOpen} closeSaveCon={this.closeSaveCon}
                 openSaveCon={this.openSaveCon} quickSave={this.quickSave}
                 quickLoad={this.load}
+                bgm={bgm}
                 displaycharactersArray={displaycharactersArray} nextChapter={this.nextChapter}
                 toogleAuto={this.toogleAuto} />
             <Title TitleChapterName={TitleChapterName} ></Title>

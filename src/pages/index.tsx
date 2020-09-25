@@ -19,7 +19,6 @@ import LoadPage from './loadPage'
 import detectOrient from '../utils/detectOrient'
 import { vh, vw } from '../utils/getSize'
 import PaintGame from './paintGame/index'
-import vConsole from 'vconsole'
 detectOrient()
 const history = createHashHistory()
 const WarpedIniPage = warpedAnimation(IniPage)
@@ -41,9 +40,6 @@ const indexStyle: React.CSSProperties = {
   backgroundPosition: 'center center'
 }
 
-if (location.hash.indexOf("debug=true") !== -1) {
-  const Vcon = new vConsole()
-}
 const App: React.FC = () => {
   return <div >
     <title>kimi no hanashi</title>

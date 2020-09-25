@@ -18,6 +18,7 @@ interface IProps {
     displayName: string,
     rawLine: string,
     saveDataConOpen: boolean
+    bgm:any
 }
 export default function CtrlPanel({ clickHandle, rawLine, displayName, saveDataConOpen, linePointer, nextChapter, displaycharactersArray, toogleAuto, quickSave, quickLoad, closeSaveCon, openSaveCon, bgm, auto }: IProps) {
     const [open, setOpen] = useState<boolean>(false)

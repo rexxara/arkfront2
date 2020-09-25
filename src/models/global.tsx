@@ -35,7 +35,7 @@ export default {
             return { ...initalState, LoadDataFromLoadPage: payload }
         },
         'reviewScence'(state: globalState, { payload }: any) {
-            const script = payload.script.map((v, i: number) => {
+            const script = payload.script.map((v:any, i: number) => {
                 if (i === 0) {
                     return { ...v, isBegin: true }
                 }
